@@ -1,19 +1,17 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, AlertTriangle, MapPin, TrendingUp, Users, Search } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { BarChart3, MapPin, TrendingUp, Users } from 'lucide-react';
+import RegionDetailModal from '@/components/RegionDetailModal';
 
 interface DemandAnalysisProps {
   expanded?: boolean;
 }
 
 const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
-  const [showAlert, setShowAlert] = useState(true);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const demandData = [
     { name: 'Paracetamol', searches: 47, found: 42, notFound: 5 },
@@ -31,7 +29,18 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
       searches: 89,
       topMedicine: 'Insulina',
       patients: 23,
-      description: 'Alta procura por medicamentos para diabetes'
+      description: 'Alta procura por medicamentos para diabetes',
+      detailData: {
+        found: [
+          { name: 'Insulina', count: 15 },
+          { name: 'Metformina', count: 12 },
+          { name: 'Paracetamol', count: 8 }
+        ],
+        notFound: [
+          { name: 'Glibenclamida', count: 7 },
+          { name: 'Losartana', count: 5 }
+        ]
+      }
     },
     { 
       name: 'Macuti', 
@@ -40,7 +49,18 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
       searches: 54,
       topMedicine: 'Paracetamol',
       patients: 15,
-      description: 'Demanda equilibrada de analgésicos'
+      description: 'Demanda equilibrada de analgésicos',
+      detailData: {
+        found: [
+          { name: 'Paracetamol', count: 18 },
+          { name: 'Ibuprofeno', count: 10 },
+          { name: 'Dipirona', count: 8 }
+        ],
+        notFound: [
+          { name: 'Aspirina', count: 4 },
+          { name: 'Diclofenaco', count: 3 }
+        ]
+      }
     },
     { 
       name: 'Centro', 
@@ -49,7 +69,17 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
       searches: 32,
       topMedicine: 'Omeprazol',
       patients: 8,
-      description: 'Baixa demanda, população adulta'
+      description: 'Baixa demanda, população adulta',
+      detailData: {
+        found: [
+          { name: 'Omeprazol', count: 12 },
+          { name: 'Pantoprazol', count: 6 },
+          { name: 'Ranitidina', count: 4 }
+        ],
+        notFound: [
+          { name: 'Esomeprazol',  count: 3 }
+        ]
+      }
     },
     { 
       name: 'Matola', 
@@ -58,7 +88,18 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
       searches: 76,
       topMedicine: 'Amoxicilina',
       patients: 19,
-      description: 'Surto de infecções respiratórias'
+      description: 'Surto de infecções respiratórias',
+      detailData: {
+        found: [
+          { name: 'Amoxicilina', count: 20 },
+          { name: 'Azitromicina', count: 15 },
+          { name: 'Xarope', count: 10 }
+        ],
+        notFound: [
+          { name: 'Claritromicina', count: 8 },
+          { name: 'Ceftriaxona', count: 6 }
+        ]
+      }
     },
     { 
       name: 'Sommerschield', 
@@ -67,7 +108,18 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
       searches: 43,
       topMedicine: 'Anti-hipertensivos',
       patients: 12,
-      description: 'População idosa, medicamentos crônicos'
+      description: 'População idosa, medicamentos crônicos',
+      detailData: {
+        found: [
+          { name: 'Captopril', count: 14 },
+          { name: 'Atenolol', count: 10 },
+          { name: 'Hidroclorotiazida', count: 8 }
+        ],
+        notFound: [
+          { name: 'Losartana', count: 5 },
+          { name: 'Enalapril', count: 4 }
+        ]
+      }
     },
     { 
       name: 'Polana', 
@@ -76,7 +128,17 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
       searches: 28,
       topMedicine: 'Vitaminas',
       patients: 7,
-      description: 'Foco em suplementos e prevenção'
+      description: 'Foco em suplementos e prevenção',
+      detailData: {
+        found: [
+          { name: 'Vitamina C', count: 10 },
+          { name: 'Complexo B', count: 8 },
+          { name: 'Ferro', count: 5 }
+        ],
+        notFound: [
+          { name: 'Vitamina D', count: 3 }
+        ]
+      }
     }
   ];
 
@@ -113,20 +175,13 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
     { month: 'Nov', indications: 423, conversion: 97 }
   ];
 
-  const handleReorder = () => {
-    toast({
-      title: "Pedido enviado!",
-      description: "Pedido #2091 enviado ao fornecedor! Tempo médio: 24h",
-    });
-    setShowAlert(false);
-  };
-
   const handleRegionClick = (region: any) => {
     setSelectedRegion(region.name);
-    toast({
-      title: `Região: ${region.name}`,
-      description: `${region.searches} buscas | Top: ${region.topMedicine} | ${region.patients} pacientes`,
-    });
+    setIsModalOpen(true);
+  };
+
+  const getSelectedRegionData = () => {
+    return neighborhoods.find(n => n.name === selectedRegion)?.detailData || { found: [], notFound: [] };
   };
 
   return (
@@ -154,7 +209,7 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-1000"
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-1000"
                     style={{ width: `${(item.searches / 50) * 100}%` }}
                   />
                 </div>
@@ -166,25 +221,6 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
               </div>
             ))}
           </div>
-
-          {/* Alert Card */}
-          {showAlert && (
-            <Alert className="border-orange-200 bg-orange-50">
-              <AlertTriangle className="h-4 w-4 text-orange-600" />
-              <AlertDescription className="text-orange-800">
-                <div className="space-y-2">
-                  <p><strong>Insulina:</strong> 5 buscas não atendidas hoje! 37 buscas na última semana</p>
-                  <Button 
-                    size="sm" 
-                    onClick={handleReorder}
-                    className="bg-orange-500 hover:bg-orange-600 text-white"
-                  >
-                    Solicitar Reposição
-                  </Button>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
       </Card>
 
@@ -206,27 +242,12 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
               >
                 <div className="font-medium">{area.name}</div>
                 <div className="text-xs opacity-90">{area.level}</div>
-                {expanded && (
-                  <div className="text-xs mt-1">
-                    {area.searches} buscas
-                  </div>
-                )}
+                <div className="text-xs mt-1">
+                  {area.searches} buscas
+                </div>
               </div>
             ))}
           </div>
-          
-          {expanded && selectedRegion && (
-            <div className="bg-blue-50 p-3 rounded-lg">
-              {neighborhoods.find(n => n.name === selectedRegion) && (
-                <div>
-                  <h5 className="font-medium">{selectedRegion}</h5>
-                  <p className="text-sm text-gray-600">
-                    {neighborhoods.find(n => n.name === selectedRegion)?.description}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -236,7 +257,7 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <AlertTriangle className="mr-2" size={16} />
+                <Badge className="mr-2 bg-orange-500">⚠️</Badge>
                 Alertas de Saúde Pública
               </CardTitle>
             </CardHeader>
@@ -275,9 +296,6 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
                         <Users className="inline w-4 h-4 mr-1" />
                         {month.indications} indicações
                       </div>
-                      <div className="text-sm text-green-600">
-                        {month.conversion}% conversão
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -293,6 +311,13 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
           </Card>
         </>
       )}
+
+      <RegionDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        regionName={selectedRegion || ''}
+        regionData={getSelectedRegionData()}
+      />
     </div>
   );
 };

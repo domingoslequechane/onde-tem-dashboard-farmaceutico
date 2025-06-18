@@ -2,25 +2,17 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, MessageCircle, FileText, TrendingUp } from 'lucide-react';
+import { Users, FileText, TrendingUp } from 'lucide-react';
 
 const ServiceImpact = () => {
-  const [clientCount, setClientCount] = useState(0);
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [indicationsCount, setIndicationsCount] = useState(0);
   
-  const testimonials = [
-    "+15 novos clientes em 1 semana!",
-    "Redução de 40% em consultas telefônicas",
-    "Aumento de 25% nas vendas online",
-    "Satisfação do cliente: 98%"
-  ];
-
   // Animated counter
   useEffect(() => {
-    const target = 127;
+    const target = 423;
     const increment = target / 100;
     const timer = setInterval(() => {
-      setClientCount(prev => {
+      setIndicationsCount(prev => {
         if (prev >= target) {
           clearInterval(timer);
           return target;
@@ -28,15 +20,6 @@ const ServiceImpact = () => {
         return Math.min(prev + increment, target);
       });
     }, 20);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Rotating testimonials
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTestimonial(prev => (prev + 1) % testimonials.length);
-    }, 3000);
 
     return () => clearInterval(timer);
   }, []);
@@ -50,10 +33,10 @@ const ServiceImpact = () => {
       Período: ${new Date().toLocaleDateString('pt-BR')}
       
       RESUMO EXECUTIVO:
-      • Clientes atendidos: 127
+      • Indicações realizadas: 423
       • Medicamentos monitorados: 15
-      • Buscas realizadas: 144
-      • Taxa de conversão: 85%
+      • Buscas realizadas: 289
+      • Impressões do mês: 1,847
       
       MEDICAMENTOS MAIS PROCURADOS:
       1. Paracetamol - 47 buscas
@@ -62,9 +45,9 @@ const ServiceImpact = () => {
       4. Omeprazol - 28 buscas
       
       IMPACTO DO SERVIÇO:
-      • +15 novos clientes em 1 semana
-      • Redução de 40% em consultas telefônicas
-      • Aumento de 25% nas vendas online
+      • +28% crescimento mensal
+      • 98% satisfação dos usuários
+      • 6 regiões atendidas
       
       ---
       Parceiro Onde Tem - Tecnologia Farmacêutica
@@ -90,47 +73,39 @@ const ServiceImpact = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Animated Client Counter */}
-        <div className="text-center p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
-          <Users className="mx-auto mb-3 text-green-600" size={32} />
+        {/* Animated Indications Counter */}
+        <div className="text-center p-6 bg-blue-50 rounded-lg">
+          <Users className="mx-auto mb-3 text-blue-600" size={32} />
           <div className="text-3xl font-bold text-gray-900 mb-1">
-            {Math.floor(clientCount)}
+            {Math.floor(indicationsCount)}
           </div>
-          <p className="text-gray-600 font-medium">Clientes Atendidos</p>
-        </div>
-
-        {/* Rotating Testimonials */}
-        <div className="text-center p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-          <MessageCircle className="mx-auto mb-2 text-blue-600" size={24} />
-          <p className="text-blue-800 font-medium transition-all duration-500">
-            {testimonials[currentTestimonial]}
-          </p>
+          <p className="text-gray-600 font-medium">Indicações no Mês</p>
         </div>
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="text-center p-3 bg-gray-50 rounded">
-            <div className="text-xl font-bold text-gray-900">144</div>
+            <div className="text-xl font-bold text-gray-900">289</div>
             <div className="text-xs text-gray-600">Buscas Hoje</div>
-          </div>
-          <div className="text-center p-3 bg-gray-50 rounded">
-            <div className="text-xl font-bold text-gray-900">85%</div>
-            <div className="text-xs text-gray-600">Taxa Conversão</div>
           </div>
           <div className="text-center p-3 bg-gray-50 rounded">
             <div className="text-xl font-bold text-gray-900">98%</div>
             <div className="text-xs text-gray-600">Satisfação</div>
           </div>
           <div className="text-center p-3 bg-gray-50 rounded">
-            <div className="text-xl font-bold text-gray-900">24h</div>
-            <div className="text-xs text-gray-600">Tempo Médio</div>
+            <div className="text-xl font-bold text-gray-900">1,847</div>
+            <div className="text-xs text-gray-600">Impressões</div>
+          </div>
+          <div className="text-center p-3 bg-gray-50 rounded">
+            <div className="text-xl font-bold text-gray-900">6</div>
+            <div className="text-xs text-gray-600">Regiões</div>
           </div>
         </div>
 
         {/* Generate Report Button */}
         <Button 
           onClick={generateReport}
-          className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
+          className="w-full bg-green-500 hover:bg-green-600 text-white"
         >
           <FileText className="mr-2" size={16} />
           Download do Relatório Completo

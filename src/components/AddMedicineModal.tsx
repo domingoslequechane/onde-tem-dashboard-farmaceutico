@@ -10,7 +10,6 @@ import { Switch } from '@/components/ui/switch';
 interface Medicine {
   id?: number;
   name: string;
-  quantity: number;
   price: number;
   category: string;
   status: 'Disponível' | 'Indisponível';
@@ -28,12 +27,6 @@ interface AddMedicineModalProps {
   onUpdate?: (id: number, updates: Partial<Medicine>) => void;
 }
 
-const medicines = [
-  'Paracetamol', 'Insulina', 'Amoxicilina', 'Omeprazol', 'Dipirona', 
-  'Ibuprofeno', 'Aspirina', 'Azitromicina', 'Captopril', 'Losartana',
-  'Atenolol', 'Hidroclorotiazida', 'Metformina', 'Glibenclamida'
-];
-
 const categories = [
   'Analgésico', 'Antibiótico', 'Gastroprotetor', 'Hormônio', 
   'Anti-inflamatório', 'Anti-hipertensivo', 'Antidiabético'
@@ -48,7 +41,6 @@ const AddMedicineModal = ({
 }: AddMedicineModalProps) => {
   const [formData, setFormData] = useState({
     name: '',
-    quantity: 0,
     price: 0,
     category: '',
     status: 'Disponível' as 'Disponível' | 'Indisponível',
@@ -61,7 +53,6 @@ const AddMedicineModal = ({
     if (editingMedicine) {
       setFormData({
         name: editingMedicine.name,
-        quantity: editingMedicine.quantity,
         price: editingMedicine.price,
         category: editingMedicine.category,
         status: editingMedicine.status,
@@ -72,7 +63,6 @@ const AddMedicineModal = ({
     } else {
       setFormData({
         name: '',
-        quantity: 0,
         price: 0,
         category: '',
         status: 'Disponível',
@@ -88,7 +78,6 @@ const AddMedicineModal = ({
     if (formData.name && formData.category) {
       const medicineData: any = {
         name: formData.name,
-        quantity: formData.quantity,
         price: formData.price,
         category: formData.category,
         status: formData.status
@@ -115,7 +104,6 @@ const AddMedicineModal = ({
     onClose();
     setFormData({
       name: '',
-      quantity: 0,
       price: 0,
       category: '',
       status: 'Disponível',
@@ -136,30 +124,29 @@ const AddMedicineModal = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome do Medicamento</Label>
-            <Select value={formData.name} onValueChange={(value) => setFormData({...formData, name: value})}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um medicamento" />
-              </SelectTrigger>
-              <SelectContent>
-                {medicines.map((med) => (
-                  <SelectItem key={med} value={med}>{med}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              id="name"
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              placeholder="Digite o nome do medicamento"
+              required
+            />
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantidade</Label>
-              <Input
-                id="quantity"
-                type="number"
-                min="0"
-                max="1000"
-                value={formData.quantity}
-                onChange={(e) => setFormData({...formData, quantity: Number(e.target.value)})}
-                placeholder="0"
-              />
+              <Label htmlFor="category">Categoria</Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="space-y-2">
@@ -174,20 +161,6 @@ const AddMedicineModal = ({
                 placeholder="0.00"
               />
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="category">Categoria</Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
           
           <div className="space-y-2">

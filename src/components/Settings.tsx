@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Clock, CreditCard, MapPin, Star, Shield } from 'lucide-react';
+import { Camera, Clock, CreditCard, MapPin, Star, Shield, X, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const Settings = () => {
@@ -20,9 +20,12 @@ const Settings = () => {
     description: 'Farmácia líder em Maputo com mais de 20 anos de experiência',
     delivery: true,
     emergencyService: true,
-    acceptCards: true
+    acceptCards: true,
+    deliveryRadius: 5
   });
 
+  const [paymentMethods, setPaymentMethods] = useState(['Multicaixa', 'Visa', 'Mastercard', 'M-Pesa', 'e-Mola']);
+  const [newPaymentMethod, setNewPaymentMethod] = useState('');
   const [rating] = useState(4.8);
   const [totalReviews] = useState(247);
 
@@ -33,7 +36,34 @@ const Settings = () => {
     });
   };
 
-  const paymentMethods = ['Multicaixa', 'Visa', 'Mastercard', 'M-Pesa', 'e-Mola'];
+  const handleAddPaymentMethod = () => {
+    if (newPaymentMethod.trim() && !paymentMethods.includes(newPaymentMethod.trim())) {
+      setPaymentMethods([...paymentMethods, newPaymentMethod.trim()]);
+      setNewPaymentMethod('');
+      toast({
+        title: "Forma de pagamento adicionada!",
+        description: `${newPaymentMethod} foi adicionado com sucesso.`,
+      });
+    }
+  };
+
+  const handleRemovePaymentMethod = (method: string) => {
+    setPaymentMethods(paymentMethods.filter(m => m !== method));
+    toast({
+      title: "Forma de pagamento removida!",
+      description: `${method} foi removido.`,
+    });
+  };
+
+  const handleServiceToggle = (service: string, value: boolean) => {
+    setPharmacyData({...pharmacyData, [service]: value});
+    const serviceName = service === 'delivery' ? 'Entrega' : 
+                       service === 'emergencyService' ? 'Atendimento de Emergência' : 'Cartões';
+    toast({
+      title: `${serviceName} ${value ? 'ativado' : 'desativado'}!`,
+      description: `O serviço foi ${value ? 'habilitado' : 'desabilitado'} com sucesso.`,
+    });
+  };
   
   return (
     <div className="space-y-6">
@@ -55,11 +85,12 @@ const Settings = () => {
         <CardContent className="space-y-6">
           {/* Photo Upload */}
           <div className="flex items-center space-x-4">
-            <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-              <Camera className="text-white" size={24} />
+            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-2xl">?</span>
             </div>
             <div>
               <Button variant="outline" size="sm">
+                <Camera className="mr-2" size={16} />
                 Alterar Foto
               </Button>
               <p className="text-xs text-gray-500 mt-1">JPG, PNG até 2MB</p>
@@ -140,9 +171,27 @@ const Settings = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <MapPin size={16} />
-              <span>Entrega Gratuita (raio 5km)</span>
+              <span>Entrega Gratuita</span>
             </div>
-            <Switch checked={pharmacyData.delivery} />
+            <div className="flex items-center space-x-3">
+              <Switch 
+                checked={pharmacyData.delivery}
+                onCheckedChange={(checked) => handleServiceToggle('delivery', checked)}
+              />
+              {pharmacyData.delivery && (
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={pharmacyData.deliveryRadius}
+                    onChange={(e) => setPharmacyData({...pharmacyData, deliveryRadius: Number(e.target.value)})}
+                    className="w-16 h-8"
+                  />
+                  <span className="text-sm text-gray-600">km</span>
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center justify-between">
@@ -150,7 +199,10 @@ const Settings = () => {
               <Shield size={16} />
               <span>Atendimento de Emergência 24h</span>
             </div>
-            <Switch checked={pharmacyData.emergencyService} />
+            <Switch 
+              checked={pharmacyData.emergencyService}
+              onCheckedChange={(checked) => handleServiceToggle('emergencyService', checked)}
+            />
           </div>
           
           <div className="flex items-center justify-between">
@@ -158,7 +210,10 @@ const Settings = () => {
               <CreditCard size={16} />
               <span>Aceita Cartões</span>
             </div>
-            <Switch checked={pharmacyData.acceptCards} />
+            <Switch 
+              checked={pharmacyData.acceptCards}
+              onCheckedChange={(checked) => handleServiceToggle('acceptCards', checked)}
+            />
           </div>
         </CardContent>
       </Card>
@@ -172,12 +227,31 @@ const Settings = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {paymentMethods.map((method) => (
-              <Badge key={method} variant="outline" className="px-3 py-1">
-                {method}
-              </Badge>
-            ))}
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {paymentMethods.map((method) => (
+                <Badge key={method} variant="outline" className="px-3 py-1 flex items-center space-x-2">
+                  <span>{method}</span>
+                  <X 
+                    size={14} 
+                    className="cursor-pointer hover:text-red-500"
+                    onClick={() => handleRemovePaymentMethod(method)}
+                  />
+                </Badge>
+              ))}
+            </div>
+            
+            <div className="flex space-x-2">
+              <Input
+                placeholder="Nova forma de pagamento"
+                value={newPaymentMethod}
+                onChange={(e) => setNewPaymentMethod(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddPaymentMethod()}
+              />
+              <Button onClick={handleAddPaymentMethod} size="sm">
+                <Plus size={16} />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

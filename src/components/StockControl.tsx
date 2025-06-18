@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,14 +6,13 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Search, Plus, Download, Edit, Trash, Tag } from 'lucide-react';
+import { Search, Plus, Download, Edit, Trash } from 'lucide-react';
 import AddMedicineModal from '@/components/AddMedicineModal';
 import { toast } from '@/hooks/use-toast';
 
 interface Medicine {
   id: number;
   name: string;
-  quantity: number;
   price: number;
   category: string;
   status: 'Disponível' | 'Indisponível';
@@ -32,7 +32,6 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
     { 
       id: 1, 
       name: 'Paracetamol', 
-      quantity: 42, 
       price: 15.50,
       category: 'Analgésico',
       status: 'Disponível', 
@@ -42,7 +41,6 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
     { 
       id: 2, 
       name: 'Insulina', 
-      quantity: 5, 
       price: 250.00,
       category: 'Hormônio',
       status: 'Disponível', 
@@ -51,7 +49,6 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
     { 
       id: 3, 
       name: 'Amoxicilina', 
-      quantity: 28, 
       price: 35.75,
       category: 'Antibiótico',
       status: 'Disponível', 
@@ -60,7 +57,6 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
     { 
       id: 4, 
       name: 'Omeprazol', 
-      quantity: 0, 
       price: 22.90,
       category: 'Gastroprotetor',
       status: 'Indisponível', 
@@ -69,7 +65,6 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
     { 
       id: 5,
       name: 'Dipirona', 
-      quantity: 15, 
       price: 12.30,
       category: 'Analgésico',
       status: 'Disponível', 
@@ -118,6 +113,19 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
     });
   };
 
+  const handleToggleStatus = (id: number) => {
+    const medicine = medicines.find(med => med.id === id);
+    if (!medicine) return;
+
+    const newStatus = medicine.status === 'Disponível' ? 'Indisponível' : 'Disponível';
+    handleUpdateMedicine(id, { status: newStatus });
+    
+    toast({
+      title: `Status alterado!`,
+      description: `${medicine.name} agora está ${newStatus.toLowerCase()}.`,
+    });
+  };
+
   const handleTogglePromotion = (id: number) => {
     const medicine = medicines.find(med => med.id === id);
     if (!medicine) return;
@@ -145,9 +153,9 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
 
   const handleExport = () => {
     const csvContent = [
-      'Nome,Quantidade,Preço,Categoria,Status,Última Atualização,Promoção',
+      'Nome,Preço,Categoria,Status,Última Atualização,Promoção',
       ...medicines.map(m => 
-        `${m.name},${m.quantity},${m.price.toFixed(2)},${m.category},${m.status},${m.lastUpdate},${m.promotion ? `${m.promotion.discount}% até ${m.promotion.validUntil}` : 'Não'}`
+        `${m.name},${m.price.toFixed(2)},${m.category},${m.status},${m.lastUpdate},${m.promotion ? `${m.promotion.discount}% até ${m.promotion.validUntil}` : 'Não'}`
       )
     ].join('\n');
     
@@ -206,7 +214,11 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
 
         <div className="space-y-3 max-h-80 overflow-y-auto">
           {displayedMedicines.map((medicine) => (
-            <div key={medicine.id} className="p-3 bg-gray-50 rounded-lg">
+            <div 
+              key={medicine.id} 
+              className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+              onClick={() => handleToggleStatus(medicine.id)}
+            >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2">
@@ -218,7 +230,7 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                     )}
                   </div>
                   <p className="text-sm text-gray-500">
-                    Qtd: {medicine.quantity} | {medicine.category} | {medicine.price.toFixed(2)} MT | {medicine.lastUpdate}
+                    {medicine.category} | {medicine.price.toFixed(2)} MT | {medicine.lastUpdate}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -229,7 +241,7 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
               </div>
               
               {expanded && (
-                <div className="flex items-center justify-between pt-2 border-t">
+                <div className="flex items-center justify-between pt-2 border-t" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-gray-600">Promoção:</span>
                     <Switch 
@@ -238,13 +250,6 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                     />
                   </div>
                   <div className="flex space-x-1">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleTogglePromotion(medicine.id)}
-                    >
-                      <Tag size={14} />
-                    </Button>
                     <Button 
                       size="sm" 
                       variant="outline"
@@ -267,25 +272,14 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
           ))}
         </div>
 
-        <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            className="flex-1" 
-            onClick={handleExport}
-          >
-            <Download size={16} className="mr-2" />
-            Exportar CSV
-          </Button>
-          
-          {!expanded && (
-            <Button 
-              variant="outline"
-              onClick={() => window.location.hash = '#estoque'}
-            >
-              Ver Todos
-            </Button>
-          )}
-        </div>
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={handleExport}
+        >
+          <Download size={16} className="mr-2" />
+          Exportar CSV
+        </Button>
       </CardContent>
 
       <AddMedicineModal
