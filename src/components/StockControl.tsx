@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,7 +78,7 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
   ]);
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
 
@@ -87,7 +86,7 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
 
   const filteredMedicines = medicines.filter(medicine =>
     medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (categoryFilter === '' || medicine.category === categoryFilter)
+    (categoryFilter === 'all' || medicine.category === categoryFilter)
   );
 
   const handleAddMedicine = (medicine: Omit<Medicine, 'id' | 'lastUpdate'>) => {
@@ -197,7 +196,7 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
               {categories.map(category => (
                 <SelectItem key={category} value={category}>{category}</SelectItem>
               ))}
