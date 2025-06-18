@@ -41,10 +41,10 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-2xl border-0">
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mb-4">
-            <span className="text-white text-2xl font-bold">OT</span>
+          <div className="mx-auto w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-4">
+            <span className="text-white text-2xl font-bold">?</span>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-800">Onde Tem</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-800">Onde Tem?</CardTitle>
           <p className="text-gray-600 text-sm">Saúde que se encontra</p>
         </CardHeader>
         <CardContent>

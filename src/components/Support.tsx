@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Send, User, Bot, Phone, Mail, Video, FileText } from 'lucide-react';
+import { MessageCircle, Send, User, Bot, Phone, Mail, Video, FileText, Play } from 'lucide-react';
+import VideoModal from './VideoModal';
 
 interface Message {
   id: number;
@@ -23,6 +24,7 @@ const Support = () => {
     }
   ]);
   const [newMessage, setNewMessage] = useState('');
+  const [selectedVideo, setSelectedVideo] = useState<{title: string, description: string, duration: string} | null>(null);
 
   const autoResponses = [
     "Entendi sua solicitação. Vou verificar isso para você e retornar em breve.",
@@ -31,6 +33,29 @@ const Support = () => {
     "Para alterar informações da farmácia, acesse a aba 'Configurações' no menu principal.",
     "Caso o problema persista, posso agendar uma chamada de suporte para você. Seria útil?",
     "Vou encaminhar sua solicitação para nossa equipe técnica. Você receberá um retorno em até 2 horas."
+  ];
+
+  const tutorials = [
+    {
+      title: "Primeiros Passos",
+      description: "Como configurar sua farmácia na plataforma Onde Tem. Aprenda a fazer login, navegar pelo dashboard e configurar informações básicas da sua farmácia.",
+      duration: "5 min"
+    },
+    {
+      title: "Gestão de Estoque",
+      description: "Como adicionar e gerenciar medicamentos no seu estoque. Veja como marcar disponibilidade, criar promoções e organizar seu inventário.",
+      duration: "8 min"
+    },
+    {
+      title: "Análise de Demanda",
+      description: "Entenda como interpretar os dados de demanda por região e usar essas informações para otimizar seu estoque e vendas.",
+      duration: "6 min"
+    },
+    {
+      title: "Configurações da Farmácia",
+      description: "Configure horários de funcionamento, formas de pagamento, serviços oferecidos e área de entrega da sua farmácia.",
+      duration: "4 min"
+    }
   ];
 
   const handleSendMessage = () => {
@@ -64,6 +89,10 @@ const Support = () => {
     if (e.key === 'Enter') {
       handleSendMessage();
     }
+  };
+
+  const openVideoModal = (tutorial: typeof tutorials[0]) => {
+    setSelectedVideo(tutorial);
   };
 
   return (
@@ -217,27 +246,42 @@ const Support = () => {
           <CardTitle>Tutoriais em Vídeo</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <div className="w-full h-32 bg-gray-300 rounded mb-3 flex items-center justify-center">
-                <Video size={32} className="text-gray-500" />
+          <div className="space-y-3">
+            {tutorials.map((tutorial, index) => (
+              <div 
+                key={index}
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => openVideoModal(tutorial)}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <Play size={20} className="text-gray-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">{tutorial.title}</h4>
+                    <p className="text-sm text-gray-600">{tutorial.description}</p>
+                    <p className="text-xs text-gray-500 mt-1">Duração: {tutorial.duration}</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">
+                  Assistir
+                </Button>
               </div>
-              <h4 className="font-medium">Primeiros Passos</h4>
-              <p className="text-sm text-gray-600">Como configurar sua farmácia na plataforma</p>
-              <p className="text-xs text-gray-500 mt-1">Duração: 5 min</p>
-            </div>
-
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <div className="w-full h-32 bg-gray-300 rounded mb-3 flex items-center justify-center">
-                <Video size={32} className="text-gray-500" />
-              </div>
-              <h4 className="font-medium">Gestão de Estoque</h4>
-              <p className="text-sm text-gray-600">Como adicionar e gerenciar medicamentos</p>
-              <p className="text-xs text-gray-500 mt-1">Duração: 8 min</p>
-            </div>
+            ))}
           </div>
         </CardContent>
       </Card>
+
+      {/* Video Modal */}
+      {selectedVideo && (
+        <VideoModal
+          isOpen={!!selectedVideo}
+          onClose={() => setSelectedVideo(null)}
+          title={selectedVideo.title}
+          description={selectedVideo.description}
+          duration={selectedVideo.duration}
+        />
+      )}
     </div>
   );
 };

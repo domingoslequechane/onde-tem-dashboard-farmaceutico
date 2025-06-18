@@ -35,8 +35,8 @@ const ServiceImpact = () => {
       RESUMO EXECUTIVO:
       • Indicações realizadas: 423
       • Medicamentos monitorados: 15
-      • Buscas realizadas: 289
-      • Impressões do mês: 1,847
+      • Impressões de hoje: 74
+      • Buscas totais hoje: 289
       
       MEDICAMENTOS MAIS PROCURADOS:
       1. Paracetamol - 47 buscas
@@ -85,8 +85,9 @@ const ServiceImpact = () => {
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="text-center p-3 bg-gray-50 rounded">
-            <div className="text-xl font-bold text-gray-900">289</div>
-            <div className="text-xs text-gray-600">Buscas Hoje</div>
+            <div className="text-xl font-bold text-gray-900">74</div>
+            <div className="text-xs text-gray-600">Impressões Hoje</div>
+            <div className="text-xs text-gray-500 mt-1">de 289 buscas</div>
           </div>
           <div className="text-center p-3 bg-gray-50 rounded">
             <div className="text-xl font-bold text-gray-900">98%</div>
@@ -94,7 +95,7 @@ const ServiceImpact = () => {
           </div>
           <div className="text-center p-3 bg-gray-50 rounded">
             <div className="text-xl font-bold text-gray-900">1,847</div>
-            <div className="text-xs text-gray-600">Impressões</div>
+            <div className="text-xs text-gray-600">Impressões Mensais</div>
           </div>
           <div className="text-center p-3 bg-gray-50 rounded">
             <div className="text-xl font-bold text-gray-900">6</div>
