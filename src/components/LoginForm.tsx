@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, TestTube } from 'lucide-react';
 
 interface LoginFormProps {
   onLogin: (email: string, password: string) => boolean;
@@ -29,6 +29,12 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       setError('Credenciais inválidas. Tente: farmacia@exemplo.com / senha123');
     }
     setIsLoading(false);
+  };
+
+  const handleTestLogin = () => {
+    setEmail('farmacia@exemplo.com');
+    setPassword('senha123');
+    setError('');
   };
 
   return (
@@ -81,6 +87,15 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
               disabled={isLoading}
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline"
+              className="w-full h-12 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium"
+              onClick={handleTestLogin}
+            >
+              <TestTube size={16} className="mr-2" />
+              Usar Credenciais de Teste
             </Button>
             <div className="text-center">
               <Button variant="link" className="text-blue-500 text-sm p-0">
