@@ -197,28 +197,29 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
   return (
     <>
       <Card className={expanded ? "" : "h-fit"}>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Gestão de Medicamentos</span>
-            <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-green-500 hover:bg-green-600">
-              <Plus size={16} className="mr-1" />
-              Adicionar
+        <CardHeader className="pb-3 md:pb-4">
+          <CardTitle className="flex items-center justify-between text-base md:text-lg">
+            <span className="truncate mr-2">Gestão de Medicamentos</span>
+            <Button size="sm" onClick={() => setIsModalOpen(true)} className="bg-green-500 hover:bg-green-600 flex-shrink-0">
+              <Plus size={14} className="mr-1" />
+              <span className="hidden sm:inline">Adicionar</span>
+              <span className="sm:hidden">+</span>
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex space-x-2">
+        <CardContent className="space-y-3 md:space-y-4">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
               <Input
-                placeholder="Buscar medicamento (ex: Paracetamol)"
+                placeholder="Buscar medicamento"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm"
               />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Categoria" />
               </SelectTrigger>
               <SelectContent>
@@ -230,29 +231,30 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
             </Select>
           </div>
 
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+          <div className="space-y-2 md:space-y-3 max-h-80 overflow-y-auto">
             {displayedMedicines.map((medicine) => (
               <div 
                 key={medicine.id} 
                 className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
                 onClick={() => handleStatusChangeRequest(medicine)}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <p className="font-medium text-gray-900 truncate">{medicine.name}</p>
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 min-w-0 mr-2">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <p className="font-medium text-gray-900 truncate text-sm md:text-base">{medicine.name}</p>
                       {medicine.promotion && (
-                        <Badge className="bg-orange-100 text-orange-800 text-xs">
+                        <Badge className="bg-orange-100 text-orange-800 text-xs flex-shrink-0">
                           -{medicine.promotion.discount}%
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">
-                      {medicine.category} | {medicine.price.toFixed(2)} MT | {medicine.lastUpdate}
-                    </p>
+                    <div className="text-xs md:text-sm text-gray-500 space-y-1">
+                      <p>{medicine.category}</p>
+                      <p>{medicine.price.toFixed(2)} MT | {medicine.lastUpdate}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge className={medicine.status === 'Disponível' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <Badge className={`text-xs ${medicine.status === 'Disponível' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {medicine.status}
                     </Badge>
                   </div>
@@ -272,16 +274,17 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                         size="sm" 
                         variant="outline"
                         onClick={() => handleEditMedicine(medicine)}
+                        className="p-2"
                       >
-                        <Edit size={14} />
+                        <Edit size={12} />
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => handleDeleteMedicine(medicine.id)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-600 hover:text-red-700 p-2"
                       >
-                        <Trash size={14} />
+                        <Trash size={12} />
                       </Button>
                     </div>
                   </div>
@@ -292,7 +295,7 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
 
           <Button 
             variant="outline" 
-            className="w-full" 
+            className="w-full text-sm" 
             onClick={handleExport}
           >
             <Download size={16} className="mr-2" />

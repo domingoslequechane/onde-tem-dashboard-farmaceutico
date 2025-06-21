@@ -1,116 +1,78 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Users, FileText, TrendingUp } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUp, Eye, Search } from 'lucide-react';
 
 const ServiceImpact = () => {
-  const [indicationsCount, setIndicationsCount] = useState(0);
-  
-  // Animated counter
+  const [currentTime, setCurrentTime] = useState(new Date());
+
   useEffect(() => {
-    const target = 423;
-    const increment = target / 100;
     const timer = setInterval(() => {
-      setIndicationsCount(prev => {
-        if (prev >= target) {
-          clearInterval(timer);
-          return target;
-        }
-        return Math.min(prev + increment, target);
-      });
-    }, 20);
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
 
     return () => clearInterval(timer);
   }, []);
 
-  const generateReport = () => {
-    // Simulate PDF generation
-    const reportContent = `
-      RELATÓRIO ONDE TEM - FARMÁCIA CENTRAL
-      =====================================
-      
-      Período: ${new Date().toLocaleDateString('pt-BR')}
-      
-      RESUMO EXECUTIVO:
-      • Indicações realizadas: 423
-      • Medicamentos monitorados: 15
-      • Impressões de hoje: 74
-      • Buscas totais hoje: 289
-      
-      MEDICAMENTOS MAIS PROCURADOS:
-      1. Paracetamol - 47 buscas
-      2. Insulina - 37 buscas  
-      3. Amoxicilina - 32 buscas
-      4. Omeprazol - 28 buscas
-      
-      IMPACTO DO SERVIÇO:
-      • +28% crescimento mensal
-      • 98% satisfação dos usuários
-      • 6 regiões atendidas
-      
-      ---
-      Parceiro Onde Tem - Tecnologia Farmacêutica
-    `;
-
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', 'relatorio_onde_tem_completo.txt');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
+  const todaysSearches = 289;
+  const myPharmacyImpressions = 74;
+  const impressionRate = Math.round((myPharmacyImpressions / todaysSearches) * 100);
 
   return (
     <Card className="h-fit">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <TrendingUp className="mr-2" size={20} />
-          Resultados Onde Tem
+      <CardHeader className="pb-3 md:pb-4">
+        <CardTitle className="flex items-center text-base md:text-lg">
+          <TrendingUp className="mr-2 flex-shrink-0" size={18} />
+          <span className="truncate">Resultados Onde Tem</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Animated Indications Counter */}
-        <div className="text-center p-6 bg-blue-50 rounded-lg">
-          <Users className="mx-auto mb-3 text-blue-600" size={32} />
-          <div className="text-3xl font-bold text-gray-900 mb-1">
-            {Math.floor(indicationsCount)}
+      <CardContent className="space-y-4 md:space-y-6">
+        {/* Today's Date */}
+        <div className="text-center p-3 bg-blue-50 rounded-lg">
+          <div className="text-xs md:text-sm text-blue-600 font-medium">
+            {currentTime.toLocaleDateString('pt-BR', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
           </div>
-          <p className="text-gray-600 font-medium">Indicações no Mês</p>
         </div>
 
-        {/* Metrics Grid */}
+        {/* Daily Impressions */}
+        <div className="grid grid-cols-1 gap-4">
+          <div className="text-center p-4 md:p-6 bg-green-50 rounded-lg">
+            <div className="flex items-center justify-center mb-2">
+              <Eye className="text-green-600 mr-2" size={20} />
+            </div>
+            <div className="text-2xl md:text-3xl font-bold text-green-700 mb-1">{myPharmacyImpressions}</div>
+            <div className="text-xs md:text-sm text-green-600 mb-2">Impressões Hoje</div>
+            <div className="text-xs text-gray-500">
+              de {todaysSearches} buscas totais ({impressionRate}%)
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Stats */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="text-center p-3 bg-gray-50 rounded">
-            <div className="text-xl font-bold text-gray-900">74</div>
-            <div className="text-xs text-gray-600">Impressões Hoje</div>
-            <div className="text-xs text-gray-500 mt-1">de 289 buscas</div>
+          <div className="text-center p-3 bg-blue-50 rounded-lg">
+            <div className="text-lg md:text-xl font-bold text-blue-700 mb-1">94</div>
+            <div className="text-xs text-blue-600">Indicações no Mês</div>
           </div>
-          <div className="text-center p-3 bg-gray-50 rounded">
-            <div className="text-xl font-bold text-gray-900">98%</div>
-            <div className="text-xs text-gray-600">Satisfação</div>
-          </div>
-          <div className="text-center p-3 bg-gray-50 rounded">
-            <div className="text-xl font-bold text-gray-900">1,847</div>
-            <div className="text-xs text-gray-600">Impressões Mensais</div>
-          </div>
-          <div className="text-center p-3 bg-gray-50 rounded">
-            <div className="text-xl font-bold text-gray-900">6</div>
-            <div className="text-xs text-gray-600">Regiões</div>
+          
+          <div className="text-center p-3 bg-purple-50 rounded-lg">
+            <div className="text-lg md:text-xl font-bold text-purple-700 mb-1">2.4k</div>
+            <div className="text-xs text-purple-600">Visualizações</div>
           </div>
         </div>
 
-        {/* Generate Report Button */}
-        <Button 
-          onClick={generateReport}
-          className="w-full bg-green-500 hover:bg-green-600 text-white"
-        >
-          <FileText className="mr-2" size={16} />
-          Download do Relatório Completo
-        </Button>
+        {/* Performance Badge */}
+        <div className="flex justify-center">
+          <Badge className="bg-emerald-100 text-emerald-800 px-3 py-1 text-xs">
+            📈 Performance Crescente
+          </Badge>
+        </div>
       </CardContent>
     </Card>
   );

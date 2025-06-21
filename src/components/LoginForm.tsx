@@ -41,13 +41,13 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-2xl border-0">
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-4">
-            <span className="text-white text-2xl font-bold">?</span>
+          <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-green-500 rounded-full flex items-center justify-center mb-4">
+            <span className="text-white text-xl md:text-2xl font-bold">?</span>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-800">Onde Tem?</CardTitle>
-          <p className="text-gray-600 text-sm">Saúde que se encontra</p>
+          <CardTitle className="text-xl md:text-2xl font-bold text-gray-800">Onde Tem?</CardTitle>
+          <p className="text-gray-600 text-xs md:text-sm">Saúde que se encontra</p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 md:px-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Input
@@ -55,7 +55,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                 placeholder="farmacia@exemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12"
+                className="h-11 md:h-12 text-sm md:text-base"
                 required
               />
             </div>
@@ -65,7 +65,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-12 pr-12"
+                className="h-11 md:h-12 pr-12 text-sm md:text-base"
                 required
               />
               <Button
@@ -79,11 +79,11 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
               </Button>
             </div>
             {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
+              <p className="text-red-500 text-xs md:text-sm text-center">{error}</p>
             )}
             <Button 
               type="submit" 
-              className="w-full h-12 bg-green-500 hover:bg-green-600 text-white font-medium"
+              className="w-full h-11 md:h-12 bg-green-500 hover:bg-green-600 text-white font-medium text-sm md:text-base"
               disabled={isLoading}
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
@@ -91,14 +91,14 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             <Button 
               type="button" 
               variant="outline"
-              className="w-full h-12 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium"
+              className="w-full h-11 md:h-12 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium text-sm md:text-base"
               onClick={handleTestLogin}
             >
               <TestTube size={16} className="mr-2" />
               Usar Credenciais de Teste
             </Button>
             <div className="text-center">
-              <Button variant="link" className="text-blue-500 text-sm p-0">
+              <Button variant="link" className="text-blue-500 text-xs md:text-sm p-0">
                 Recuperar senha
               </Button>
             </div>
