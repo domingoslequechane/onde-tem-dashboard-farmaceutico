@@ -15,8 +15,8 @@ const VideoModal = ({ isOpen, onClose, title, description, duration }: VideoModa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 sm:p-4">
-      <Card className="w-full max-w-sm sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden mx-4 sm:mx-0">
+    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-sm sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden mx-4">
         <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 md:p-6 pb-2 sm:pb-3">
           <CardTitle className="text-sm sm:text-base md:text-lg font-semibold truncate pr-2">
             {title}

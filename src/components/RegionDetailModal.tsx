@@ -35,7 +35,7 @@ const RegionDetailModal = ({ isOpen, onClose, regionName, regionData }: RegionDe
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl mx-4">
         <DialogHeader>
           <DialogTitle>Medicamentos Procurados - {regionName}</DialogTitle>
         </DialogHeader>
