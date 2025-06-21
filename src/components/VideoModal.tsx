@@ -6,12 +6,11 @@ import { X, Play } from 'lucide-react';
 interface VideoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
-  description: string;
-  duration: string;
+  videoTitle: string;
+  videoId: string;
 }
 
-const VideoModal = ({ isOpen, onClose, title, description, duration }: VideoModalProps) => {
+const VideoModal = ({ isOpen, onClose, videoTitle, videoId }: VideoModalProps) => {
   if (!isOpen) return null;
 
   return (
@@ -19,7 +18,7 @@ const VideoModal = ({ isOpen, onClose, title, description, duration }: VideoModa
       <Card className="w-full max-w-sm sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 md:p-6 pb-2 sm:pb-3">
           <CardTitle className="text-sm sm:text-base md:text-lg font-semibold truncate pr-2">
-            {title}
+            {videoTitle}
           </CardTitle>
           <Button 
             variant="ghost" 
@@ -36,12 +35,15 @@ const VideoModal = ({ isOpen, onClose, title, description, duration }: VideoModa
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-purple-900" />
             <div className="relative z-10 text-center text-white p-3 sm:p-4">
               <Play size={32} className="mx-auto mb-2 sm:mb-4" />
-              <h3 className="text-sm sm:text-lg font-semibold mb-1 sm:mb-2">{title}</h3>
+              <h3 className="text-sm sm:text-lg font-semibold mb-1 sm:mb-2">{videoTitle}</h3>
               <p className="text-xs sm:text-sm opacity-90 px-2">
-                {description}
+                {videoId === 'stock-management' && 'Aprenda a gerenciar seu estoque de forma eficiente e otimizada.'}
+                {videoId === 'demand-analysis' && 'Entenda como analisar a demanda e tomar decisões estratégicas.'}
+                {videoId === 'emergency-system' && 'Descubra como funciona o sistema de emergência do Onde Tem.'}
+                {videoId === 'platform-integration' && 'Veja como integrar sua farmácia com nossa plataforma.'}
               </p>
               <div className="mt-3 sm:mt-4 text-xs opacity-75">
-                ▶ Clique para reproduzir • Duração: {duration}
+                ▶ Clique para reproduzir • Duração: 5:30
               </div>
             </div>
             
@@ -55,7 +57,7 @@ const VideoModal = ({ isOpen, onClose, title, description, duration }: VideoModa
           
           {/* Video Controls Simulation */}
           <div className="mt-3 sm:mt-4 flex items-center justify-between text-xs sm:text-sm text-gray-600">
-            <span>00:00 / {duration}</span>
+            <span>00:00 / 05:30</span>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <button className="hover:text-gray-800 transition-colors">🔊</button>
               <button className="hover:text-gray-800 transition-colors">⚙️</button>
