@@ -15,9 +15,9 @@ const VideoModal = ({ isOpen, onClose, title, description, duration }: VideoModa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center px-4 py-4">
-      <Card className="w-full max-w-sm sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden mx-4">
-        <CardHeader className="flex flex-row items-center justify-between p-4 md:p-6 pb-2 sm:pb-3">
+    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-2 sm:p-4">
+      <Card className="w-full max-w-sm sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 md:p-6 pb-2 sm:pb-3">
           <CardTitle className="text-sm sm:text-base md:text-lg font-semibold truncate pr-2">
             {title}
           </CardTitle>
@@ -30,7 +30,7 @@ const VideoModal = ({ isOpen, onClose, title, description, duration }: VideoModa
             <X size={16} />
           </Button>
         </CardHeader>
-        <CardContent className="p-4 md:p-6 pt-0">
+        <CardContent className="p-2 sm:p-4 md:p-6 pt-0">
           <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center relative overflow-hidden">
             {/* Simulated Video Player */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-purple-900" />

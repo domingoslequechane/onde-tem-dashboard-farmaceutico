@@ -66,31 +66,31 @@ const Settings = () => {
   };
   
   return (
-    <div className="space-y-4 px-2 sm:px-0">
+    <div className="space-y-6">
       {/* Profile Header */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between text-sm sm:text-base">
+          <CardTitle className="flex items-center justify-between">
             <span>Perfil da Farmácia</span>
-            <div className="flex items-center space-x-1 sm:space-x-2">
-              <Badge className="bg-green-100 text-green-800 text-xs whitespace-nowrap">
+            <div className="flex items-center space-x-2">
+              <Badge className="bg-green-100 text-green-800">
                 ✅ Verificada
               </Badge>
-              <Badge className="bg-blue-100 text-blue-800 text-xs whitespace-nowrap">
+              <Badge className="bg-blue-100 text-blue-800">
                 ⭐ Premium
               </Badge>
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 px-3 sm:px-6">
+        <CardContent className="space-y-6">
           {/* Photo Upload */}
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-lg">?</span>
+          <div className="flex items-center space-x-4">
+            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-2xl">?</span>
             </div>
             <div>
-              <Button variant="outline" size="sm" className="text-xs h-8">
-                <Camera className="mr-1" size={12} />
+              <Button variant="outline" size="sm">
+                <Camera className="mr-2" size={16} />
                 Alterar Foto
               </Button>
               <p className="text-xs text-gray-500 mt-1">JPG, PNG até 2MB</p>
@@ -98,46 +98,42 @@ const Settings = () => {
           </div>
 
           {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="name" className="text-xs">Nome da Farmácia</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome da Farmácia</Label>
               <Input
                 id="name"
                 value={pharmacyData.name}
                 onChange={(e) => setPharmacyData({...pharmacyData, name: e.target.value})}
-                className="h-9 text-xs"
               />
             </div>
             
-            <div className="space-y-1">
-              <Label htmlFor="phone" className="text-xs">Telefone</Label>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefone</Label>
               <Input
                 id="phone"
                 value={pharmacyData.phone}
                 onChange={(e) => setPharmacyData({...pharmacyData, phone: e.target.value})}
-                className="h-9 text-xs"
               />
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="address" className="text-xs">Endereço Completo</Label>
+          <div className="space-y-2">
+            <Label htmlFor="address">Endereço Completo</Label>
             <Input
               id="address"
               value={pharmacyData.address}
               onChange={(e) => setPharmacyData({...pharmacyData, address: e.target.value})}
-              className="h-9 text-xs"
             />
           </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="description" className="text-xs">Descrição</Label>
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição</Label>
             <Textarea
               id="description"
               value={pharmacyData.description}
               onChange={(e) => setPharmacyData({...pharmacyData, description: e.target.value})}
-              rows={2}
-              className="text-xs"
+              rows={3}
             />
           </div>
         </CardContent>
@@ -146,19 +142,19 @@ const Settings = () => {
       {/* Operating Hours */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center text-sm sm:text-base">
-            <Clock className="mr-2" size={16} />
+          <CardTitle className="flex items-center">
+            <Clock className="mr-2" size={20} />
             Horário de Funcionamento
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-3 sm:px-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map((day, index) => (
-              <div key={day} className="space-y-1">
-                <Label className="text-xs">{day}</Label>
+              <div key={day} className="space-y-2">
+                <Label className="text-sm">{day}</Label>
                 <Input 
                   defaultValue={index < 6 ? "07:00 - 22:00" : "08:00 - 20:00"} 
-                  className="text-xs h-8"
+                  className="text-sm"
                 />
               </div>
             ))}
@@ -169,57 +165,54 @@ const Settings = () => {
       {/* Services */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm sm:text-base">Serviços Oferecidos</CardTitle>
+          <CardTitle>Serviços Oferecidos</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 px-3 sm:px-6">
+        <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 min-w-0 flex-1">
-              <MapPin size={14} className="flex-shrink-0" />
-              <span className="text-xs whitespace-nowrap">Entrega Gratuita</span>
+            <div className="flex items-center space-x-2">
+              <MapPin size={16} />
+              <span>Entrega Gratuita</span>
             </div>
-            <div className="flex items-center space-x-2 flex-shrink-0">
+            <div className="flex items-center space-x-3">
               <Switch 
                 checked={pharmacyData.delivery}
                 onCheckedChange={(checked) => handleServiceToggle('delivery', checked)}
-                className="scale-75"
               />
               {pharmacyData.delivery && (
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-2">
                   <Input
                     type="number"
                     min="1"
                     max="50"
                     value={pharmacyData.deliveryRadius}
                     onChange={(e) => setPharmacyData({...pharmacyData, deliveryRadius: Number(e.target.value)})}
-                    className="w-12 h-6 text-xs"
+                    className="w-16 h-8"
                   />
-                  <span className="text-xs text-gray-600">km</span>
+                  <span className="text-sm text-gray-600">km</span>
                 </div>
               )}
             </div>
           </div>
           
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 min-w-0 flex-1">
-              <Shield size={14} className="flex-shrink-0" />
-              <span className="text-xs whitespace-nowrap">Atendimento de Emergência 24h</span>
+            <div className="flex items-center space-x-2">
+              <Shield size={16} />
+              <span>Atendimento de Emergência 24h</span>
             </div>
             <Switch 
               checked={pharmacyData.emergencyService}
               onCheckedChange={(checked) => handleServiceToggle('emergencyService', checked)}
-              className="scale-75 flex-shrink-0"
             />
           </div>
           
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 min-w-0 flex-1">
-              <CreditCard size={14} className="flex-shrink-0" />
-              <span className="text-xs whitespace-nowrap">Aceita Cartões</span>
+            <div className="flex items-center space-x-2">
+              <CreditCard size={16} />
+              <span>Aceita Cartões</span>
             </div>
             <Switch 
               checked={pharmacyData.acceptCards}
               onCheckedChange={(checked) => handleServiceToggle('acceptCards', checked)}
-              className="scale-75 flex-shrink-0"
             />
           </div>
         </CardContent>
@@ -228,20 +221,20 @@ const Settings = () => {
       {/* Payment Methods */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center text-sm sm:text-base">
-            <CreditCard className="mr-2" size={16} />
+          <CardTitle className="flex items-center">
+            <CreditCard className="mr-2" size={20} />
             Formas de Pagamento
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-3 sm:px-6">
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-1 sm:gap-2">
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
               {paymentMethods.map((method) => (
-                <Badge key={method} variant="outline" className="px-2 py-1 flex items-center space-x-1 text-xs whitespace-nowrap">
+                <Badge key={method} variant="outline" className="px-3 py-1 flex items-center space-x-2">
                   <span>{method}</span>
                   <X 
-                    size={12} 
-                    className="cursor-pointer hover:text-red-500 flex-shrink-0"
+                    size={14} 
+                    className="cursor-pointer hover:text-red-500"
                     onClick={() => handleRemovePaymentMethod(method)}
                   />
                 </Badge>
@@ -254,10 +247,9 @@ const Settings = () => {
                 value={newPaymentMethod}
                 onChange={(e) => setNewPaymentMethod(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddPaymentMethod()}
-                className="h-8 text-xs"
               />
-              <Button onClick={handleAddPaymentMethod} size="sm" className="h-8 px-2">
-                <Plus size={12} />
+              <Button onClick={handleAddPaymentMethod} size="sm">
+                <Plus size={16} />
               </Button>
             </div>
           </div>
@@ -267,54 +259,54 @@ const Settings = () => {
       {/* Rating Summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center text-sm sm:text-base">
-            <Star className="mr-2" size={16} />
+          <CardTitle className="flex items-center">
+            <Star className="mr-2" size={20} />
             Avaliação dos Clientes
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-3 sm:px-6">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="text-2xl font-bold text-yellow-500">{rating}</div>
+        <CardContent>
+          <div className="flex items-center space-x-4">
+            <div className="text-3xl font-bold text-yellow-500">{rating}</div>
             <div className="flex">
               {[1,2,3,4,5].map((star) => (
                 <Star 
                   key={star} 
-                  className={`w-4 h-4 ${star <= rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
+                  className={`w-6 h-6 ${star <= rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
                 />
               ))}
             </div>
-            <div className="text-gray-600 text-sm">
+            <div className="text-gray-600">
               {totalReviews} avaliações
             </div>
           </div>
           
-          <div className="space-y-2">
+          <div className="mt-4 space-y-2">
             <div className="flex items-center space-x-2">
-              <span className="text-xs w-8">5★</span>
+              <span className="text-sm w-12">5★</span>
               <div className="flex-1 bg-gray-200 rounded-full h-2">
                 <div className="bg-yellow-500 h-2 rounded-full" style={{width: '75%'}}></div>
               </div>
-              <span className="text-xs text-gray-600">186</span>
+              <span className="text-sm text-gray-600">186</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs w-8">4★</span>
+              <span className="text-sm w-12">4★</span>
               <div className="flex-1 bg-gray-200 rounded-full h-2">
                 <div className="bg-yellow-500 h-2 rounded-full" style={{width: '20%'}}></div>
               </div>
-              <span className="text-xs text-gray-600">49</span>
+              <span className="text-sm text-gray-600">49</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs w-8">3★</span>
+              <span className="text-sm w-12">3★</span>
               <div className="flex-1 bg-gray-200 rounded-full h-2">
                 <div className="bg-yellow-500 h-2 rounded-full" style={{width: '3%'}}></div>
               </div>
-              <span className="text-xs text-gray-600">8</span>
+              <span className="text-sm text-gray-600">8</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Button onClick={handleSave} className="w-full bg-green-500 hover:bg-green-600 text-sm h-10">
+      <Button onClick={handleSave} className="w-full bg-green-500 hover:bg-green-600">
         Salvar Configurações
       </Button>
     </div>
