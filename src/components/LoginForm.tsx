@@ -38,8 +38,8 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-2 sm:p-4">
-      <Card className="w-full max-w-sm sm:max-w-md shadow-2xl border-0">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-4">
+      <Card className="w-full max-w-sm sm:max-w-md shadow-2xl border-0 mx-4 sm:mx-0">
         <CardHeader className="text-center pb-2 px-4 sm:px-6">
           <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-green-500 rounded-full flex items-center justify-center mb-3 sm:mb-4">
             <span className="text-white text-xl sm:text-2xl font-bold">?</span>
@@ -47,7 +47,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
           <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">Onde Tem?</CardTitle>
           <p className="text-gray-600 text-xs sm:text-sm">Saúde que se encontra</p>
         </CardHeader>
-        <CardContent className="px-3 sm:px-4 md:px-6">
+        <CardContent className="px-4 sm:px-4 md:px-6">
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="space-y-2">
               <Input
@@ -95,7 +95,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
               onClick={handleTestLogin}
             >
               <TestTube size={14} className="mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="truncate">Usar Credenciais de Teste</span>
+              <span className="truncate whitespace-nowrap">Usar Credenciais de Teste</span>
             </Button>
             <div className="text-center">
               <Button variant="link" className="text-blue-500 text-xs sm:text-sm p-0">

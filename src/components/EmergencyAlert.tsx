@@ -49,18 +49,18 @@ const EmergencyAlert = ({ onClose }: EmergencyAlertProps) => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 sm:p-4 animate-fade-in">
       {/* Emergency Sound Effect Simulation */}
       <div className="absolute top-2 sm:top-4 right-2 sm:right-4 text-red-500 animate-pulse text-xs sm:text-sm">
         🔊 ALERTA SONORO ATIVO
       </div>
       
-      <Card className="w-full max-w-sm sm:max-w-md bg-red-50 border-red-200 shadow-2xl animate-scale-in">
-        <CardContent className="p-3 sm:p-6">
+      <Card className="w-full max-w-sm sm:max-w-md bg-red-50 border-red-200 shadow-2xl animate-scale-in mx-4 sm:mx-0">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <div className="flex items-center text-red-600 min-w-0 flex-1">
               <AlertTriangle className="animate-pulse mr-1 sm:mr-2 flex-shrink-0" size={20} />
-              <span className="font-bold text-sm sm:text-lg truncate">⚠️ SOS EMERGENCIAL</span>
+              <span className="font-bold text-sm sm:text-lg truncate whitespace-nowrap">⚠️ SOS EMERGENCIAL</span>
             </div>
             <Button 
               variant="ghost" 
@@ -73,13 +73,13 @@ const EmergencyAlert = ({ onClose }: EmergencyAlertProps) => {
           </div>
 
           <div className="text-center mb-4 sm:mb-6">
-            <div className="text-lg sm:text-2xl font-bold text-red-700 mb-2">
+            <div className="text-base sm:text-2xl font-bold text-red-700 mb-2">
               URGENTE: Cliente busca INSULINA
             </div>
             
             <div className="flex items-center justify-center text-gray-700 mb-1 sm:mb-2 text-sm">
               <MapPin size={14} className="mr-1 flex-shrink-0" />
-              <span className="truncate">Maria Silva - 300m de distância</span>
+              <span className="truncate whitespace-nowrap">Maria Silva - 300m de distância</span>
             </div>
             
             <div className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 px-2">
@@ -88,7 +88,7 @@ const EmergencyAlert = ({ onClose }: EmergencyAlertProps) => {
             
             <div className="bg-white rounded-lg p-2 sm:p-3 border">
               <div className="text-xs text-gray-500 mb-1">Tempo restante para responder:</div>
-              <div className="text-lg sm:text-xl font-bold text-red-600">{timeLeft}s</div>
+              <div className="text-base sm:text-xl font-bold text-red-600">{timeLeft}s</div>
             </div>
           </div>
 
@@ -98,7 +98,7 @@ const EmergencyAlert = ({ onClose }: EmergencyAlertProps) => {
               className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 sm:py-3 text-sm"
             >
               <MessageCircle size={14} className="mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="truncate">TENHO ESTOQUE - Contactar Cliente</span>
+              <span className="truncate whitespace-nowrap">TENHO ESTOQUE - Contactar Cliente</span>
             </Button>
             
             <Button 
@@ -106,7 +106,7 @@ const EmergencyAlert = ({ onClose }: EmergencyAlertProps) => {
               variant="outline"
               className="w-full border-red-300 text-red-600 hover:bg-red-50 font-medium py-2 sm:py-3 text-sm"
             >
-              NÃO TENHO - Encaminhar Alerta
+              <span className="whitespace-nowrap">NÃO TENHO - Encaminhar Alerta</span>
             </Button>
           </div>
 
