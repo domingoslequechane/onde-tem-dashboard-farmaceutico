@@ -49,18 +49,18 @@ const EmergencyAlert = ({ onClose }: EmergencyAlertProps) => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center px-6 py-4 animate-fade-in">
       {/* Emergency Sound Effect Simulation */}
-      <div className="absolute top-2 sm:top-4 right-2 sm:right-4 text-red-500 animate-pulse text-xs sm:text-sm">
+      <div className="absolute top-4 right-4 text-red-500 animate-pulse text-xs">
         🔊 ALERTA SONORO ATIVO
       </div>
       
-      <Card className="w-full max-w-sm sm:max-w-md bg-red-50 border-red-200 shadow-2xl animate-scale-in">
-        <CardContent className="p-3 sm:p-6">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
+      <Card className="w-full max-w-sm bg-red-50 border-red-200 shadow-2xl animate-scale-in">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center text-red-600 min-w-0 flex-1">
-              <AlertTriangle className="animate-pulse mr-1 sm:mr-2 flex-shrink-0" size={20} />
-              <span className="font-bold text-sm sm:text-lg truncate">⚠️ SOS EMERGENCIAL</span>
+              <AlertTriangle className="animate-pulse mr-2 flex-shrink-0" size={18} />
+              <span className="font-bold text-sm truncate">⚠️ SOS EMERGENCIAL</span>
             </div>
             <Button 
               variant="ghost" 
@@ -72,45 +72,45 @@ const EmergencyAlert = ({ onClose }: EmergencyAlertProps) => {
             </Button>
           </div>
 
-          <div className="text-center mb-4 sm:mb-6">
-            <div className="text-lg sm:text-2xl font-bold text-red-700 mb-2">
+          <div className="text-center mb-6">
+            <div className="text-lg font-bold text-red-700 mb-2">
               URGENTE: Cliente busca INSULINA
             </div>
             
-            <div className="flex items-center justify-center text-gray-700 mb-1 sm:mb-2 text-sm">
+            <div className="flex items-center justify-center text-gray-700 mb-2 text-sm">
               <MapPin size={14} className="mr-1 flex-shrink-0" />
               <span className="truncate">Maria Silva - 300m de distância</span>
             </div>
             
-            <div className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 px-2">
+            <div className="text-xs text-gray-600 mb-4 px-2">
               "Preciso urgente, meu pai é diabético"
             </div>
             
-            <div className="bg-white rounded-lg p-2 sm:p-3 border">
+            <div className="bg-white rounded-lg p-3 border">
               <div className="text-xs text-gray-500 mb-1">Tempo restante para responder:</div>
-              <div className="text-lg sm:text-xl font-bold text-red-600">{timeLeft}s</div>
+              <div className="text-lg font-bold text-red-600">{timeLeft}s</div>
             </div>
           </div>
 
-          <div className="space-y-2 sm:space-y-3">
+          <div className="space-y-3">
             <Button 
               onClick={handleHaveStock}
-              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 sm:py-3 text-sm"
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 text-sm"
             >
-              <MessageCircle size={14} className="mr-1 sm:mr-2 flex-shrink-0" />
+              <MessageCircle size={14} className="mr-2 flex-shrink-0" />
               <span className="truncate">TENHO ESTOQUE - Contactar Cliente</span>
             </Button>
             
             <Button 
               onClick={handleNoStock}
               variant="outline"
-              className="w-full border-red-300 text-red-600 hover:bg-red-50 font-medium py-2 sm:py-3 text-sm"
+              className="w-full border-red-300 text-red-600 hover:bg-red-50 font-medium py-3 text-sm"
             >
               NÃO TENHO - Encaminhar Alerta
             </Button>
           </div>
 
-          <div className="mt-3 sm:mt-4 text-xs text-gray-500 text-center px-2">
+          <div className="mt-4 text-xs text-gray-500 text-center">
             Alerta será encaminhado automaticamente em {timeLeft}s
           </div>
         </CardContent>
