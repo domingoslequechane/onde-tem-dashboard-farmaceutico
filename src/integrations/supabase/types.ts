@@ -14,7 +14,452 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_interactions: {
+        Row: {
+          ai_response: string
+          client_id: string
+          confidence_score: number | null
+          consultation_id: string | null
+          created_at: string
+          id: string
+          interaction_type: string
+          ip_address: unknown | null
+          session_id: string | null
+          user_agent: string | null
+          user_input: string
+        }
+        Insert: {
+          ai_response: string
+          client_id: string
+          confidence_score?: number | null
+          consultation_id?: string | null
+          created_at?: string
+          id?: string
+          interaction_type: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_input: string
+        }
+        Update: {
+          ai_response?: string
+          client_id?: string
+          confidence_score?: number | null
+          consultation_id?: string | null
+          created_at?: string
+          id?: string
+          interaction_type?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_input?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_interactions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_interactions_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          address: string | null
+          allergies: string[] | null
+          birth_date: string | null
+          created_at: string
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          full_name: string
+          gender: string | null
+          id: string
+          is_anonymous: boolean
+          medical_conditions: string[] | null
+          phone: string | null
+          profile_id: string | null
+          region_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          allergies?: string[] | null
+          birth_date?: string | null
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          full_name: string
+          gender?: string | null
+          id?: string
+          is_anonymous?: boolean
+          medical_conditions?: string[] | null
+          phone?: string | null
+          profile_id?: string | null
+          region_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          allergies?: string[] | null
+          birth_date?: string | null
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          full_name?: string
+          gender?: string | null
+          id?: string
+          is_anonymous?: boolean
+          medical_conditions?: string[] | null
+          phone?: string | null
+          profile_id?: string | null
+          region_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultations: {
+        Row: {
+          ai_recommendation: string | null
+          client_id: string
+          consultation_type: string
+          created_at: string
+          feedback_comment: string | null
+          feedback_rating: number | null
+          id: string
+          recommended_medicines: string[] | null
+          status: string
+          symptoms: string
+          updated_at: string
+          urgency_level: string
+        }
+        Insert: {
+          ai_recommendation?: string | null
+          client_id: string
+          consultation_type?: string
+          created_at?: string
+          feedback_comment?: string | null
+          feedback_rating?: number | null
+          id?: string
+          recommended_medicines?: string[] | null
+          status?: string
+          symptoms: string
+          updated_at?: string
+          urgency_level: string
+        }
+        Update: {
+          ai_recommendation?: string | null
+          client_id?: string
+          consultation_type?: string
+          created_at?: string
+          feedback_comment?: string | null
+          feedback_rating?: number | null
+          id?: string
+          recommended_medicines?: string[] | null
+          status?: string
+          symptoms?: string
+          updated_at?: string
+          urgency_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medicine_stocks: {
+        Row: {
+          batch_number: string | null
+          created_at: string
+          expiry_date: string | null
+          id: string
+          is_available: boolean
+          medicine_id: string
+          minimum_stock: number | null
+          pharmacy_id: string
+          price: number
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          batch_number?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          is_available?: boolean
+          medicine_id: string
+          minimum_stock?: number | null
+          pharmacy_id: string
+          price: number
+          quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          batch_number?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          is_available?: boolean
+          medicine_id?: string
+          minimum_stock?: number | null
+          pharmacy_id?: string
+          price?: number
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicine_stocks_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "medicines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicine_stocks_pharmacy_id_fkey"
+            columns: ["pharmacy_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medicines: {
+        Row: {
+          active_ingredient: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          manufacturer: string | null
+          name: string
+          requires_prescription: boolean
+          updated_at: string
+        }
+        Insert: {
+          active_ingredient?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          manufacturer?: string | null
+          name: string
+          requires_prescription?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active_ingredient?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          manufacturer?: string | null
+          name?: string
+          requires_prescription?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pharmacies: {
+        Row: {
+          address: string
+          cnpj: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          latitude: number | null
+          longitude: number | null
+          name: string
+          opening_hours: Json | null
+          owner_id: string
+          phone: string | null
+          region_id: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          opening_hours?: Json | null
+          owner_id: string
+          phone?: string | null
+          region_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          opening_hours?: Json | null
+          owner_id?: string
+          phone?: string | null
+          region_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pharmacies_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacies_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+          user_type?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: []
+      }
+      regions: {
+        Row: {
+          country: string
+          created_at: string
+          id: string
+          name: string
+          state: string
+        }
+        Insert: {
+          country?: string
+          created_at?: string
+          id?: string
+          name: string
+          state: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          id?: string
+          name?: string
+          state?: string
+        }
+        Relationships: []
+      }
+      stock_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          is_resolved: boolean
+          medicine_id: string
+          pharmacy_id: string
+          resolved_at: string | null
+          threshold_value: number | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          medicine_id: string
+          pharmacy_id: string
+          resolved_at?: string | null
+          threshold_value?: number | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          medicine_id?: string
+          pharmacy_id?: string
+          resolved_at?: string | null
+          threshold_value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_alerts_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "medicines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_pharmacy_id_fkey"
+            columns: ["pharmacy_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
