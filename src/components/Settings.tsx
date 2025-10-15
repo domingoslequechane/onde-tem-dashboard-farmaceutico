@@ -12,22 +12,22 @@ import { toast } from '@/hooks/use-toast';
 
 const Settings = () => {
   const [pharmacyData, setPharmacyData] = useState({
-    name: 'Farmácia Central',
-    address: 'Av. Julius Nyerere, 1234, Maputo',
-    phone: '+258 84 123 4567',
-    email: 'farmacia@exemplo.com',
+    name: '',
+    address: '',
+    phone: '',
+    email: '',
     hours: '07:00 - 22:00',
-    description: 'Farmácia líder em Maputo com mais de 20 anos de experiência',
-    delivery: true,
-    emergencyService: true,
-    acceptCards: true,
+    description: '',
+    delivery: false,
+    emergencyService: false,
+    acceptCards: false,
     deliveryRadius: 5
   });
 
-  const [paymentMethods, setPaymentMethods] = useState(['Multicaixa', 'Visa', 'Mastercard', 'M-Pesa', 'e-Mola']);
+  const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
   const [newPaymentMethod, setNewPaymentMethod] = useState('');
-  const [rating] = useState(4.8);
-  const [totalReviews] = useState(247);
+  const [rating] = useState(0);
+  const [totalReviews] = useState(0);
 
   const handleSave = () => {
     toast({

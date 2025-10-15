@@ -15,7 +15,7 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ user, onLogout }: DashboardProps) => {
-  const [showEmergencyAlert, setShowEmergencyAlert] = useState(true);
+  const [showEmergencyAlert, setShowEmergencyAlert] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -15,9 +15,9 @@ const ServiceImpact = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const todaysSearches = 289;
-  const myPharmacyImpressions = 74;
-  const impressionRate = Math.round((myPharmacyImpressions / todaysSearches) * 100);
+  const [todaysSearches, setTodaysSearches] = useState(0);
+  const [myPharmacyImpressions, setMyPharmacyImpressions] = useState(0);
+  const impressionRate = todaysSearches > 0 ? Math.round((myPharmacyImpressions / todaysSearches) * 100) : 0;
 
   return (
     <Card className="h-fit">
@@ -57,12 +57,12 @@ const ServiceImpact = () => {
         {/* Additional Stats */}
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg">
-            <div className="text-base sm:text-lg md:text-xl font-bold text-blue-700 mb-1">94</div>
+            <div className="text-base sm:text-lg md:text-xl font-bold text-blue-700 mb-1">0</div>
             <div className="text-xs text-blue-600">Indicações no Mês</div>
           </div>
           
           <div className="text-center p-2 sm:p-3 bg-purple-50 rounded-lg">
-            <div className="text-base sm:text-lg md:text-xl font-bold text-purple-700 mb-1">2.4k</div>
+            <div className="text-base sm:text-lg md:text-xl font-bold text-purple-700 mb-1">0</div>
             <div className="text-xs text-purple-600">Visualizações</div>
           </div>
         </div>

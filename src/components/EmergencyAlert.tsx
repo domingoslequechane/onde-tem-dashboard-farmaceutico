@@ -10,7 +10,7 @@ interface EmergencyAlertProps {
 }
 
 const EmergencyAlert = ({ onClose }: EmergencyAlertProps) => {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
 
   useEffect(() => {

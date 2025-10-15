@@ -15,25 +15,9 @@ interface Message {
 }
 
 const Support = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "Olá! Como posso ajudá-lo hoje? Estou aqui para esclarecer dúvidas sobre o uso da plataforma Onde Tem.",
-      isUser: false,
-      timestamp: "14:30"
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [selectedVideo, setSelectedVideo] = useState<{title: string, description: string, duration: string} | null>(null);
-
-  const autoResponses = [
-    "Entendi sua solicitação. Vou verificar isso para você e retornar em breve.",
-    "Obrigado por entrar em contato! Para problemas técnicos, recomendo verificar se sua internet está estável.",
-    "Essa é uma ótima pergunta! Você pode encontrar mais informações na seção de tutoriais do dashboard.",
-    "Para alterar informações da farmácia, acesse a aba 'Configurações' no menu principal.",
-    "Caso o problema persista, posso agendar uma chamada de suporte para você. Seria útil?",
-    "Vou encaminhar sua solicitação para nossa equipe técnica. Você receberá um retorno em até 2 horas."
-  ];
 
   const tutorials = [
     {
@@ -68,19 +52,6 @@ const Support = () => {
       };
 
       setMessages([...messages, userMessage]);
-      
-      // Simulate auto response after a delay
-      setTimeout(() => {
-        const randomResponse = autoResponses[Math.floor(Math.random() * autoResponses.length)];
-        const botMessage: Message = {
-          id: messages.length + 2,
-          text: randomResponse,
-          isUser: false,
-          timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages(prev => [...prev, botMessage]);
-      }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
-
       setNewMessage('');
     }
   };
