@@ -4,26 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface Medicine {
-  id?: number;
-  name: string;
-  price: number;
-  category: string;
-  status: 'Disponível' | 'Indisponível';
-  promotion?: {
-    discount: number;
-    validUntil: string;
-  };
+  id: string;
+  nome: string;
+  preco: number;
+  categoria: string;
+  quantidade: number;
+  disponivel: boolean;
 }
 
 interface AddMedicineModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (medicine: Omit<Medicine, 'id' | 'lastUpdate'>) => void;
+  onSuccess: () => void;
   editingMedicine?: Medicine | null;
-  onUpdate?: (id: number, updates: Partial<Medicine>) => void;
+  farmaciaId: string;
 }
 
 const categories = [
@@ -34,82 +32,138 @@ const categories = [
 const AddMedicineModal = ({ 
   isOpen, 
   onClose, 
-  onAdd, 
-  editingMedicine = null, 
-  onUpdate 
+  onSuccess,
+  editingMedicine = null,
+  farmaciaId
 }: AddMedicineModalProps) => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    price: 0,
-    category: '',
-    status: 'Disponível' as 'Disponível' | 'Indisponível',
-    hasPromotion: false,
-    discount: 0,
-    validUntil: ''
+    nome: '',
+    preco: 0,
+    categoria: '',
+    quantidade: 0,
+    disponivel: true
   });
 
   useEffect(() => {
     if (editingMedicine) {
       setFormData({
-        name: editingMedicine.name,
-        price: editingMedicine.price,
-        category: editingMedicine.category,
-        status: editingMedicine.status,
-        hasPromotion: !!editingMedicine.promotion,
-        discount: editingMedicine.promotion?.discount || 0,
-        validUntil: editingMedicine.promotion?.validUntil || ''
+        nome: editingMedicine.nome,
+        preco: editingMedicine.preco,
+        categoria: editingMedicine.categoria,
+        quantidade: editingMedicine.quantidade,
+        disponivel: editingMedicine.disponivel
       });
     } else {
       setFormData({
-        name: '',
-        price: 0,
-        category: '',
-        status: 'Disponível',
-        hasPromotion: false,
-        discount: 0,
-        validUntil: ''
+        nome: '',
+        preco: 0,
+        categoria: '',
+        quantidade: 0,
+        disponivel: true
       });
     }
   }, [editingMedicine, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.name && formData.category) {
-      const medicineData: any = {
-        name: formData.name,
-        price: formData.price,
-        category: formData.category,
-        status: formData.status
-      };
+    
+    if (!formData.nome || !formData.categoria) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos obrigatórios",
+        variant: "destructive"
+      });
+      return;
+    }
 
-      if (formData.hasPromotion && formData.discount > 0) {
-        medicineData.promotion = {
-          discount: formData.discount,
-          validUntil: formData.validUntil
-        };
-      }
+    setLoading(true);
 
-      if (editingMedicine && onUpdate) {
-        onUpdate(editingMedicine.id!, medicineData);
+    try {
+      if (editingMedicine) {
+        // Atualizar medicamento e estoque existente
+        const { error: medError } = await supabase
+          .from('medicamentos')
+          .update({
+            nome: formData.nome,
+            categoria: formData.categoria
+          })
+          .eq('id', editingMedicine.id);
+
+        if (medError) throw medError;
+
+        const { error: stockError } = await supabase
+          .from('estoque')
+          .update({
+            preco: formData.preco,
+            quantidade: formData.quantidade,
+            disponivel: formData.disponivel
+          })
+          .eq('medicamento_id', editingMedicine.id)
+          .eq('farmacia_id', farmaciaId);
+
+        if (stockError) throw stockError;
+
+        toast({
+          title: "Sucesso!",
+          description: "Medicamento atualizado com sucesso"
+        });
       } else {
-        onAdd(medicineData);
+        // Criar novo medicamento
+        const { data: medData, error: medError } = await supabase
+          .from('medicamentos')
+          .insert({
+            nome: formData.nome,
+            categoria: formData.categoria
+          })
+          .select()
+          .single();
+
+        if (medError) throw medError;
+
+        // Criar registro de estoque
+        const { error: stockError } = await supabase
+          .from('estoque')
+          .insert({
+            medicamento_id: medData.id,
+            farmacia_id: farmaciaId,
+            preco: formData.preco,
+            quantidade: formData.quantidade,
+            disponivel: formData.disponivel
+          });
+
+        if (stockError) throw stockError;
+
+        toast({
+          title: "Sucesso!",
+          description: "Medicamento adicionado com sucesso"
+        });
       }
 
-      onClose();
+      onSuccess();
+      handleClose();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao salvar medicamento",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleClose = () => {
-    onClose();
-    setFormData({
-      name: '',
-      price: 0,
-      category: '',
-      status: 'Disponível',
-      hasPromotion: false,
-      discount: 0,
-      validUntil: ''
-    });
+    if (!loading) {
+      onClose();
+      setFormData({
+        nome: '',
+        preco: 0,
+        categoria: '',
+        quantidade: 0,
+        disponivel: true
+      });
+    }
   };
 
   return (
@@ -122,23 +176,28 @@ const AddMedicineModal = ({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome do Medicamento</Label>
+            <Label htmlFor="nome">Nome do Medicamento</Label>
             <Input
-              id="name"
+              id="nome"
               type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              value={formData.nome}
+              onChange={(e) => setFormData({...formData, nome: e.target.value})}
               placeholder="Digite o nome do medicamento"
               required
+              disabled={loading}
             />
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
+              <Label htmlFor="categoria">Categoria</Label>
+              <Select 
+                value={formData.categoria} 
+                onValueChange={(value) => setFormData({...formData, categoria: value})}
+                disabled={loading}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma categoria" />
+                  <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
@@ -149,76 +208,68 @@ const AddMedicineModal = ({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="price">Preço (MT)</Label>
+              <Label htmlFor="preco">Preço (MT)</Label>
               <Input
-                id="price"
+                id="preco"
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
+                value={formData.preco}
+                onChange={(e) => setFormData({...formData, preco: Number(e.target.value)})}
                 placeholder="0.00"
+                disabled={loading}
               />
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select value={formData.status} onValueChange={(value: 'Disponível' | 'Indisponível') => setFormData({...formData, status: value})}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Disponível">Disponível</SelectItem>
-                <SelectItem value="Indisponível">Indisponível</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Promotion Section */}
-          <div className="border-t pt-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="promotion">Criar Promoção</Label>
-              <Switch 
-                checked={formData.hasPromotion}
-                onCheckedChange={(checked) => setFormData({...formData, hasPromotion: checked})}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="quantidade">Quantidade</Label>
+              <Input
+                id="quantidade"
+                type="number"
+                min="0"
+                value={formData.quantidade}
+                onChange={(e) => setFormData({...formData, quantidade: Number(e.target.value)})}
+                placeholder="0"
+                disabled={loading}
               />
             </div>
             
-            {formData.hasPromotion && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="discount">Desconto (%)</Label>
-                  <Input
-                    id="discount"
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={formData.discount}
-                    onChange={(e) => setFormData({...formData, discount: Number(e.target.value)})}
-                    placeholder="10"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="validUntil">Válido até</Label>
-                  <Input
-                    id="validUntil"
-                    type="date"
-                    value={formData.validUntil}
-                    onChange={(e) => setFormData({...formData, validUntil: e.target.value})}
-                  />
-                </div>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="disponivel">Status</Label>
+              <Select 
+                value={formData.disponivel ? 'true' : 'false'} 
+                onValueChange={(value) => setFormData({...formData, disponivel: value === 'true'})}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Disponível</SelectItem>
+                  <SelectItem value="false">Indisponível</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           <div className="flex space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose} 
+              className="flex-1"
+              disabled={loading}
+            >
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1 bg-green-500 hover:bg-green-600">
-              {editingMedicine ? 'Salvar' : 'Adicionar'}
+            <Button 
+              type="submit" 
+              className="flex-1 bg-green-500 hover:bg-green-600"
+              disabled={loading}
+            >
+              {loading ? 'Salvando...' : editingMedicine ? 'Salvar' : 'Adicionar'}
             </Button>
           </div>
         </form>
