@@ -150,6 +150,7 @@ export type Database = {
           cep: string | null
           cidade: string
           criado_em: string | null
+          data_vencimento: string | null
           endereco_completo: string
           estado: string
           horario_funcionamento: string | null
@@ -157,8 +158,11 @@ export type Database = {
           latitude: number
           longitude: number
           nome: string
+          plano: string | null
           ponto_referencia: string | null
+          status_assinatura: string | null
           telefone: string | null
+          user_id: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -168,6 +172,7 @@ export type Database = {
           cep?: string | null
           cidade: string
           criado_em?: string | null
+          data_vencimento?: string | null
           endereco_completo: string
           estado: string
           horario_funcionamento?: string | null
@@ -175,8 +180,11 @@ export type Database = {
           latitude: number
           longitude: number
           nome: string
+          plano?: string | null
           ponto_referencia?: string | null
+          status_assinatura?: string | null
           telefone?: string | null
+          user_id?: string | null
           whatsapp?: string | null
         }
         Update: {
@@ -186,6 +194,7 @@ export type Database = {
           cep?: string | null
           cidade?: string
           criado_em?: string | null
+          data_vencimento?: string | null
           endereco_completo?: string
           estado?: string
           horario_funcionamento?: string | null
@@ -193,8 +202,11 @@ export type Database = {
           latitude?: number
           longitude?: number
           nome?: string
+          plano?: string | null
           ponto_referencia?: string | null
+          status_assinatura?: string | null
           telefone?: string | null
+          user_id?: string | null
           whatsapp?: string | null
         }
         Relationships: []
@@ -250,6 +262,24 @@ export type Database = {
           proj4text?: string | null
           srid?: number
           srtext?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -783,6 +813,13 @@ export type Database = {
       gidx_out: {
         Args: { "": unknown }
         Returns: unknown
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       json: {
         Args: { "": unknown }
@@ -2087,7 +2124,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "farmacia"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -2222,6 +2259,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "farmacia"],
+    },
   },
 } as const
