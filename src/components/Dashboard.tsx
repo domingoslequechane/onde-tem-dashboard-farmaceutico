@@ -12,9 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 interface DashboardProps {
   user: { email: string; name: string } | null;
   onLogout: () => void;
+  farmacia?: any;
 }
 
-const Dashboard = ({ user, onLogout }: DashboardProps) => {
+const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
   const [showEmergencyAlert, setShowEmergencyAlert] = useState(false);
 
   return (
@@ -73,7 +74,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
           </TabsContent>
           
           <TabsContent value="configuracoes">
-            <Settings />
+            <Settings farmacia={farmacia} />
           </TabsContent>
           
           <TabsContent value="suporte">
