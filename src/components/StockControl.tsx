@@ -43,9 +43,22 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
         .from('farmacias')
         .select('id')
         .eq('user_id', userData.user.id)
-        .single();
+        .maybeSingle();
 
       if (farmaciaError) throw farmaciaError;
+      
+      if (!farmaciaData) {
+        // Usuário não tem farmácia associada (pode ser admin)
+        setMedicines([]);
+        toast({
+          title: "Nenhuma farmácia associada",
+          description: "Este usuário não possui uma farmácia vinculada.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       setFarmaciaId(farmaciaData.id);
 
       const { data, error } = await supabase
