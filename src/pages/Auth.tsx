@@ -166,13 +166,23 @@ const Auth = () => {
                 </Button>
                 
                 {isLogin && (
-                  <Button 
-                    type="button"
-                    variant="link" 
-                    className="text-primary hover:text-primary-dark text-sm p-0 block w-full"
-                  >
-                    Esqueceu sua senha?
-                  </Button>
+                  <>
+                    <Button 
+                      type="button"
+                      variant="link" 
+                      className="text-primary hover:text-primary-dark text-sm p-0 block w-full"
+                    >
+                      Esqueceu sua senha?
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant="link" 
+                      className="text-destructive hover:text-destructive/90 text-sm p-0 block w-full font-medium"
+                      onClick={() => navigate('/admin/login')}
+                    >
+                      Acesso Administrativo
+                    </Button>
+                  </>
                 )}
               </div>
             </form>

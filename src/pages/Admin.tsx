@@ -1,54 +1,71 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Plus, Power, PowerOff, Key } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Power, PowerOff, Key, Edit, Search, Store, Users, TrendingUp, Shield } from 'lucide-react';
 import Header from '@/components/Header';
+import AdminFarmaciaModal from '@/components/AdminFarmaciaModal';
 
 const Admin = () => {
   const navigate = useNavigate();
   const [farmacias, setFarmacias] = useState<any[]>([]);
+  const [filteredFarmacias, setFilteredFarmacias] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingFarmacia, setEditingFarmacia] = useState<any>(null);
 
   useEffect(() => {
     checkAuth();
-    fetchFarmacias();
   }, []);
+
+  useEffect(() => {
+    const filtered = farmacias.filter(farmacia =>
+      farmacia.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      farmacia.cidade.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      farmacia.estado.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredFarmacias(filtered);
+  }, [searchTerm, farmacias]);
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      navigate('/auth');
+      navigate('/admin/login');
       return;
     }
 
-    // Check if user is admin
-    const { data: roles } = await supabase
+    // Verificar se é admin
+    const { data: roles, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (!roles || roles.role !== 'admin') {
+    if (error || !roles || roles.role !== 'admin') {
       toast({
         title: "Acesso negado",
-        description: "Você não tem permissão para acessar esta página.",
+        description: "Você não possui privilégios de administrador.",
         variant: "destructive",
       });
-      navigate('/');
+      await supabase.auth.signOut();
+      navigate('/admin/login');
       return;
     }
 
     setUser(user);
+    fetchFarmacias();
   };
 
   const fetchFarmacias = async () => {
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('farmacias')
@@ -94,137 +111,221 @@ const Admin = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/auth');
+    navigate('/admin/login');
   };
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground text-lg">Carregando painel...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header 
-        user={user ? { email: user.email, name: 'Admin' } : null} 
+        user={user ? { email: user.email, name: 'Administrador' } : null} 
         onLogout={handleLogout} 
       />
       
-      <main className="container mx-auto px-2 sm:px-4 py-3 sm:py-4 md:py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Painel Administrativo
-          </h1>
-          <p className="text-gray-600">Gerencie farmácias e acompanhe o desempenho da plataforma</p>
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
+        {/* Cabeçalho */}
+        <div className="mb-6 sm:mb-8 animate-fade-in">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-3 rounded-lg bg-destructive text-destructive-foreground">
+              <Shield size={28} />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">
+                Painel Administrativo
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Gerencie farmácias e acompanhe o desempenho da plataforma
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total de Farmácias</CardTitle>
+        {/* Cards de Estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <Card className="border-none shadow-lg">
+            <CardHeader className="pb-3 bg-gradient-to-br from-primary/5 to-secondary/5">
+              <div className="flex items-center justify-between">
+                <CardDescription className="text-sm font-medium">Total de Farmácias</CardDescription>
+                <Store className="h-5 w-5 text-primary" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{farmacias.length}</p>
+            <CardContent className="pt-4">
+              <p className="text-3xl sm:text-4xl font-bold text-primary">{farmacias.length}</p>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Farmácias Ativas</CardTitle>
+          <Card className="border-none shadow-lg">
+            <CardHeader className="pb-3 bg-gradient-to-br from-secondary/5 to-primary/5">
+              <div className="flex items-center justify-between">
+                <CardDescription className="text-sm font-medium">Farmácias Ativas</CardDescription>
+                <Users className="h-5 w-5 text-secondary" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-green-600">
+            <CardContent className="pt-4">
+              <p className="text-3xl sm:text-4xl font-bold text-secondary">
                 {farmacias.filter(f => f.ativa).length}
               </p>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Farmácias Inativas</CardTitle>
+          <Card className="border-none shadow-lg">
+            <CardHeader className="pb-3 bg-gradient-to-br from-destructive/5 to-destructive/10">
+              <div className="flex items-center justify-between">
+                <CardDescription className="text-sm font-medium">Farmácias Inativas</CardDescription>
+                <TrendingUp className="h-5 w-5 text-destructive" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-red-600">
+            <CardContent className="pt-4">
+              <p className="text-3xl sm:text-4xl font-bold text-destructive">
                 {farmacias.filter(f => !f.ativa).length}
               </p>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Farmácias Cadastradas</CardTitle>
-              <Button onClick={() => navigate('/admin/add-farmacia')}>
+        {/* Tabela de Farmácias */}
+        <Card className="border-none shadow-lg">
+          <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <CardTitle className="text-xl">Farmácias Cadastradas</CardTitle>
+                <CardDescription className="mt-1">Gerencie todas as farmácias da plataforma</CardDescription>
+              </div>
+              <Button 
+                onClick={() => {
+                  setEditingFarmacia(null);
+                  setIsModalOpen(true);
+                }}
+                className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar Farmácia
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Cidade</TableHead>
-                  <TableHead>Plano</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Assinatura</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {farmacias.map((farmacia) => (
-                  <TableRow key={farmacia.id}>
-                    <TableCell className="font-medium">{farmacia.nome}</TableCell>
-                    <TableCell>{farmacia.cidade}</TableCell>
-                    <TableCell>
-                      <Badge variant={farmacia.plano === 'premium' ? 'default' : 'secondary'}>
-                        {farmacia.plano || 'free'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={farmacia.ativa ? 'default' : 'destructive'}>
-                        {farmacia.ativa ? 'Ativa' : 'Inativa'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={farmacia.status_assinatura === 'ativa' ? 'default' : 'secondary'}>
-                        {farmacia.status_assinatura || 'N/A'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleFarmaciaStatus(farmacia.id, farmacia.ativa)}
-                        >
-                          {farmacia.ativa ? (
-                            <PowerOff className="h-4 w-4" />
-                          ) : (
-                            <Power className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            toast({
-                              title: "Em breve",
-                              description: "Funcionalidade de recuperação de acesso em desenvolvimento.",
-                            });
-                          }}
-                        >
-                          <Key className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          <CardContent className="p-6">
+            {/* Busca */}
+            <div className="mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                <Input
+                  placeholder="Buscar por nome, cidade ou província..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-11"
+                />
+              </div>
+            </div>
+
+            {/* Tabela */}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Cidade</TableHead>
+                    <TableHead>Plano</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Assinatura</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredFarmacias.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        Nenhuma farmácia encontrada
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredFarmacias.map((farmacia) => (
+                      <TableRow key={farmacia.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">{farmacia.nome}</TableCell>
+                        <TableCell>{farmacia.cidade}</TableCell>
+                        <TableCell>
+                          <Badge variant={farmacia.plano === 'premium' ? 'default' : 'secondary'} className={farmacia.plano === 'premium' ? 'bg-secondary' : ''}>
+                            {farmacia.plano || 'free'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={farmacia.ativa ? 'default' : 'destructive'} className={farmacia.ativa ? 'bg-secondary' : ''}>
+                            {farmacia.ativa ? 'Ativa' : 'Inativa'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={farmacia.status_assinatura === 'ativa' ? 'default' : 'secondary'} className={farmacia.status_assinatura === 'ativa' ? 'bg-primary' : ''}>
+                            {farmacia.status_assinatura || 'N/A'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                setEditingFarmacia(farmacia);
+                                setIsModalOpen(true);
+                              }}
+                              title="Editar"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => toggleFarmaciaStatus(farmacia.id, farmacia.ativa)}
+                              title={farmacia.ativa ? 'Desativar' : 'Ativar'}
+                            >
+                              {farmacia.ativa ? (
+                                <PowerOff className="h-4 w-4" />
+                              ) : (
+                                <Power className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                toast({
+                                  title: "Em breve",
+                                  description: "Funcionalidade de recuperação de acesso em desenvolvimento.",
+                                });
+                              }}
+                              title="Recuperar Acesso"
+                            >
+                              <Key className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </main>
+
+      <AdminFarmaciaModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingFarmacia(null);
+        }}
+        onSuccess={fetchFarmacias}
+        farmacia={editingFarmacia}
+      />
     </div>
   );
 };
