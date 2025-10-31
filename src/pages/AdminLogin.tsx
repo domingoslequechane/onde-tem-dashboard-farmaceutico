@@ -15,6 +15,7 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +87,51 @@ const AdminLogin = () => {
     }
   };
 
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/admin`,
+        }
+      });
+
+      if (error) throw error;
+      if (!data.user) throw new Error('Falha ao criar usuário');
+
+      // Criar role de admin
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: data.user.id,
+          role: 'admin'
+        });
+
+      if (roleError) throw roleError;
+
+      toast({
+        title: "Conta criada com sucesso!",
+        description: "Verifique seu email para confirmar a conta.",
+      });
+      
+      setShowSignup(false);
+      setEmail('');
+      setPassword('');
+    } catch (error: any) {
+      toast({
+        title: "Erro ao criar conta",
+        description: error.message || "Ocorreu um erro. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/10 via-background to-destructive/10">
       <div className="w-full max-w-md">
@@ -97,10 +143,10 @@ const AdminLogin = () => {
               </div>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-              {showForgotPassword ? 'Recuperar Senha Admin' : 'Painel Administrativo'}
+              {showForgotPassword ? 'Recuperar Senha Admin' : showSignup ? 'Criar Conta Admin' : 'Painel Administrativo'}
             </h1>
             <p className="text-destructive-foreground/90 text-sm">
-              {showForgotPassword ? 'Digite seu email para recuperar o acesso' : 'Acesso restrito aos administradores do sistema'}
+              {showForgotPassword ? 'Digite seu email para recuperar o acesso' : showSignup ? 'Crie uma nova conta de administrador' : 'Acesso restrito aos administradores do sistema'}
             </p>
           </div>
 
@@ -113,7 +159,7 @@ const AdminLogin = () => {
               />
             </div>
 
-            <form onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-5">
+            <form onSubmit={showForgotPassword ? handleForgotPassword : showSignup ? handleSignup : handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
                   Email do Administrador
@@ -163,10 +209,15 @@ const AdminLogin = () => {
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    {showForgotPassword ? 'Enviando...' : 'Verificando...'}
+                    {showForgotPassword ? 'Enviando...' : showSignup ? 'Criando...' : 'Verificando...'}
                   </div>
                 ) : showForgotPassword ? (
                   'Enviar Email'
+                ) : showSignup ? (
+                  <>
+                    <Shield className="mr-2 h-5 w-5" />
+                    Criar Conta Admin
+                  </>
                 ) : (
                   <>
                     <Shield className="mr-2 h-5 w-5" />
@@ -176,7 +227,7 @@ const AdminLogin = () => {
               </Button>
               
               <div className="text-center space-y-3">
-                {!showForgotPassword ? (
+                {!showForgotPassword && !showSignup ? (
                   <>
                     <Button 
                       type="button"
@@ -185,6 +236,14 @@ const AdminLogin = () => {
                       onClick={() => setShowForgotPassword(true)}
                     >
                       Esqueceu sua senha?
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant="link" 
+                      className="text-primary hover:text-primary-dark text-sm p-0 block w-full"
+                      onClick={() => setShowSignup(true)}
+                    >
+                      Criar conta de administrador
                     </Button>
                     <Button 
                       type="button"
@@ -200,7 +259,10 @@ const AdminLogin = () => {
                     type="button"
                     variant="link" 
                     className="text-muted-foreground hover:text-foreground text-sm p-0"
-                    onClick={() => setShowForgotPassword(false)}
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setShowSignup(false);
+                    }}
                   >
                     Voltar para login
                   </Button>
