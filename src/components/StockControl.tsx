@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Download, RefreshCw, Edit } from 'lucide-react';
+import { Search, Plus, Download, RefreshCw, Edit, Package } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import AddMedicineModal from './AddMedicineModal';
@@ -36,11 +36,13 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
   const fetchMedicines = async () => {
     setIsLoading(true);
     try {
-      // Buscar farmacia_id
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
       const { data: farmaciaData, error: farmaciaError } = await supabase
         .from('farmacias')
         .select('id')
-        .limit(1)
+        .eq('user_id', userData.user.id)
         .single();
 
       if (farmaciaError) throw farmaciaError;
@@ -126,10 +128,15 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
 
   return (
     <>
-      <Card className={expanded ? "" : "h-fit"}>
-        <CardHeader className="pb-3 md:pb-4">
-          <CardTitle className="flex items-center justify-between text-base md:text-lg">
-            <span className="truncate mr-2">Gestão de Medicamentos</span>
+      <Card className={`border-none shadow-lg ${expanded ? "" : "h-fit"}`}>
+        <CardHeader className="pb-4 bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
+          <CardTitle className="flex items-center justify-between text-lg sm:text-xl">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary text-primary-foreground">
+                <Package size={20} />
+              </div>
+              <span className="truncate">Gestão de Medicamentos</span>
+            </div>
             <div className="flex gap-2">
               <Button 
                 size="sm" 
@@ -137,41 +144,41 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                   setEditingMedicine(null);
                   setIsModalOpen(true);
                 }}
-                className="bg-green-500 hover:bg-green-600 flex-shrink-0"
+                className="bg-secondary hover:bg-secondary/90 flex-shrink-0 gap-1"
               >
-                <Plus size={14} className="mr-1" />
+                <Plus size={16} />
                 <span className="hidden sm:inline">Novo</span>
               </Button>
               <Button 
                 size="sm" 
                 onClick={fetchMedicines} 
                 variant="outline"
-                className="flex-shrink-0"
+                className="flex-shrink-0 gap-1"
                 disabled={isLoading}
               >
-                <RefreshCw size={14} className={`mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
                 <span className="hidden sm:inline">Atualizar</span>
               </Button>
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 md:space-y-4">
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+        <CardContent className="space-y-4 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
               <Input
-                placeholder="Buscar medicamento"
+                placeholder="Buscar medicamento..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 text-sm"
+                className="pl-10 h-11"
               />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-48 h-11">
                 <SelectValue placeholder="Categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="all">Todas Categorias</SelectItem>
                 {categories.map(category => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
@@ -180,44 +187,55 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-12 text-muted-foreground">
+              <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-2" />
               Carregando medicamentos...
             </div>
           ) : displayedMedicines.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Nenhum medicamento encontrado
+            <div className="text-center py-12 text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p className="font-medium">Nenhum medicamento encontrado</p>
+              <p className="text-sm">Adicione medicamentos ao seu estoque</p>
             </div>
           ) : (
-            <div className="space-y-2 md:space-y-3 max-h-80 overflow-y-auto">
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
               {displayedMedicines.map((medicine) => (
                 <div 
                   key={medicine.id} 
-                  className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-4 bg-card border rounded-lg hover:shadow-md transition-all duration-200 hover:border-primary/50"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1 min-w-0 mr-2">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <p className="font-medium text-gray-900 truncate text-sm md:text-base">{medicine.nome}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <p className="font-semibold text-foreground truncate">{medicine.nome}</p>
                       </div>
-                      <div className="text-xs md:text-sm text-gray-500 space-y-1">
-                        <p>{medicine.categoria}</p>
-                        <p>{medicine.preco.toFixed(2)} MT | Qtd: {medicine.quantidade}</p>
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                        <span className="px-2 py-1 bg-muted rounded text-xs font-medium">
+                          {medicine.categoria}
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {medicine.preco.toFixed(2)} MT
+                        </span>
+                        <span>Qtd: <strong>{medicine.quantidade}</strong></span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 flex-shrink-0">
-                      <Badge className={`text-xs ${medicine.disponivel && medicine.quantidade > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge 
+                        variant={medicine.disponivel && medicine.quantidade > 0 ? "default" : "destructive"}
+                        className={medicine.disponivel && medicine.quantidade > 0 ? "bg-secondary" : ""}
+                      >
                         {medicine.disponivel && medicine.quantidade > 0 ? 'Disponível' : 'Indisponível'}
                       </Badge>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => {
                           setEditingMedicine(medicine);
                           setIsModalOpen(true);
                         }}
-                        className="h-8 w-8 p-0"
+                        className="h-9 w-9"
                       >
-                        <Edit size={14} />
+                        <Edit size={16} />
                       </Button>
                     </div>
                   </div>
@@ -228,12 +246,12 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
 
           <Button 
             variant="outline" 
-            className="w-full text-sm" 
+            className="w-full h-11 gap-2" 
             onClick={handleExport}
             disabled={medicines.length === 0}
           >
-            <Download size={16} className="mr-2" />
-            Exportar CSV
+            <Download size={18} />
+            Exportar Relatório CSV
           </Button>
         </CardContent>
       </Card>

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import ondeTemLogo from '@/assets/onde-tem-logo.png';
 
 const Auth = () => {
@@ -65,87 +65,124 @@ const Auth = () => {
     }
   };
 
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-muted">
-      <Card className="w-full max-w-sm sm:max-w-md shadow-2xl border-0 mx-4 bg-white/95 backdrop-blur-sm">
-        <CardHeader className="text-center pb-2 px-4 sm:px-6">
-          <div className="mx-auto mb-3 sm:mb-4">
-            <img src={ondeTemLogo} alt="Onde Tem?" className="h-16 sm:h-20 md:h-24 w-auto" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+      <div className="w-full max-w-md">
+        <Card className="border-none shadow-2xl overflow-hidden backdrop-blur-sm bg-card/95">
+          <div className="bg-gradient-to-br from-primary to-primary-light p-8 text-center">
+            <img 
+              src={ondeTemLogo} 
+              alt="Onde Tem?" 
+              className="h-24 sm:h-28 w-auto mx-auto mb-4 drop-shadow-lg" 
+            />
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              {isLogin ? 'Bem-vindo de volta!' : 'Crie sua conta'}
+            </h1>
+            <p className="text-primary-foreground/90 text-sm">
+              {isLogin ? 'Entre para gerenciar sua farmácia' : 'Cadastre sua farmácia agora'}
+            </p>
           </div>
-          <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
-            {isLogin ? 'Login' : 'Cadastro'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 sm:px-4 md:px-6">
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            {!isLogin && (
+
+          <CardContent className="p-6 sm:p-8">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {!isLogin && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Nome da Farmácia
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Ex: Farmácia Central"
+                    value={farmaciaName}
+                    onChange={(e) => setFarmaciaName(e.target.value)}
+                    className="h-12"
+                    required={!isLogin}
+                  />
+                </div>
+              )}
+              
               <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Email
+                </label>
                 <Input
-                  type="text"
-                  placeholder="Nome da Farmácia"
-                  value={farmaciaName}
-                  onChange={(e) => setFarmaciaName(e.target.value)}
-                  className="h-10 sm:h-11 md:h-12 text-sm sm:text-base"
-                  required={!isLogin}
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12"
+                  required
                 />
               </div>
-            )}
-            <div className="space-y-2">
-              <Input
-                type="email"
-                placeholder="farmacia@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-10 sm:h-11 md:h-12 text-sm sm:text-base"
-                required
-              />
-            </div>
-            <div className="space-y-2 relative">
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-10 sm:h-11 md:h-12 pr-10 sm:pr-12 text-sm sm:text-base"
-                required
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 h-6 w-6 sm:h-8 sm:w-8 p-0"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-              </Button>
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full h-10 sm:h-11 md:h-12 bg-green-500 hover:bg-green-600 text-white font-medium text-sm sm:text-base"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Aguarde...' : (isLogin ? 'Entrar' : 'Cadastrar')}
-            </Button>
-            
-            <div className="text-center space-y-2">
+              
+              <div className="space-y-2 relative">
+                <label className="text-sm font-medium text-foreground">
+                  Senha
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 pr-12"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-muted"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </Button>
+                </div>
+              </div>
+
               <Button 
-                type="button"
-                variant="link" 
-                className="text-gray-600 text-xs sm:text-sm p-0"
-                onClick={() => setIsLogin(!isLogin)}
+                type="submit" 
+                className="w-full h-12 bg-gradient-to-r from-primary to-primary-light hover:from-primary-dark hover:to-primary text-white font-semibold text-base shadow-lg"
+                disabled={isLoading}
               >
-                {isLogin ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Faça login'}
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Aguarde...
+                  </div>
+                ) : (
+                  isLogin ? 'Entrar' : 'Cadastrar'
+                )}
               </Button>
-              {isLogin && (
-                <Button variant="link" className="text-blue-500 text-xs sm:text-sm p-0 block w-full">
-                  Recuperar senha
+              
+              <div className="text-center space-y-3 pt-2">
+                <Button 
+                  type="button"
+                  variant="link" 
+                  className="text-muted-foreground hover:text-foreground text-sm p-0"
+                  onClick={() => setIsLogin(!isLogin)}
+                >
+                  {isLogin ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Faça login'}
                 </Button>
-              )}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                
+                {isLogin && (
+                  <Button 
+                    type="button"
+                    variant="link" 
+                    className="text-primary hover:text-primary-dark text-sm p-0 block w-full"
+                  >
+                    Esqueceu sua senha?
+                  </Button>
+                )}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          © 2025 Onde Tem? - Saúde que se encontra
+        </p>
+      </div>
     </div>
   );
 };

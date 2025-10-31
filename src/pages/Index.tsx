@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,10 +61,10 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground text-lg">Carregando...</p>
         </div>
       </div>
     );
@@ -76,16 +75,14 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      <Dashboard 
-        user={user ? { 
-          email: user.email, 
-          name: farmacia?.nome || user.email?.split('@')[0] || 'Usuário' 
-        } : null} 
-        onLogout={handleLogout}
-        farmacia={farmacia}
-      />
-    </div>
+    <Dashboard 
+      user={user ? { 
+        email: user.email, 
+        name: farmacia?.nome || user.email?.split('@')[0] || 'Usuário' 
+      } : null} 
+      onLogout={handleLogout}
+      farmacia={farmacia}
+    />
   );
 };
 

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Header from '@/components/Header';
 import StockControl from '@/components/StockControl';
@@ -8,6 +7,7 @@ import EmergencyAlert from '@/components/EmergencyAlert';
 import Settings from '@/components/Settings';
 import Support from '@/components/Support';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Package, TrendingUp, Settings as SettingsIcon, MessageSquare, LayoutDashboard } from 'lucide-react';
 
 interface DashboardProps {
   user: { email: string; name: string } | null;
@@ -19,65 +19,99 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
   const [showEmergencyAlert, setShowEmergencyAlert] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header user={user} onLogout={onLogout} />
       
-      {/* Emergency Alert */}
       {showEmergencyAlert && (
         <EmergencyAlert onClose={() => setShowEmergencyAlert(false)} />
       )}
 
-      <main className="container mx-auto px-2 sm:px-4 py-3 sm:py-4 md:py-6">
-        <div className="mb-3 sm:mb-4 md:mb-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
-            Bem-vindo(a), {user?.name || 'Farmácia Central'}!
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
+        {/* Welcome Section */}
+        <div className="mb-6 sm:mb-8 animate-fade-in">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">
+            Bem-vindo, {user?.name}! 👋
           </h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-2 sm:mb-3 md:mb-4">
+          <p className="text-sm sm:text-base text-muted-foreground mb-4">
             Gerencie seu estoque e analise a demanda em tempo real
           </p>
           
-          {/* Verification Badge */}
-          <div className="inline-flex items-center px-2 sm:px-3 md:px-4 py-1 sm:py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full text-xs sm:text-sm font-medium">
-            ✅ Farmácia Verificada - Premium
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-primary-light text-primary-foreground rounded-full text-sm font-medium shadow-md">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            Farmácia Verificada
           </div>
         </div>
         
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-3 sm:mb-4 md:mb-6 h-auto p-1">
-            <TabsTrigger value="dashboard" className="text-xs sm:text-sm px-1 sm:px-2 py-2">Dashboard</TabsTrigger>
-            <TabsTrigger value="estoque" className="text-xs sm:text-sm px-1 sm:px-2 py-2">Estoque</TabsTrigger>
-            <TabsTrigger value="demanda" className="text-xs sm:text-sm px-1 sm:px-2 py-2">Demanda</TabsTrigger>
-            <TabsTrigger value="configuracoes" className="text-xs sm:text-sm px-1 py-2">Config.</TabsTrigger>
-            <TabsTrigger value="suporte" className="text-xs sm:text-sm px-1 sm:px-2 py-2">Suporte</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 mb-6 h-auto p-1 bg-muted/50 rounded-xl gap-1">
+            <TabsTrigger 
+              value="dashboard" 
+              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-2.5 sm:py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+            >
+              <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Início</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="estoque" 
+              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-2.5 sm:py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+            >
+              <Package className="h-4 w-4 flex-shrink-0" />
+              <span>Estoque</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="demanda" 
+              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-2.5 sm:py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+            >
+              <TrendingUp className="h-4 w-4 flex-shrink-0" />
+              <span>Demanda</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="configuracoes" 
+              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-2.5 sm:py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+            >
+              <SettingsIcon className="h-4 w-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Config.</span>
+              <span className="sm:hidden">Config</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="suporte" 
+              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-2.5 sm:py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+            >
+              <MessageSquare className="h-4 w-4 flex-shrink-0" />
+              <span>Suporte</span>
+            </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="dashboard">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-              <div className="lg:col-span-1">
+          <TabsContent value="dashboard" className="mt-0 animate-fade-in">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="lg:col-span-1 animate-slide-up">
                 <StockControl />
               </div>
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                 <DemandAnalysis />
               </div>
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                 <ServiceImpact />
               </div>
             </div>
           </TabsContent>
           
-          <TabsContent value="estoque">
+          <TabsContent value="estoque" className="mt-0 animate-fade-in">
             <StockControl expanded={true} />
           </TabsContent>
           
-          <TabsContent value="demanda">
+          <TabsContent value="demanda" className="mt-0 animate-fade-in">
             <DemandAnalysis expanded={true} />
           </TabsContent>
           
-          <TabsContent value="configuracoes">
+          <TabsContent value="configuracoes" className="mt-0 animate-fade-in">
             <Settings farmacia={farmacia} />
           </TabsContent>
           
-          <TabsContent value="suporte">
+          <TabsContent value="suporte" className="mt-0 animate-fade-in">
             <Support />
           </TabsContent>
         </Tabs>

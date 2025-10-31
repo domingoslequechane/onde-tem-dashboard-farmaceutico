@@ -1,7 +1,6 @@
 import ondeTemLogo from '@/assets/onde-tem-logo.png';
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Menu } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +12,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 interface HeaderProps {
   user: { email: string; name: string } | null;
@@ -21,47 +25,107 @@ interface HeaderProps {
 
 const Header = ({ user, onLogout }: HeaderProps) => {
   return (
-    <header className="bg-white shadow-sm border-b">
-      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-2 min-w-0 flex-1">
-          <img src={ondeTemLogo} alt="Onde Tem?" className="h-8 sm:h-10 md:h-12 w-auto flex-shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs text-gray-500 hidden sm:block truncate">Dashboard Farmacêutico</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 flex-shrink-0">
-          <div className="hidden lg:flex items-center space-x-2 text-sm text-gray-600">
-            <User size={16} />
-            <span className="max-w-24 xl:max-w-32 truncate">{user?.email}</span>
+    <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="flex h-16 sm:h-20 items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <img 
+              src={ondeTemLogo} 
+              alt="Onde Tem?" 
+              className="h-10 sm:h-12 md:h-14 w-auto object-contain" 
+            />
           </div>
           
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="flex items-center space-x-1 text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <LogOut size={12} className="sm:size-4" />
-                <span className="hidden sm:inline">Sair</span>
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="mx-2 sm:mx-4 max-w-lg w-full">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-base sm:text-lg">Confirmar Saída</AlertDialogTitle>
-                <AlertDialogDescription className="text-sm">
-                  Tem certeza que deseja sair do sistema? Você precisará fazer login novamente para acessar o dashboard.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-                <AlertDialogCancel className="w-full sm:w-auto text-sm">Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={onLogout} className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-sm">
-                  Sim, Sair
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {/* Desktop User Info & Actions */}
+          <div className="hidden md:flex items-center gap-4">
+            <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-muted">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <User size={18} />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium">{user?.name}</p>
+                <p className="text-xs text-muted-foreground truncate max-w-[150px]">
+                  {user?.email}
+                </p>
+              </div>
+            </div>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="default" className="gap-2">
+                  <LogOut size={16} />
+                  Sair
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmar Saída</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tem certeza que deseja sair do sistema? Você precisará fazer login novamente.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={onLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Sim, Sair
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          {/* Mobile Menu */}
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu size={24} />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px] sm:w-[320px]">
+                <div className="flex flex-col gap-6 py-6">
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground flex-shrink-0">
+                      <User size={20} />
+                    </div>
+                    <div className="text-left min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="w-full gap-2 justify-center">
+                        <LogOut size={18} />
+                        Sair do Sistema
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar Saída</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja sair? Você precisará fazer login novamente.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                        <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={onLogout}
+                          className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Sair
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </header>
