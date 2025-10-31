@@ -97,26 +97,18 @@ const AdminLogin = () => {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/admin`,
+          data: {
+            is_admin: 'true' // Metadata para o trigger identificar como admin
+          }
         }
       });
 
       if (error) throw error;
       if (!data.user) throw new Error('Falha ao criar usuário');
 
-      // Usar upsert para evitar erro de duplicação
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: data.user.id,
-          role: 'admin'
-        }, {
-          onConflict: 'user_id,role'
-        });
-
-      if (roleError) throw roleError;
-
+      // O role admin será criado automaticamente pelo trigger
       toast({
-        title: "Conta criada com sucesso!",
+        title: "Conta admin criada!",
         description: "Verifique seu email para confirmar a conta.",
       });
       
