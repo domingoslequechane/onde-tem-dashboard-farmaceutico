@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Eye, EyeOff, TestTube } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
-import pharmacyBg from '@/assets/pharmacy-login-bg.jpg';
+import ondeTemLogo from '@/assets/onde-tem-logo.png';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -65,27 +65,17 @@ const Auth = () => {
     }
   };
 
-  const handleTestLogin = (role: 'farmacia' | 'admin') => {
-    if (role === 'farmacia') {
-      setEmail('farmacia@exemplo.com');
-      setPassword('senha123');
-    } else {
-      setEmail('admin@ondetem.com');
-      setPassword('admin123');
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-muted">
       <Card className="w-full max-w-sm sm:max-w-md shadow-2xl border-0 mx-4 bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center pb-2 px-4 sm:px-6">
-          <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-green-500 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-            <span className="text-white text-xl sm:text-2xl font-bold">?</span>
+          <div className="mx-auto mb-3 sm:mb-4">
+            <img src={ondeTemLogo} alt="Onde Tem?" className="h-16 sm:h-20 md:h-24 w-auto" />
           </div>
           <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
-            {isLogin ? 'Login - Onde Tem?' : 'Cadastro - Onde Tem?'}
+            {isLogin ? 'Login' : 'Cadastro'}
           </CardTitle>
-          <p className="text-gray-600 text-xs sm:text-sm">Saúde que se encontra</p>
         </CardHeader>
         <CardContent className="px-4 sm:px-4 md:px-6">
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
@@ -137,29 +127,6 @@ const Auth = () => {
             >
               {isLoading ? 'Aguarde...' : (isLogin ? 'Entrar' : 'Cadastrar')}
             </Button>
-            
-            {isLogin && (
-              <>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  className="w-full h-10 sm:h-11 md:h-12 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium text-sm sm:text-base"
-                  onClick={() => handleTestLogin('farmacia')}
-                >
-                  <TestTube size={14} className="mr-1 sm:mr-2 flex-shrink-0" />
-                  <span className="truncate whitespace-nowrap">Teste - Farmácia</span>
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  className="w-full h-10 sm:h-11 md:h-12 border-purple-300 text-purple-600 hover:bg-purple-50 font-medium text-sm sm:text-base"
-                  onClick={() => handleTestLogin('admin')}
-                >
-                  <TestTube size={14} className="mr-1 sm:mr-2 flex-shrink-0" />
-                  <span className="truncate whitespace-nowrap">Teste - Admin</span>
-                </Button>
-              </>
-            )}
             
             <div className="text-center space-y-2">
               <Button 

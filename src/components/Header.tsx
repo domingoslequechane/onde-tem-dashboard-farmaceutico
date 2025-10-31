@@ -1,4 +1,4 @@
-
+import ondeTemLogo from '@/assets/onde-tem-logo.png';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
@@ -24,11 +24,8 @@ const Header = ({ user, onLogout }: HeaderProps) => {
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3 flex items-center justify-between">
         <div className="flex items-center space-x-2 min-w-0 flex-1">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-sm sm:text-lg">?</span>
-          </div>
+          <img src={ondeTemLogo} alt="Onde Tem?" className="h-8 sm:h-10 md:h-12 w-auto flex-shrink-0" />
           <div className="min-w-0 flex-1">
-            <h1 className="text-sm sm:text-lg md:text-xl font-bold text-gray-900 truncate">Onde Tem?</h1>
             <p className="text-xs text-gray-500 hidden sm:block truncate">Dashboard Farmacêutico</p>
           </div>
         </div>
