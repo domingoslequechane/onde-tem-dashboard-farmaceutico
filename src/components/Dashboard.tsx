@@ -29,26 +29,26 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         {/* Welcome Section */}
         <div className="mb-6 sm:mb-8 animate-fade-in">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
             Bem-vindo, {user?.name}! 👋
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground mb-4">
             Gerencie seu estoque e analise a demanda em tempo real
           </p>
           
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-primary-light text-primary-foreground rounded-full text-sm font-medium shadow-md">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary to-primary-light text-primary-foreground rounded-full text-sm font-medium shadow-md">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            Farmácia Verificada
+            <span>Farmácia Verificada</span>
           </div>
         </div>
         
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6 h-auto p-1 bg-muted/50 rounded-xl gap-1">
+          <TabsList className="grid w-full grid-cols-5 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl gap-1">
             <TabsTrigger 
               value="dashboard" 
-              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-2.5 sm:py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+              className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
             >
               <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
               <span className="hidden sm:inline">Dashboard</span>
@@ -56,21 +56,21 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
             </TabsTrigger>
             <TabsTrigger 
               value="estoque" 
-              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-2.5 sm:py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+              className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
             >
               <Package className="h-4 w-4 flex-shrink-0" />
               <span>Estoque</span>
             </TabsTrigger>
             <TabsTrigger 
               value="demanda" 
-              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-2.5 sm:py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+              className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
             >
               <TrendingUp className="h-4 w-4 flex-shrink-0" />
               <span>Demanda</span>
             </TabsTrigger>
             <TabsTrigger 
               value="configuracoes" 
-              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-2.5 sm:py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+              className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
             >
               <SettingsIcon className="h-4 w-4 flex-shrink-0" />
               <span className="hidden sm:inline">Config.</span>
@@ -78,7 +78,7 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
             </TabsTrigger>
             <TabsTrigger 
               value="suporte" 
-              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-2.5 sm:py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+              className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
             >
               <MessageSquare className="h-4 w-4 flex-shrink-0" />
               <span>Suporte</span>
