@@ -14,6 +14,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +59,33 @@ const AdminLogin = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado!",
+        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+      });
+      setShowForgotPassword(false);
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Ocorreu um erro. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/10 via-background to-destructive/10">
       <div className="w-full max-w-md">
@@ -69,10 +97,10 @@ const AdminLogin = () => {
               </div>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-              Painel Administrativo
+              {showForgotPassword ? 'Recuperar Senha Admin' : 'Painel Administrativo'}
             </h1>
             <p className="text-destructive-foreground/90 text-sm">
-              Acesso restrito aos administradores do sistema
+              {showForgotPassword ? 'Digite seu email para recuperar o acesso' : 'Acesso restrito aos administradores do sistema'}
             </p>
           </div>
 
@@ -85,7 +113,7 @@ const AdminLogin = () => {
               />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
                   Email do Administrador
@@ -100,30 +128,32 @@ const AdminLogin = () => {
                 />
               </div>
               
-              <div className="space-y-2 relative">
-                <label className="text-sm font-medium text-foreground">
-                  Senha
-                </label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 pr-12"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-muted"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </Button>
+              {!showForgotPassword && (
+                <div className="space-y-2 relative">
+                  <label className="text-sm font-medium text-foreground">
+                    Senha
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="h-12 pr-12"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-muted"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <Button 
                 type="submit" 
@@ -133,8 +163,10 @@ const AdminLogin = () => {
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Verificando...
+                    {showForgotPassword ? 'Enviando...' : 'Verificando...'}
                   </div>
+                ) : showForgotPassword ? (
+                  'Enviar Email'
                 ) : (
                   <>
                     <Shield className="mr-2 h-5 w-5" />
@@ -143,15 +175,36 @@ const AdminLogin = () => {
                 )}
               </Button>
               
-              <div className="text-center">
-                <Button 
-                  type="button"
-                  variant="link" 
-                  className="text-muted-foreground hover:text-foreground text-sm p-0"
-                  onClick={() => navigate('/auth')}
-                >
-                  Voltar para login de farmácia
-                </Button>
+              <div className="text-center space-y-3">
+                {!showForgotPassword ? (
+                  <>
+                    <Button 
+                      type="button"
+                      variant="link" 
+                      className="text-primary hover:text-primary-dark text-sm p-0 block w-full"
+                      onClick={() => setShowForgotPassword(true)}
+                    >
+                      Esqueceu sua senha?
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant="link" 
+                      className="text-muted-foreground hover:text-foreground text-sm p-0"
+                      onClick={() => navigate('/auth')}
+                    >
+                      Voltar para login de farmácia
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    type="button"
+                    variant="link" 
+                    className="text-muted-foreground hover:text-foreground text-sm p-0"
+                    onClick={() => setShowForgotPassword(false)}
+                  >
+                    Voltar para login
+                  </Button>
+                )}
               </div>
             </form>
           </CardContent>

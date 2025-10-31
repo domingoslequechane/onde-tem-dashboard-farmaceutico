@@ -10,50 +10,56 @@ import ondeTemLogo from '@/assets/onde-tem-logo.png';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [farmaciaName, setFarmaciaName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Bem-vindo de volta.",
-        });
-        navigate('/');
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              farmacia_name: farmaciaName,
-            }
-          }
-        });
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Bem-vindo de volta.",
+      });
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Ocorreu um erro. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        if (error) throw error;
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-        toast({
-          title: "Cadastro realizado!",
-          description: "Verifique seu email para confirmar sua conta.",
-        });
-      }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado!",
+        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+      });
+      setShowForgotPassword(false);
     } catch (error: any) {
       toast({
         title: "Erro",
@@ -76,31 +82,15 @@ const Auth = () => {
               className="h-24 sm:h-28 w-auto mx-auto mb-4 drop-shadow-lg" 
             />
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-              {isLogin ? 'Bem-vindo de volta!' : 'Crie sua conta'}
+              {showForgotPassword ? 'Recuperar Senha' : 'Bem-vindo de volta!'}
             </h1>
             <p className="text-primary-foreground/90 text-sm">
-              {isLogin ? 'Entre para gerenciar sua farmácia' : 'Cadastre sua farmácia agora'}
+              {showForgotPassword ? 'Digite seu email para recuperar o acesso' : 'Entre para gerenciar sua farmácia'}
             </p>
           </div>
 
           <CardContent className="p-6 sm:p-8">
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Nome da Farmácia
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="Ex: Farmácia Central"
-                    value={farmaciaName}
-                    onChange={(e) => setFarmaciaName(e.target.value)}
-                    className="h-12"
-                    required={!isLogin}
-                  />
-                </div>
-              )}
-              
+            <form onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
                   Email
@@ -115,30 +105,32 @@ const Auth = () => {
                 />
               </div>
               
-              <div className="space-y-2 relative">
-                <label className="text-sm font-medium text-foreground">
-                  Senha
-                </label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 pr-12"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-muted"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </Button>
+              {!showForgotPassword && (
+                <div className="space-y-2 relative">
+                  <label className="text-sm font-medium text-foreground">
+                    Senha
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="h-12 pr-12"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-muted"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <Button 
                 type="submit" 
@@ -151,26 +143,18 @@ const Auth = () => {
                     Aguarde...
                   </div>
                 ) : (
-                  isLogin ? 'Entrar' : 'Cadastrar'
+                  showForgotPassword ? 'Enviar Email' : 'Entrar'
                 )}
               </Button>
               
               <div className="text-center space-y-3 pt-2">
-                <Button 
-                  type="button"
-                  variant="link" 
-                  className="text-muted-foreground hover:text-foreground text-sm p-0"
-                  onClick={() => setIsLogin(!isLogin)}
-                >
-                  {isLogin ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Faça login'}
-                </Button>
-                
-                {isLogin && (
+                {!showForgotPassword ? (
                   <>
                     <Button 
                       type="button"
                       variant="link" 
                       className="text-primary hover:text-primary-dark text-sm p-0 block w-full"
+                      onClick={() => setShowForgotPassword(true)}
                     >
                       Esqueceu sua senha?
                     </Button>
@@ -183,6 +167,15 @@ const Auth = () => {
                       Acesso Administrativo
                     </Button>
                   </>
+                ) : (
+                  <Button 
+                    type="button"
+                    variant="link" 
+                    className="text-muted-foreground hover:text-foreground text-sm p-0"
+                    onClick={() => setShowForgotPassword(false)}
+                  >
+                    Voltar para login
+                  </Button>
                 )}
               </div>
             </form>
