@@ -103,12 +103,14 @@ const AdminLogin = () => {
       if (error) throw error;
       if (!data.user) throw new Error('Falha ao criar usuário');
 
-      // Criar role de admin
+      // Usar upsert para evitar erro de duplicação
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert({
+        .upsert({
           user_id: data.user.id,
           role: 'admin'
+        }, {
+          onConflict: 'user_id,role'
         });
 
       if (roleError) throw roleError;
