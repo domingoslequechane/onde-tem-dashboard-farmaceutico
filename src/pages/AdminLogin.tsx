@@ -114,28 +114,17 @@ const AdminLogin = () => {
 
       toast({
         title: "Conta admin criada!",
-        description: data.user.confirmed_at 
-          ? "Login realizado com sucesso!" 
-          : "Verifique seu email para confirmar a conta.",
+        description: "Login realizado com sucesso!",
       });
       
-      // Se o email foi confirmado automaticamente, redirecionar
-      if (data.user.confirmed_at) {
-        navigate('/admin');
-      } else {
-        setShowSignup(false);
-        setEmail('');
-        setPassword('');
-      }
+      // Redirecionar para o painel admin
+      navigate('/admin');
     } catch (error: any) {
       console.error('Signup error details:', error);
       
       let errorMessage = "Ocorreu um erro. Tente novamente.";
       
-      // Mensagens específicas para erros comuns
-      if (error.message?.includes('Failed to fetch')) {
-        errorMessage = "Erro de conexão. Verifique se o provedor de email está configurado no Supabase (Authentication > Providers > Email).";
-      } else if (error.message?.includes('User already registered')) {
+      if (error.message?.includes('User already registered')) {
         errorMessage = "Este email já está registrado. Tente fazer login.";
       } else if (error.message) {
         errorMessage = error.message;
