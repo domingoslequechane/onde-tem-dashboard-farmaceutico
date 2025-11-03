@@ -98,27 +98,52 @@ const AdminLogin = () => {
         options: {
           emailRedirectTo: `${window.location.origin}/admin`,
           data: {
-            is_admin: 'true' // Metadata para o trigger identificar como admin
+            is_admin: 'true'
           }
         }
       });
 
-      if (error) throw error;
-      if (!data.user) throw new Error('Falha ao criar usuário');
+      if (error) {
+        console.error('Signup error:', error);
+        throw error;
+      }
+      
+      if (!data.user) {
+        throw new Error('Falha ao criar usuário');
+      }
 
-      // O role admin será criado automaticamente pelo trigger
       toast({
         title: "Conta admin criada!",
-        description: "Verifique seu email para confirmar a conta.",
+        description: data.user.confirmed_at 
+          ? "Login realizado com sucesso!" 
+          : "Verifique seu email para confirmar a conta.",
       });
       
-      setShowSignup(false);
-      setEmail('');
-      setPassword('');
+      // Se o email foi confirmado automaticamente, redirecionar
+      if (data.user.confirmed_at) {
+        navigate('/admin');
+      } else {
+        setShowSignup(false);
+        setEmail('');
+        setPassword('');
+      }
     } catch (error: any) {
+      console.error('Signup error details:', error);
+      
+      let errorMessage = "Ocorreu um erro. Tente novamente.";
+      
+      // Mensagens específicas para erros comuns
+      if (error.message?.includes('Failed to fetch')) {
+        errorMessage = "Erro de conexão. Verifique se o provedor de email está configurado no Supabase (Authentication > Providers > Email).";
+      } else if (error.message?.includes('User already registered')) {
+        errorMessage = "Este email já está registrado. Tente fazer login.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Erro ao criar conta",
-        description: error.message || "Ocorreu um erro. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
