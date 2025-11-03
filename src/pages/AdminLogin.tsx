@@ -7,6 +7,18 @@ import { Eye, EyeOff, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import ondeTemLogo from '@/assets/onde-tem-logo.png';
+import { z } from 'zod';
+
+const adminAuthSchema = z.object({
+  email: z.string()
+    .trim()
+    .min(1, 'Email é obrigatório')
+    .email('Email inválido')
+    .max(255, 'Email muito longo'),
+  password: z.string()
+    .min(8, 'A senha deve ter no mínimo 8 caracteres')
+    .max(72, 'A senha deve ter no máximo 72 caracteres')
+});
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -22,9 +34,12 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
+      // Validar inputs
+      const validatedData = adminAuthSchema.parse({ email: email.trim(), password });
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: validatedData.email,
+        password: validatedData.password,
       });
 
       if (error) throw error;
@@ -50,11 +65,19 @@ const AdminLogin = () => {
       
       navigate('/admin');
     } catch (error: any) {
-      toast({
-        title: "Erro no login",
-        description: error.message || "Credenciais inválidas ou sem permissão de admin.",
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Erro de validação",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro no login",
+          description: error.message || "Credenciais inválidas ou sem permissão de admin.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +88,11 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // Validar email
+      const emailSchema = z.string().trim().email('Email inválido');
+      const validatedEmail = emailSchema.parse(email.trim());
+
+      const { error } = await supabase.auth.resetPasswordForEmail(validatedEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
@@ -77,11 +104,19 @@ const AdminLogin = () => {
       });
       setShowForgotPassword(false);
     } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Ocorreu um erro. Tente novamente.",
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Erro de validação",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: error.message || "Ocorreu um erro. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -92,9 +127,12 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
+      // Validar inputs
+      const validatedData = adminAuthSchema.parse({ email: email.trim(), password });
+
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: validatedData.email,
+        password: validatedData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/admin`,
           data: {
@@ -104,7 +142,6 @@ const AdminLogin = () => {
       });
 
       if (error) {
-        console.error('Signup error:', error);
         throw error;
       }
       
@@ -120,12 +157,18 @@ const AdminLogin = () => {
       // Redirecionar para o painel admin
       navigate('/admin');
     } catch (error: any) {
-      console.error('Signup error details:', error);
-      
       let errorMessage = "Ocorreu um erro. Tente novamente.";
       
-      if (error.message?.includes('User already registered')) {
+      if (error instanceof z.ZodError) {
+        errorMessage = error.errors[0].message;
+      } else if (error.message?.includes('User already registered')) {
         errorMessage = "Este email já está registrado. Tente fazer login.";
+      } else if (error.message?.includes('Unable to validate email')) {
+        errorMessage = "Email inválido. Verifique o formato do email.";
+      } else if (error.message?.includes('Password should be')) {
+        errorMessage = "A senha deve ter no mínimo 8 caracteres.";
+      } else if (error.message?.includes('Failed to fetch')) {
+        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
       } else if (error.message) {
         errorMessage = error.message;
       }
