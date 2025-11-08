@@ -1,1 +1,4 @@
 project_id = "uacernprfbnascyfrkrb"
+
+[functions.health-check]
+verify_jwt = false
