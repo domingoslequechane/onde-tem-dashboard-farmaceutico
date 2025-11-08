@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Eye, EyeOff, Shield } from 'lucide-react';
+import { Eye, EyeOff, Shield, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import ondeTemLogo from '@/assets/onde-tem-logo.png';
@@ -28,6 +28,7 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +123,52 @@ const AdminLogin = () => {
     }
   };
 
+  const handleHealthCheck = async () => {
+    setIsCheckingHealth(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('health-check');
+      
+      if (error) throw error;
+      
+      const healthData = data as {
+        status: string;
+        checks: {
+          env_vars: boolean;
+          database: boolean;
+          auth: boolean;
+        };
+        message: string;
+      };
+      
+      if (healthData.status === 'healthy') {
+        toast({
+          title: "✅ Conexão OK",
+          description: "Todos os serviços estão operacionais. Você pode criar sua conta.",
+        });
+      } else {
+        const issues = [];
+        if (!healthData.checks.env_vars) issues.push('Variáveis de ambiente');
+        if (!healthData.checks.database) issues.push('Banco de dados');
+        if (!healthData.checks.auth) issues.push('Autenticação');
+        
+        toast({
+          title: "⚠️ Problemas detectados",
+          description: `Sistemas com problemas: ${issues.join(', ')}. Configure as URLs no Supabase.`,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "❌ Erro de Conectividade",
+        description: "Não foi possível conectar ao Supabase. Verifique se as URLs de redirecionamento estão configuradas no dashboard do Supabase.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -158,6 +205,7 @@ const AdminLogin = () => {
       navigate('/admin');
     } catch (error: any) {
       let errorMessage = "Ocorreu um erro. Tente novamente.";
+      let errorTitle = "Erro ao criar conta";
       
       if (error instanceof z.ZodError) {
         errorMessage = error.errors[0].message;
@@ -168,13 +216,14 @@ const AdminLogin = () => {
       } else if (error.message?.includes('Password should be')) {
         errorMessage = "A senha deve ter no mínimo 8 caracteres.";
       } else if (error.message?.includes('Failed to fetch')) {
-        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+        errorTitle = "Erro de Configuração";
+        errorMessage = "Não foi possível conectar ao Supabase. AÇÃO NECESSÁRIA: Configure as URLs de redirecionamento no dashboard do Supabase em Authentication → URL Configuration. Adicione: " + window.location.origin;
       } else if (error.message) {
         errorMessage = error.message;
       }
       
       toast({
-        title: "Erro ao criar conta",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });
@@ -276,6 +325,28 @@ const AdminLogin = () => {
                   </>
                 )}
               </Button>
+
+              {showSignup && (
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="w-full h-12 border-2 border-primary/20 hover:border-primary/40"
+                  onClick={handleHealthCheck}
+                  disabled={isCheckingHealth}
+                >
+                  {isCheckingHealth ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Verificando...
+                    </div>
+                  ) : (
+                    <>
+                      <Activity className="mr-2 h-5 w-5" />
+                      Testar Conectividade
+                    </>
+                  )}
+                </Button>
+              )}
               
               <div className="text-center space-y-3">
                 {!showForgotPassword && !showSignup ? (
