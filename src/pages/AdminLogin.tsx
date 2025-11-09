@@ -179,16 +179,6 @@ const AdminLogin = () => {
 
       console.log('Tentando criar conta admin...', { email: validatedData.email });
 
-      // Primeiro verificar se o email já existe
-      const { data: existingUser } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', (await supabase.auth.signInWithPassword({
-          email: validatedData.email,
-          password: 'invalid-check-only'
-        })).data?.user?.id || 'none')
-        .maybeSingle();
-
       const { data, error } = await supabase.auth.signUp({
         email: validatedData.email,
         password: validatedData.password,
@@ -238,24 +228,21 @@ const AdminLogin = () => {
       
       if (error instanceof z.ZodError) {
         errorMessage = error.errors[0].message;
-      } else if (error.name === 'AuthApiError' && error.status === 422) {
-        errorTitle = "Email já cadastrado";
-        errorMessage = "Este email já possui uma conta. Use outro email ou faça login.";
       } else if (error.message?.includes('User already registered')) {
         errorTitle = "Email já cadastrado";
-        errorMessage = "Este email já está registrado. Use outro email para criar conta admin.";
+        errorMessage = "Este email já está em uso. Use outro email.";
       } else if (error.message?.includes('Unable to validate email')) {
-        errorMessage = "Email inválido. Verifique o formato do email.";
+        errorMessage = "Email inválido. Verifique o formato.";
       } else if (error.message?.includes('Password should be')) {
         errorMessage = "A senha deve ter no mínimo 8 caracteres.";
-      } else if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError') || !error.message) {
-        errorTitle = "Email já cadastrado";
-        errorMessage = "Este email já possui uma conta. Use um email diferente para criar uma nova conta admin.";
-      } else if (error.status === 429) {
-        errorTitle = "Muitas tentativas";
-        errorMessage = "Aguarde alguns minutos antes de tentar novamente.";
-      } else if (error.message) {
-        errorMessage = error.message;
+      } else if (error.status === 429 || error.message?.includes('rate')) {
+        errorTitle = "Limite excedido";
+        errorMessage = "Muitas tentativas. Aguarde 5 minutos ou use o SQL direto para criar admin (veja as instruções no chat).";
+      } else if (error.message?.includes('Failed to fetch') || !error.message) {
+        errorTitle = "Erro de Conexão";  
+        errorMessage = "Possível rate limit do Supabase. Aguarde alguns minutos ou crie o admin via SQL (veja instruções no chat).";
+      } else {
+        errorMessage = error.message || "Erro desconhecido. Use SQL para criar admin (veja chat).";
       }
       
       toast({
