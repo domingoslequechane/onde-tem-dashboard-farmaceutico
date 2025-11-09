@@ -177,6 +177,8 @@ const AdminLogin = () => {
       // Validar inputs
       const validatedData = adminAuthSchema.parse({ email: email.trim(), password });
 
+      console.log('Tentando criar conta admin...', { email: validatedData.email });
+
       const { data, error } = await supabase.auth.signUp({
         email: validatedData.email,
         password: validatedData.password,
@@ -188,36 +190,57 @@ const AdminLogin = () => {
         }
       });
 
+      console.log('Resposta do signup:', { data, error });
+
       if (error) {
+        console.error('Erro no signup:', error);
         throw error;
       }
       
       if (!data.user) {
+        console.error('Usuário não foi criado');
         throw new Error('Falha ao criar usuário');
       }
 
+      console.log('Conta criada com sucesso:', data.user.id);
+
       toast({
         title: "Conta admin criada!",
-        description: "Login realizado com sucesso!",
+        description: data.user.identities?.length === 0 
+          ? "Verifique seu email para confirmar a conta antes de fazer login." 
+          : "Login realizado com sucesso!",
       });
       
-      // Redirecionar para o painel admin
-      navigate('/admin');
+      // Se o usuário já foi confirmado automaticamente, redirecionar
+      if (data.session) {
+        navigate('/admin');
+      } else {
+        toast({
+          title: "Confirme seu email",
+          description: "Enviamos um email de confirmação. Verifique sua caixa de entrada.",
+        });
+      }
     } catch (error: any) {
+      console.error('Erro completo no signup:', error);
+      
       let errorMessage = "Ocorreu um erro. Tente novamente.";
       let errorTitle = "Erro ao criar conta";
       
       if (error instanceof z.ZodError) {
         errorMessage = error.errors[0].message;
       } else if (error.message?.includes('User already registered')) {
-        errorMessage = "Este email já está registrado. Tente fazer login.";
+        errorTitle = "Email já cadastrado";
+        errorMessage = "Este email já está registrado. Tente fazer login ou use 'Esqueceu sua senha?'";
       } else if (error.message?.includes('Unable to validate email')) {
         errorMessage = "Email inválido. Verifique o formato do email.";
       } else if (error.message?.includes('Password should be')) {
         errorMessage = "A senha deve ter no mínimo 8 caracteres.";
-      } else if (error.message?.includes('Failed to fetch')) {
-        errorTitle = "Erro de Configuração";
-        errorMessage = "Não foi possível conectar ao Supabase. AÇÃO NECESSÁRIA: Configure as URLs de redirecionamento no dashboard do Supabase em Authentication → URL Configuration. Adicione: " + window.location.origin;
+      } else if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+        errorTitle = "Erro de Conectividade";
+        errorMessage = "Não foi possível conectar ao Supabase. Tente novamente em alguns segundos.";
+      } else if (error.status === 429) {
+        errorTitle = "Muitas tentativas";
+        errorMessage = "Aguarde alguns minutos antes de tentar novamente.";
       } else if (error.message) {
         errorMessage = error.message;
       }
