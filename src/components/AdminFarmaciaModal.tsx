@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Copy, RefreshCw } from 'lucide-react';
 
 interface AdminFarmaciaModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface AdminFarmaciaModalProps {
 
 const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarmaciaModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
   const [formData, setFormData] = useState({
     nome: farmacia?.nome || '',
     email: farmacia?.email || '',
@@ -34,22 +36,65 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
     cep: farmacia?.cep || '',
     latitude: farmacia?.latitude || '',
     longitude: farmacia?.longitude || '',
-    horario_funcionamento: farmacia?.horario_funcionamento || '',
+    horario_abertura: farmacia?.horario_abertura || '08:00',
+    horario_fechamento: farmacia?.horario_fechamento || '20:00',
     plano: farmacia?.plano || 'free',
     status_assinatura: farmacia?.status_assinatura || 'ativa',
     ativa: farmacia?.ativa ?? true,
   });
 
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setGeneratedPassword(password);
+    return password;
+  };
+
+  const copyPassword = () => {
+    navigator.clipboard.writeText(generatedPassword);
+    toast({
+      title: "Senha copiada!",
+      description: "A senha foi copiada para a área de transferência.",
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!farmacia && !formData.email) {
+      toast({
+        title: "Email obrigatório",
+        description: "Por favor, informe o email da farmácia.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!farmacia && !generatedPassword) {
+      toast({
+        title: "Senha não gerada",
+        description: "Por favor, gere uma senha antes de salvar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       if (farmacia) {
         // Atualizar farmácia existente
+        const updateData = {
+          ...formData,
+          horario_funcionamento: `${formData.horario_abertura} - ${formData.horario_fechamento}`
+        };
+        
         const { error } = await supabase
           .from('farmacias')
-          .update(formData)
+          .update(updateData)
           .eq('id', farmacia.id);
 
         if (error) throw error;
@@ -59,16 +104,36 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
           description: "As informações foram atualizadas com sucesso.",
         });
       } else {
-        // Criar nova farmácia
-        const { error } = await supabase
-          .from('farmacias')
-          .insert([formData]);
+        // Criar conta de usuário para a farmácia
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: generatedPassword,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+          }
+        });
 
-        if (error) throw error;
+        if (authError) throw authError;
+
+        if (!authData.user) throw new Error('Erro ao criar usuário');
+
+        // Criar farmácia vinculada ao usuário
+        const farmaciaData = {
+          ...formData,
+          user_id: authData.user.id,
+          horario_funcionamento: `${formData.horario_abertura} - ${formData.horario_fechamento}`
+        };
+        
+        const { error: farmaciaError } = await supabase
+          .from('farmacias')
+          .insert([farmaciaData]);
+
+        if (farmaciaError) throw farmaciaError;
 
         toast({
           title: "Farmácia criada!",
-          description: "A farmácia foi cadastrada com sucesso.",
+          description: `Conta criada com email: ${formData.email}. Senha: ${generatedPassword}`,
+          duration: 10000,
         });
       }
 
@@ -119,6 +184,55 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
                 placeholder="(+258) 84 000 0000"
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email {!farmacia && '*'}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="farmacia@exemplo.com"
+                required={!farmacia}
+                disabled={!!farmacia}
+              />
+            </div>
+
+            {!farmacia && (
+              <div className="space-y-2">
+                <Label htmlFor="senha">Senha Automática *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="senha"
+                    type="text"
+                    value={generatedPassword}
+                    readOnly
+                    placeholder="Clique para gerar"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={generatePassword}
+                    title="Gerar nova senha"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                  {generatedPassword && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={copyPassword}
+                      title="Copiar senha"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="whatsapp">WhatsApp</Label>
@@ -173,12 +287,22 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="horario">Horário de Funcionamento</Label>
+              <Label htmlFor="horario_abertura">Horário de Abertura</Label>
               <Input
-                id="horario"
-                value={formData.horario_funcionamento}
-                onChange={(e) => setFormData({ ...formData, horario_funcionamento: e.target.value })}
-                placeholder="Ex: 08:00 - 20:00"
+                id="horario_abertura"
+                type="time"
+                value={formData.horario_abertura}
+                onChange={(e) => setFormData({ ...formData, horario_abertura: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="horario_fechamento">Horário de Fechamento</Label>
+              <Input
+                id="horario_fechamento"
+                type="time"
+                value={formData.horario_fechamento}
+                onChange={(e) => setFormData({ ...formData, horario_fechamento: e.target.value })}
               />
             </div>
 

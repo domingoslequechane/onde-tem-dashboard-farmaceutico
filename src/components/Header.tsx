@@ -1,6 +1,7 @@
+import { useNavigate, useLocation } from 'react-router-dom';
 import ondeTemLogo from '@/assets/onde-tem-logo.png';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, Menu } from 'lucide-react';
+import { LogOut, User, Menu, Settings } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,10 @@ interface HeaderProps {
 }
 
 const Header = ({ user, onLogout }: HeaderProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminPage = location.pathname.startsWith('/admin');
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm">
       <div className="container mx-auto px-4 sm:px-6">
@@ -39,7 +44,11 @@ const Header = ({ user, onLogout }: HeaderProps) => {
           
           {/* Desktop User Info & Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-muted">
+            <div 
+              className="flex items-center gap-3 px-4 py-2 rounded-lg bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
+              onClick={() => isAdminPage && navigate('/admin/settings')}
+              title={isAdminPage ? 'Configurações' : undefined}
+            >
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 <User size={18} />
               </div>
@@ -49,6 +58,9 @@ const Header = ({ user, onLogout }: HeaderProps) => {
                   {user?.email}
                 </p>
               </div>
+              {isAdminPage && (
+                <Settings size={16} className="text-muted-foreground" />
+              )}
             </div>
             
             <AlertDialog>
@@ -85,7 +97,10 @@ const Header = ({ user, onLogout }: HeaderProps) => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px] sm:w-[320px]">
                 <div className="flex flex-col gap-6 py-6">
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted">
+                  <div 
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
+                    onClick={() => isAdminPage && navigate('/admin/settings')}
+                  >
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground flex-shrink-0">
                       <User size={20} />
                     </div>
@@ -95,6 +110,9 @@ const Header = ({ user, onLogout }: HeaderProps) => {
                         {user?.email}
                       </p>
                     </div>
+                    {isAdminPage && (
+                      <Settings size={16} className="text-muted-foreground" />
+                    )}
                   </div>
 
                   <AlertDialog>

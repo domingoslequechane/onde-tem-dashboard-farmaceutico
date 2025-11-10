@@ -7,9 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Plus, Power, PowerOff, Key, Edit, Search, Store, Users, TrendingUp, Shield } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Power, PowerOff, Key, Edit, Search, Store, Users, TrendingUp, Shield, UserCog, BarChart } from 'lucide-react';
 import Header from '@/components/Header';
 import AdminFarmaciaModal from '@/components/AdminFarmaciaModal';
+import AdminManagers from '@/components/AdminManagers';
+import AdminStatistics from '@/components/AdminStatistics';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -193,128 +196,156 @@ const Admin = () => {
           </Card>
         </div>
 
-        {/* Tabela de Farmácias */}
-        <Card className="border-none shadow-lg">
-          <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <CardTitle className="text-xl">Farmácias Cadastradas</CardTitle>
-                <CardDescription className="mt-1">Gerencie todas as farmácias da plataforma</CardDescription>
-              </div>
-              <Button 
-                onClick={() => {
-                  setEditingFarmacia(null);
-                  setIsModalOpen(true);
-                }}
-                className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Farmácia
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            {/* Busca */}
-            <div className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-                <Input
-                  placeholder="Buscar por nome, cidade ou província..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-11"
-                />
-              </div>
-            </div>
+        {/* Tabs para diferentes seções */}
+        <Tabs defaultValue="farmacias" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
+            <TabsTrigger value="farmacias" className="flex items-center gap-2">
+              <Store className="h-4 w-4" />
+              <span className="hidden sm:inline">Farmácias</span>
+            </TabsTrigger>
+            <TabsTrigger value="administradores" className="flex items-center gap-2">
+              <UserCog className="h-4 w-4" />
+              <span className="hidden sm:inline">Administradores</span>
+            </TabsTrigger>
+            <TabsTrigger value="estatisticas" className="flex items-center gap-2">
+              <BarChart className="h-4 w-4" />
+              <span className="hidden sm:inline">Estatísticas</span>
+            </TabsTrigger>
+          </TabsList>
 
-            {/* Tabela */}
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Cidade</TableHead>
-                    <TableHead>Plano</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Assinatura</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredFarmacias.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        Nenhuma farmácia encontrada
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredFarmacias.map((farmacia) => (
-                      <TableRow key={farmacia.id} className="hover:bg-muted/50">
-                        <TableCell className="font-medium">{farmacia.nome}</TableCell>
-                        <TableCell>{farmacia.cidade}</TableCell>
-                        <TableCell>
-                          <Badge variant={farmacia.plano === 'premium' ? 'default' : 'secondary'} className={farmacia.plano === 'premium' ? 'bg-secondary' : ''}>
-                            {farmacia.plano || 'free'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={farmacia.ativa ? 'default' : 'destructive'} className={farmacia.ativa ? 'bg-secondary' : ''}>
-                            {farmacia.ativa ? 'Ativa' : 'Inativa'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={farmacia.status_assinatura === 'ativa' ? 'default' : 'secondary'} className={farmacia.status_assinatura === 'ativa' ? 'bg-primary' : ''}>
-                            {farmacia.status_assinatura || 'N/A'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => {
-                                setEditingFarmacia(farmacia);
-                                setIsModalOpen(true);
-                              }}
-                              title="Editar"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => toggleFarmaciaStatus(farmacia.id, farmacia.ativa)}
-                              title={farmacia.ativa ? 'Desativar' : 'Ativar'}
-                            >
-                              {farmacia.ativa ? (
-                                <PowerOff className="h-4 w-4" />
-                              ) : (
-                                <Power className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => {
-                                toast({
-                                  title: "Em breve",
-                                  description: "Funcionalidade de recuperação de acesso em desenvolvimento.",
-                                });
-                              }}
-                              title="Recuperar Acesso"
-                            >
-                              <Key className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+          {/* Aba de Farmácias */}
+          <TabsContent value="farmacias" className="space-y-6">
+            <Card className="border-none shadow-lg">
+              <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <CardTitle className="text-xl">Farmácias Cadastradas</CardTitle>
+                    <CardDescription className="mt-1">Gerencie todas as farmácias da plataforma</CardDescription>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setEditingFarmacia(null);
+                      setIsModalOpen(true);
+                    }}
+                    className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar Farmácia
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="mb-6">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                    <Input
+                      placeholder="Buscar por nome, cidade ou província..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-11"
+                    />
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Cidade</TableHead>
+                        <TableHead>Plano</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Assinatura</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredFarmacias.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                            Nenhuma farmácia encontrada
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredFarmacias.map((farmacia) => (
+                          <TableRow key={farmacia.id} className="hover:bg-muted/50">
+                            <TableCell className="font-medium">{farmacia.nome}</TableCell>
+                            <TableCell>{farmacia.cidade}</TableCell>
+                            <TableCell>
+                              <Badge variant={farmacia.plano === 'premium' ? 'default' : 'secondary'} className={farmacia.plano === 'premium' ? 'bg-secondary' : ''}>
+                                {farmacia.plano || 'free'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={farmacia.ativa ? 'default' : 'destructive'} className={farmacia.ativa ? 'bg-secondary' : ''}>
+                                {farmacia.ativa ? 'Ativa' : 'Inativa'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={farmacia.status_assinatura === 'ativa' ? 'default' : 'secondary'} className={farmacia.status_assinatura === 'ativa' ? 'bg-primary' : ''}>
+                                {farmacia.status_assinatura || 'N/A'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => {
+                                    setEditingFarmacia(farmacia);
+                                    setIsModalOpen(true);
+                                  }}
+                                  title="Editar"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => toggleFarmaciaStatus(farmacia.id, farmacia.ativa)}
+                                  title={farmacia.ativa ? 'Desativar' : 'Ativar'}
+                                >
+                                  {farmacia.ativa ? (
+                                    <PowerOff className="h-4 w-4" />
+                                  ) : (
+                                    <Power className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => {
+                                    toast({
+                                      title: "Em breve",
+                                      description: "Funcionalidade de recuperação de acesso em desenvolvimento.",
+                                    });
+                                  }}
+                                  title="Recuperar Acesso"
+                                >
+                                  <Key className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Aba de Administradores */}
+          <TabsContent value="administradores">
+            <AdminManagers />
+          </TabsContent>
+
+          {/* Aba de Estatísticas */}
+          <TabsContent value="estatisticas">
+            <AdminStatistics />
+          </TabsContent>
+        </Tabs>
       </main>
 
       <AdminFarmaciaModal
