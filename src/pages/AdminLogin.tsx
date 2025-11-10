@@ -26,9 +26,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
-  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+  const [isSignupMode, setIsSignupMode] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,170 +82,38 @@ const AdminLogin = () => {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      // Validar email
-      const emailSchema = z.string().trim().email('Email inválido');
-      const validatedEmail = emailSchema.parse(email.trim());
-
-      const { error } = await supabase.auth.resetPasswordForEmail(validatedEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Email enviado!",
-        description: "Verifique sua caixa de entrada para redefinir sua senha.",
-      });
-      setShowForgotPassword(false);
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: "Erro de validação",
-          description: error.errors[0].message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro",
-          description: error.message || "Ocorreu um erro. Tente novamente.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleHealthCheck = async () => {
-    setIsCheckingHealth(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('health-check');
-      
-      if (error) throw error;
-      
-      const healthData = data as {
-        status: string;
-        checks: {
-          env_vars: boolean;
-          database: boolean;
-          auth: boolean;
-        };
-        message: string;
-      };
-      
-      if (healthData.status === 'healthy') {
-        toast({
-          title: "✅ Conexão OK",
-          description: "Todos os serviços estão operacionais. Você pode criar sua conta.",
-        });
-      } else {
-        const issues = [];
-        if (!healthData.checks.env_vars) issues.push('Variáveis de ambiente');
-        if (!healthData.checks.database) issues.push('Banco de dados');
-        if (!healthData.checks.auth) issues.push('Autenticação');
-        
-        toast({
-          title: "⚠️ Problemas detectados",
-          description: `Sistemas com problemas: ${issues.join(', ')}. Configure as URLs no Supabase.`,
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "❌ Erro de Conectividade",
-        description: "Não foi possível conectar ao Supabase. Verifique se as URLs de redirecionamento estão configuradas no dashboard do Supabase.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCheckingHealth(false);
-    }
-  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Validar inputs
       const validatedData = adminAuthSchema.parse({ email: email.trim(), password });
-
-      console.log('Tentando criar conta admin...', { email: validatedData.email });
 
       const { data, error } = await supabase.auth.signUp({
         email: validatedData.email,
         password: validatedData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/admin`,
-          data: {
-            is_admin: 'true'
-          }
         }
       });
 
-      console.log('Resposta do signup:', { data, error });
-
-      if (error) {
-        console.error('Erro no signup:', error);
-        throw error;
-      }
-      
-      if (!data.user) {
-        console.error('Usuário não foi criado');
-        throw new Error('Falha ao criar usuário');
-      }
-
-      console.log('Conta criada com sucesso:', data.user.id);
+      if (error) throw error;
 
       toast({
-        title: "Conta admin criada!",
-        description: data.user.identities?.length === 0 
-          ? "Verifique seu email para confirmar a conta antes de fazer login." 
-          : "Login realizado com sucesso!",
+        title: "Conta criada!",
+        description: "Verifique seu email para confirmar. Após confirmar, faça login.",
       });
       
-      // Se o usuário já foi confirmado automaticamente, redirecionar
-      if (data.session) {
-        navigate('/admin');
-      } else {
-        toast({
-          title: "Confirme seu email",
-          description: "Enviamos um email de confirmação. Verifique sua caixa de entrada.",
-        });
-      }
+      setIsSignupMode(false);
+      setEmail('');
+      setPassword('');
     } catch (error: any) {
-      console.error('Erro completo no signup:', error);
-      
-      let errorMessage = "Ocorreu um erro. Tente novamente.";
-      let errorTitle = "Erro ao criar conta";
-      
-      if (error instanceof z.ZodError) {
-        errorMessage = error.errors[0].message;
-      } else if (error.message?.includes('User already registered')) {
-        errorTitle = "Email já cadastrado";
-        errorMessage = "Este email já está em uso. Use outro email.";
-      } else if (error.message?.includes('Unable to validate email')) {
-        errorMessage = "Email inválido. Verifique o formato.";
-      } else if (error.message?.includes('Password should be')) {
-        errorMessage = "A senha deve ter no mínimo 8 caracteres.";
-      } else if (error.status === 429 || error.message?.includes('rate')) {
-        errorTitle = "Limite excedido";
-        errorMessage = "Muitas tentativas. Aguarde 5 minutos ou use o SQL direto para criar admin (veja as instruções no chat).";
-      } else if (error.message?.includes('Failed to fetch') || !error.message) {
-        errorTitle = "Erro de Conexão";  
-        errorMessage = "Possível rate limit do Supabase. Aguarde alguns minutos ou crie o admin via SQL (veja instruções no chat).";
-      } else {
-        errorMessage = error.message || "Erro desconhecido. Use SQL para criar admin (veja chat).";
-      }
-      
       toast({
-        title: errorTitle,
-        description: errorMessage,
+        title: "Erro",
+        description: error instanceof z.ZodError 
+          ? error.errors[0].message 
+          : error.message || "Não foi possível criar a conta.",
         variant: "destructive",
       });
     } finally {
@@ -266,10 +132,10 @@ const AdminLogin = () => {
               </div>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-              {showForgotPassword ? 'Recuperar Senha Admin' : showSignup ? 'Criar Conta Admin' : 'Painel Administrativo'}
+              {isSignupMode ? 'Criar Conta Admin' : 'Painel Administrativo'}
             </h1>
             <p className="text-destructive-foreground/90 text-sm">
-              {showForgotPassword ? 'Digite seu email para recuperar o acesso' : showSignup ? 'Crie uma nova conta de administrador' : 'Acesso restrito aos administradores do sistema'}
+              {isSignupMode ? 'Crie sua conta de administrador' : 'Acesso restrito aos administradores'}
             </p>
           </div>
 
@@ -282,10 +148,10 @@ const AdminLogin = () => {
               />
             </div>
 
-            <form onSubmit={showForgotPassword ? handleForgotPassword : showSignup ? handleSignup : handleSubmit} className="space-y-5">
+            <form onSubmit={isSignupMode ? handleSignup : handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
-                  Email do Administrador
+                  Email
                 </label>
                 <Input
                   type="email"
@@ -297,7 +163,7 @@ const AdminLogin = () => {
                 />
               </div>
               
-              {!showForgotPassword && (
+              {(
                 <div className="space-y-2 relative">
                   <label className="text-sm font-medium text-foreground">
                     Senha
@@ -332,86 +198,35 @@ const AdminLogin = () => {
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    {showForgotPassword ? 'Enviando...' : showSignup ? 'Criando...' : 'Verificando...'}
+                    {isSignupMode ? 'Criando...' : 'Verificando...'}
                   </div>
-                ) : showForgotPassword ? (
-                  'Enviar Email'
-                ) : showSignup ? (
-                  <>
-                    <Shield className="mr-2 h-5 w-5" />
-                    Criar Conta Admin
-                  </>
+                ) : isSignupMode ? (
+                  'Criar Conta Admin'
                 ) : (
                   <>
                     <Shield className="mr-2 h-5 w-5" />
-                    Acessar Painel Admin
+                    Acessar Painel
                   </>
                 )}
               </Button>
-
-              {showSignup && (
+              
+              <div className="text-center space-y-2">
                 <Button 
                   type="button"
-                  variant="outline" 
-                  className="w-full h-12 border-2 border-primary/20 hover:border-primary/40"
-                  onClick={handleHealthCheck}
-                  disabled={isCheckingHealth}
+                  variant="link" 
+                  className="text-primary text-sm p-0 block w-full"
+                  onClick={() => setIsSignupMode(!isSignupMode)}
                 >
-                  {isCheckingHealth ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                      Verificando...
-                    </div>
-                  ) : (
-                    <>
-                      <Activity className="mr-2 h-5 w-5" />
-                      Testar Conectividade
-                    </>
-                  )}
+                  {isSignupMode ? 'Já tenho conta - Fazer login' : 'Criar primeira conta admin'}
                 </Button>
-              )}
-              
-              <div className="text-center space-y-3">
-                {!showForgotPassword && !showSignup ? (
-                  <>
-                    <Button 
-                      type="button"
-                      variant="link" 
-                      className="text-primary hover:text-primary-dark text-sm p-0 block w-full"
-                      onClick={() => setShowForgotPassword(true)}
-                    >
-                      Esqueceu sua senha?
-                    </Button>
-                    <Button 
-                      type="button"
-                      variant="link" 
-                      className="text-primary hover:text-primary-dark text-sm p-0 block w-full"
-                      onClick={() => setShowSignup(true)}
-                    >
-                      Criar conta de administrador
-                    </Button>
-                    <Button 
-                      type="button"
-                      variant="link" 
-                      className="text-muted-foreground hover:text-foreground text-sm p-0"
-                      onClick={() => navigate('/auth')}
-                    >
-                      Voltar para login de farmácia
-                    </Button>
-                  </>
-                ) : (
-                  <Button 
-                    type="button"
-                    variant="link" 
-                    className="text-muted-foreground hover:text-foreground text-sm p-0"
-                    onClick={() => {
-                      setShowForgotPassword(false);
-                      setShowSignup(false);
-                    }}
-                  >
-                    Voltar para login
-                  </Button>
-                )}
+                <Button 
+                  type="button"
+                  variant="link" 
+                  className="text-muted-foreground hover:text-foreground text-sm p-0"
+                  onClick={() => navigate('/auth')}
+                >
+                  Voltar para login de farmácia
+                </Button>
               </div>
             </form>
           </CardContent>
