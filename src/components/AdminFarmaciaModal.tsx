@@ -118,8 +118,9 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
         if (!authData.user) throw new Error('Erro ao criar usuário');
 
         // Criar farmácia vinculada ao usuário
+        const { email, ...farmaciaFields } = formData;
         const farmaciaData = {
-          ...formData,
+          ...farmaciaFields,
           user_id: authData.user.id,
           horario_funcionamento: `${formData.horario_abertura} - ${formData.horario_fechamento}`
         };
@@ -277,12 +278,12 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cep">CEP</Label>
+              <Label htmlFor="cep">NUIT</Label>
               <Input
                 id="cep"
                 value={formData.cep}
                 onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                placeholder="Ex: 1100"
+                placeholder="Ex: 123456789"
               />
             </div>
 

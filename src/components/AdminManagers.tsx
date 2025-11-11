@@ -10,8 +10,15 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, Trash2, Copy, RefreshCw, UserCog } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
+interface Admin {
+  id: string;
+  user_id: string;
+  role: string;
+  email?: string;
+}
+
 const AdminManagers = () => {
-  const [admins, setAdmins] = useState<any[]>([]);
+  const [admins, setAdmins] = useState<Admin[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -24,15 +31,31 @@ const AdminManagers = () => {
   const fetchAdmins = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('id, user_id, role')
         .eq('role', 'admin')
         .order('user_id', { ascending: false });
 
-      if (error) throw error;
+      if (rolesError) throw rolesError;
 
-      setAdmins(data || []);
+      // Get emails from auth.users
+      const { data, error: usersError } = await supabase.auth.admin.listUsers();
+      
+      if (usersError) throw usersError;
+
+      // Map user_id to email
+      const adminsWithEmails: Admin[] = (rolesData || []).map((admin: any) => {
+        const user = data.users?.find((u: any) => u.id === admin.user_id);
+        return {
+          id: admin.id,
+          user_id: admin.user_id,
+          role: admin.role,
+          email: user?.email || admin.user_id
+        };
+      });
+
+      setAdmins(adminsWithEmails);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar administradores",
@@ -178,7 +201,7 @@ const AdminManagers = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID do Usuário</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Função</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -193,7 +216,7 @@ const AdminManagers = () => {
                 ) : (
                   admins.map((admin) => (
                     <TableRow key={admin.id} className="hover:bg-muted/50">
-                      <TableCell className="font-mono text-sm">{admin.user_id}</TableCell>
+                      <TableCell className="font-medium">{admin.email || admin.user_id}</TableCell>
                       <TableCell>
                         <Badge className="bg-primary">Administrador</Badge>
                       </TableCell>
