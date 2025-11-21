@@ -103,7 +103,10 @@ const AdminManagers = () => {
         email: email.trim(),
         password: generatedPassword,
         options: {
-          emailRedirectTo: `${window.location.origin}/admin`,
+          emailRedirectTo: `${window.location.origin}/admin/reset-password`,
+          data: {
+            email: email.trim()
+          }
         }
       });
 
