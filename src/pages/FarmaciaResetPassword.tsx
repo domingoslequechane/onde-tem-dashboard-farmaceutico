@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Eye, EyeOff, KeyRound } from 'lucide-react';
+import { Eye, EyeOff, KeyRound, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import ondeTemLogo from '@/assets/onde-tem-logo.png';
 
-const ResetPassword = () => {
+const FarmaciaResetPassword = () => {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,7 +18,6 @@ const ResetPassword = () => {
   const [validSession, setValidSession] = useState(false);
 
   useEffect(() => {
-    // Verificar se há uma sessão de recuperação válida
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setValidSession(true);
@@ -45,10 +44,10 @@ const ResetPassword = () => {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       toast({
         title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres.",
+        description: "A senha deve ter pelo menos 8 caracteres.",
         variant: "destructive",
       });
       return;
@@ -68,7 +67,6 @@ const ResetPassword = () => {
         description: "Sua senha foi atualizada com sucesso.",
       });
 
-      // Aguardar um momento e redirecionar para login
       setTimeout(() => {
         navigate('/auth');
       }, 1500);
@@ -94,11 +92,11 @@ const ResetPassword = () => {
           <div className="bg-gradient-to-br from-primary to-primary-light p-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm">
-                <KeyRound className="h-10 w-10 text-white" />
+                <Building2 className="h-10 w-10 text-white" />
               </div>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-              Redefinir Senha
+              Redefinir Senha - Farmácia
             </h1>
             <p className="text-primary-foreground/90 text-sm">
               Digite sua nova senha
@@ -127,7 +125,7 @@ const ResetPassword = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="h-12 pr-12"
                     required
-                    minLength={6}
+                    minLength={8}
                   />
                   <Button
                     type="button"
@@ -153,7 +151,7 @@ const ResetPassword = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="h-12 pr-12"
                     required
-                    minLength={6}
+                    minLength={8}
                   />
                   <Button
                     type="button"
@@ -196,4 +194,4 @@ const ResetPassword = () => {
   );
 };
 
-export default ResetPassword;
+export default FarmaciaResetPassword;

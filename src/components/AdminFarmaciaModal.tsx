@@ -36,8 +36,8 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
     cep: farmacia?.cep || '',
     latitude: farmacia?.latitude || '',
     longitude: farmacia?.longitude || '',
-    horario_abertura: farmacia?.horario_abertura || '08:00',
-    horario_fechamento: farmacia?.horario_fechamento || '20:00',
+    horario_abertura: farmacia?.horario_funcionamento?.split(' - ')[0] || '08:00',
+    horario_fechamento: farmacia?.horario_funcionamento?.split(' - ')[1] || '20:00',
     plano: farmacia?.plano || 'free',
     status_assinatura: farmacia?.status_assinatura || 'ativa',
     ativa: farmacia?.ativa ?? true,
@@ -109,13 +109,23 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
           email: formData.email,
           password: generatedPassword,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${window.location.origin}/farmacia/reset-password`,
+            data: {
+              email: formData.email
+            }
           }
         });
 
         if (authError) throw authError;
 
         if (!authData.user) throw new Error('Erro ao criar usuário');
+
+        // Adicionar role de farmácia
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert([{ user_id: authData.user.id, role: 'farmacia' }]);
+
+        if (roleError) throw roleError;
 
         // Criar farmácia vinculada ao usuário
         const { email, ...farmaciaFields } = formData;
