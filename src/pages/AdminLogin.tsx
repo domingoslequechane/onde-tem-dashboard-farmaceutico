@@ -26,6 +26,8 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState('');
   
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,6 +84,35 @@ const AdminLogin = () => {
     }
   };
 
+  const handlePasswordRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(recoveryEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado!",
+        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+      });
+
+      setIsRecoveryMode(false);
+      setRecoveryEmail('');
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível enviar o email de recuperação.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
 
   return (
@@ -111,22 +142,64 @@ const AdminLogin = () => {
               />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Email
-                </label>
-                <Input
-                  type="email"
-                  placeholder="admin@ondetem.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-12"
-                  required
-                />
-              </div>
-              
-              {(
+            {isRecoveryMode ? (
+              <form onSubmit={handlePasswordRecovery} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="admin@ondetem.com"
+                    value={recoveryEmail}
+                    onChange={(e) => setRecoveryEmail(e.target.value)}
+                    className="h-12"
+                    required
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold text-base shadow-lg"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Enviando...
+                    </div>
+                  ) : (
+                    "Enviar Email de Recuperação"
+                  )}
+                </Button>
+
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="text-muted-foreground hover:text-foreground text-sm p-0"
+                    onClick={() => setIsRecoveryMode(false)}
+                  >
+                    Voltar ao Login
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="admin@ondetem.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-12"
+                    required
+                  />
+                </div>
+                
                 <div className="space-y-2 relative">
                   <label className="text-sm font-medium text-foreground">
                     Senha
@@ -151,37 +224,48 @@ const AdminLogin = () => {
                     </Button>
                   </div>
                 </div>
-              )}
 
-              <Button 
-                type="submit" 
-                className="w-full h-12 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold text-base shadow-lg"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Verificando...
-                  </div>
-                ) : (
-                  <>
-                    <Shield className="mr-2 h-5 w-5" />
-                    Acessar Painel
-                  </>
-                )}
-              </Button>
-              
-              <div className="text-center">
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="text-sm text-primary hover:text-primary-dark p-0 h-auto"
+                    onClick={() => setIsRecoveryMode(true)}
+                  >
+                    Esqueceu a senha?
+                  </Button>
+                </div>
+
                 <Button 
-                  type="button"
-                  variant="link" 
-                  className="text-muted-foreground hover:text-foreground text-sm p-0"
-                  onClick={() => navigate('/auth')}
+                  type="submit" 
+                  className="w-full h-12 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold text-base shadow-lg"
+                  disabled={isLoading}
                 >
-                  Voltar para login de farmácia
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Verificando...
+                    </div>
+                  ) : (
+                    <>
+                      <Shield className="mr-2 h-5 w-5" />
+                      Acessar Painel
+                    </>
+                  )}
                 </Button>
-              </div>
-            </form>
+                
+                <div className="text-center">
+                  <Button 
+                    type="button"
+                    variant="link" 
+                    className="text-muted-foreground hover:text-foreground text-sm p-0"
+                    onClick={() => navigate('/auth')}
+                  >
+                    Voltar para login de farmácia
+                  </Button>
+                </div>
+              </form>
+            )}
           </CardContent>
         </Card>
 
