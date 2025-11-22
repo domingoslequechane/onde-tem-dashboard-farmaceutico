@@ -26,7 +26,7 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
   const [generatedPassword, setGeneratedPassword] = useState('');
   const [formData, setFormData] = useState({
     nome: farmacia?.nome || '',
-    email: farmacia?.email || '',
+    email: '', // Email não é armazenado na tabela farmacias, apenas usado na criação
     telefone: farmacia?.telefone || '',
     whatsapp: farmacia?.whatsapp || '',
     endereco_completo: farmacia?.endereco_completo || '',
@@ -34,8 +34,8 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
     cidade: farmacia?.cidade || '',
     estado: farmacia?.estado || '',
     cep: farmacia?.cep || '',
-    latitude: farmacia?.latitude || '',
-    longitude: farmacia?.longitude || '',
+    latitude: farmacia?.latitude?.toString() || '',
+    longitude: farmacia?.longitude?.toString() || '',
     horario_abertura: farmacia?.horario_funcionamento?.split(' - ')[0] || '08:00',
     horario_fechamento: farmacia?.horario_funcionamento?.split(' - ')[1] || '20:00',
     plano: farmacia?.plano || 'free',
@@ -82,14 +82,48 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
       return;
     }
 
+    // Validar coordenadas
+    const lat = parseFloat(formData.latitude);
+    const lng = parseFloat(formData.longitude);
+    
+    if (isNaN(lat) || lat < -90 || lat > 90) {
+      toast({
+        title: "Latitude inválida",
+        description: "A latitude deve estar entre -90 e 90.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isNaN(lng) || lng < -180 || lng > 180) {
+      toast({
+        title: "Longitude inválida",
+        description: "A longitude deve estar entre -180 e 180.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       if (farmacia) {
         // Atualizar farmácia existente
         const updateData = {
-          ...formData,
-          horario_funcionamento: `${formData.horario_abertura} - ${formData.horario_fechamento}`
+          nome: formData.nome,
+          telefone: formData.telefone,
+          whatsapp: formData.whatsapp,
+          endereco_completo: formData.endereco_completo,
+          bairro: formData.bairro,
+          cidade: formData.cidade,
+          estado: formData.estado,
+          cep: formData.cep,
+          latitude: parseFloat(formData.latitude),
+          longitude: parseFloat(formData.longitude),
+          horario_funcionamento: `${formData.horario_abertura} - ${formData.horario_fechamento}`,
+          plano: formData.plano,
+          status_assinatura: formData.status_assinatura,
+          ativa: formData.ativa,
         };
         
         const { error } = await supabase
@@ -324,11 +358,13 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="latitude">Latitude *</Label>
+              <Label htmlFor="latitude">Latitude * (-90 a 90)</Label>
               <Input
                 id="latitude"
                 type="number"
-                step="any"
+                step="0.0000001"
+                min="-90"
+                max="90"
                 value={formData.latitude}
                 onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
                 placeholder="Ex: -25.9692"
@@ -337,11 +373,13 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="longitude">Longitude *</Label>
+              <Label htmlFor="longitude">Longitude * (-180 a 180)</Label>
               <Input
                 id="longitude"
                 type="number"
-                step="any"
+                step="0.0000001"
+                min="-180"
+                max="180"
                 value={formData.longitude}
                 onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                 placeholder="Ex: 32.5732"
