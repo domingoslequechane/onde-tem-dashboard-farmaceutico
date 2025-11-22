@@ -120,13 +120,8 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
 
         if (!authData.user) throw new Error('Erro ao criar usuário');
 
-        // Adicionar role de farmácia
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert([{ user_id: authData.user.id, role: 'farmacia' }]);
-
-        if (roleError) throw roleError;
-
+        // A role 'farmacia' é criada automaticamente pelo trigger handle_new_user_role
+        
         // Criar farmácia vinculada ao usuário
         const farmaciaData = {
           nome: formData.nome,
