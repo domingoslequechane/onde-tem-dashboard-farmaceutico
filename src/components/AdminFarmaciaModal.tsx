@@ -128,11 +128,22 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
         if (roleError) throw roleError;
 
         // Criar farmácia vinculada ao usuário
-        const { email, ...farmaciaFields } = formData;
         const farmaciaData = {
-          ...farmaciaFields,
-          user_id: authData.user.id,
-          horario_funcionamento: `${formData.horario_abertura} - ${formData.horario_fechamento}`
+          nome: formData.nome,
+          telefone: formData.telefone,
+          whatsapp: formData.whatsapp,
+          endereco_completo: formData.endereco_completo,
+          bairro: formData.bairro,
+          cidade: formData.cidade,
+          estado: formData.estado,
+          cep: formData.cep,
+          latitude: parseFloat(formData.latitude),
+          longitude: parseFloat(formData.longitude),
+          horario_funcionamento: `${formData.horario_abertura} - ${formData.horario_fechamento}`,
+          plano: formData.plano,
+          status_assinatura: formData.status_assinatura,
+          ativa: formData.ativa,
+          user_id: authData.user.id
         };
         
         const { error: farmaciaError } = await supabase
