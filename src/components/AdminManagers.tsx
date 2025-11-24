@@ -253,13 +253,11 @@ const AdminManagers = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('blocked_users')
-        .insert({
-          user_id: selectedAdmin.user_id,
-          blocked_by: currentUserId,
-          reason: 'Bloqueado pelo administrador'
-        });
+      // Usar função security definer para bloquear
+      const { error } = await supabase.rpc('block_admin', {
+        target_user_id: selectedAdmin.user_id,
+        block_reason: 'Bloqueado pelo administrador'
+      });
 
       if (error) throw error;
 
@@ -443,15 +441,45 @@ const AdminManagers = () => {
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => openBlockDialog(admin)}
-                                title="Bloquear"
-                                disabled={admin.user_id === currentUserId}
-                              >
-                                <Ban className="h-4 w-4 text-orange-500" />
-                              </Button>
+                              {admin.account_status !== 'blocked' ? (
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => openBlockDialog(admin)}
+                                  title="Bloquear"
+                                  disabled={admin.user_id === currentUserId}
+                                >
+                                  <Ban className="h-4 w-4 text-orange-500" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={async () => {
+                                    if (!confirm('Desbloquear este administrador?')) return;
+                                    try {
+                                      const { error } = await supabase.rpc('unblock_admin', {
+                                        target_user_id: admin.user_id
+                                      });
+                                      if (error) throw error;
+                                      toast({
+                                        title: "Usuário desbloqueado",
+                                        description: `${admin.display_name || admin.email} foi desbloqueado.`,
+                                      });
+                                      fetchAdmins();
+                                    } catch (error: any) {
+                                      toast({
+                                        title: "Erro ao desbloquear",
+                                        description: error.message,
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }}
+                                  title="Desbloquear"
+                                >
+                                  <Ban className="h-4 w-4 text-green-500" />
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="icon"
