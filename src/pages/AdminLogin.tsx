@@ -45,16 +45,13 @@ const AdminLogin = () => {
 
       if (error) throw error;
 
-      // Verificar se o usuário é admin
+      // Verificar se o usuário é admin usando a função security definer
       const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.user.id)
-        .maybeSingle();
+        .rpc('get_user_role', { _user_id: data.user.id });
 
       if (roleError) throw roleError;
 
-      if (!roleData || roleData.role !== 'admin') {
+      if (!roleData || (roleData !== 'admin' && roleData !== 'super_admin')) {
         await supabase.auth.signOut();
         throw new Error('Acesso negado. Você não possui privilégios de administrador.');
       }

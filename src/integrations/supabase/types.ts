@@ -685,6 +685,10 @@ export type Database = {
         Returns: boolean
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       gettransactionid: { Args: never; Returns: unknown }
       has_role: {
         Args: {
