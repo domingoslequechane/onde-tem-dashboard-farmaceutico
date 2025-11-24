@@ -549,6 +549,10 @@ export type Database = {
             }
             Returns: string
           }
+      block_admin: {
+        Args: { block_reason?: string; target_user_id: string }
+        Returns: undefined
+      }
       buscar_farmacias_proximas:
         | {
             Args: {
@@ -1401,6 +1405,7 @@ export type Database = {
         Args: { geom: unknown; move: number; wrap: number }
         Returns: unknown
       }
+      unblock_admin: { Args: { target_user_id: string }; Returns: undefined }
       unlockrows: { Args: { "": string }; Returns: number }
       update_admin_info: {
         Args: {
