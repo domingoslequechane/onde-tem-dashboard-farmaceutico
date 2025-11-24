@@ -589,6 +589,7 @@ export type Database = {
               whatsapp: string
             }[]
           }
+      delete_admin: { Args: { target_user_id: string }; Returns: undefined }
       delete_expired_codes: { Args: never; Returns: undefined }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:

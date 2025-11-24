@@ -265,10 +265,10 @@ const AdminManagers = () => {
     if (!confirm('Tem certeza que deseja remover este administrador?')) return;
 
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
+      // Usar função security definer para remover
+      const { error } = await supabase.rpc('delete_admin', {
+        target_user_id: userId
+      });
 
       if (error) throw error;
 
