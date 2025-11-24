@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Trash2, Copy, RefreshCw, UserCog } from 'lucide-react';
@@ -23,6 +24,7 @@ const AdminManagers = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [generatedPassword, setGeneratedPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'admin' | 'super_admin'>('admin');
 
   useEffect(() => {
     fetchAdmins();
@@ -111,10 +113,10 @@ const AdminManagers = () => {
       if (authError) throw authError;
       if (!authData.user) throw new Error('Erro ao criar usuário');
 
-      // Adicionar role de admin
+      // Adicionar role de admin ou super_admin
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert([{ user_id: authData.user.id, role: 'admin' }]);
+        .insert([{ user_id: authData.user.id, role: selectedRole }]);
 
       if (roleError) throw roleError;
 
@@ -126,6 +128,7 @@ const AdminManagers = () => {
 
       setEmail('');
       setGeneratedPassword('');
+      setSelectedRole('admin');
       setIsModalOpen(false);
       fetchAdmins();
     } catch (error: any) {
@@ -260,6 +263,19 @@ const AdminManagers = () => {
                 placeholder="admin@exemplo.com"
                 required
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="admin-role">Tipo de Usuário *</Label>
+              <Select value={selectedRole} onValueChange={(value: 'admin' | 'super_admin') => setSelectedRole(value)}>
+                <SelectTrigger id="admin-role" className="bg-background">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="super_admin">Super-Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
