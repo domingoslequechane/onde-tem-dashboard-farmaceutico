@@ -69,8 +69,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { pharmacyId, verificationCode }: DeletePharmacyRequest = await req.json();
 
-    // Verify code
-    const { data: codeData, error: codeError } = await supabase
+    // Verify code (use admin client to bypass RLS)
+    const { data: codeData, error: codeError } = await supabaseAdmin
       .from("deletion_codes")
       .select("*")
       .eq("admin_id", user.id)
@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (codeError || !codeData) {
       console.error("Code verification failed:", codeError);
@@ -155,8 +155,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("Auth user deleted successfully");
     }
 
-    // 5. Delete used verification code
-    await supabase
+    // 5. Delete used verification code (use admin client to bypass RLS)
+    await supabaseAdmin
       .from("deletion_codes")
       .delete()
       .eq("id", codeData.id);
