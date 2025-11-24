@@ -25,12 +25,14 @@ const AdminSetPassword = () => {
 
   const checkSession = async () => {
     try {
-      // Aguardar o Supabase processar o token da URL automaticamente
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // O Supabase processa automaticamente os tokens de recovery da URL
+      // Aguardar um pouco mais para garantir que o processamento foi concluído
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error || !session) {
+        console.error('Erro na sessão:', error);
         toast({
           title: "Link inválido ou expirado",
           description: "Este link de convite é inválido ou expirou. Solicite um novo convite ao administrador.",
@@ -40,6 +42,7 @@ const AdminSetPassword = () => {
         return;
       }
 
+      console.log('Sessão válida:', session.user.email);
       setIsValidating(false);
     } catch (error: any) {
       console.error('Erro ao validar sessão:', error);

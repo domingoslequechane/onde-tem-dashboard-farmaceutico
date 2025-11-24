@@ -126,10 +126,16 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Gerar link de reset de senha
+    // Gerar link de convite personalizado
+    const appUrl = Deno.env.get('APP_URL') || 'https://91e2f1f8-ea96-415f-9224-8bd034d01d6f.lovableproject.com';
+    const redirectTo = `${appUrl}/admin/set-password`;
+    
     const { data: resetData, error: resetError } = await supabaseClient.auth.admin.generateLink({
       type: 'recovery',
       email: email,
+      options: {
+        redirectTo: redirectTo
+      }
     });
 
     if (resetError) {
@@ -137,10 +143,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw resetError;
     }
 
-    // Construir URL corretamente
-    const appUrl = Deno.env.get('APP_URL') || 'https://91e2f1f8-ea96-415f-9224-8bd034d01d6f.lovableproject.com';
-    const tokenHash = resetData.properties.hashed_token;
-    const inviteLink = `${appUrl}/admin/set-password?token=${tokenHash}&type=recovery`;
+    // Usar o action_link gerado pelo Supabase
+    const inviteLink = resetData.properties.action_link;
 
     console.log("Link gerado para:", email);
 
