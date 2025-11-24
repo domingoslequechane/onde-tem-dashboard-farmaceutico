@@ -32,6 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
+    // Create admin client for operations that bypass RLS
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -47,12 +48,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("User authenticated:", user.id);
 
-    // Verify user is admin
-    const { data: roleData, error: roleError } = await supabase
+    // Verify user is admin using service role to bypass RLS
+    const { data: roleData, error: roleError } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (roleError) {
       console.error("Role query error:", roleError);
