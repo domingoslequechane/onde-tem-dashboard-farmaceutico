@@ -131,49 +131,52 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-hidden">
-      <Header 
-        user={user ? { email: user.email, name: 'Administrador' } : null} 
-        onLogout={handleLogout} 
-      />
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="flex-shrink-0">
+        <Header 
+          user={user ? { email: user.email, name: 'Administrador' } : null} 
+          onLogout={handleLogout} 
+        />
+      </div>
       
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl flex-1 flex flex-col overflow-hidden">
-        {/* Cabeçalho */}
-        <div className="mb-6 sm:mb-8 animate-fade-in flex-shrink-0">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-3 rounded-lg bg-destructive text-destructive-foreground">
-              <Shield size={28} />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">
-                Painel Administrativo
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                Gerencie farmácias e acompanhe o desempenho da plataforma
-              </p>
+      <main className="flex-1 overflow-hidden flex flex-col">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl flex-1 flex flex-col overflow-hidden">
+          {/* Cabeçalho */}
+          <div className="mb-6 sm:mb-8 animate-fade-in flex-shrink-0">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-3 rounded-lg bg-destructive text-destructive-foreground">
+                <Shield size={28} />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">
+                  Painel Administrativo
+                </h1>
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  Gerencie farmácias e acompanhe o desempenho da plataforma
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Tabs para diferentes seções */}
-        <Tabs defaultValue="estatisticas" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto flex-shrink-0">
-            <TabsTrigger value="estatisticas" className="flex items-center gap-2">
-              <BarChart className="h-4 w-4" />
-              <span className="hidden sm:inline">Estatísticas</span>
-            </TabsTrigger>
-            <TabsTrigger value="farmacias" className="flex items-center gap-2">
-              <Store className="h-4 w-4" />
-              <span className="hidden sm:inline">Farmácias</span>
-            </TabsTrigger>
-            <TabsTrigger value="administradores" className="flex items-center gap-2">
-              <UserCog className="h-4 w-4" />
-              <span className="hidden sm:inline">Administradores</span>
-            </TabsTrigger>
-          </TabsList>
+          {/* Tabs para diferentes seções */}
+          <Tabs defaultValue="estatisticas" className="flex-1 flex flex-col overflow-hidden">
+            <TabsList className="grid w-full grid-cols-3 lg:w-auto flex-shrink-0 mb-6">
+              <TabsTrigger value="estatisticas" className="flex items-center gap-2">
+                <BarChart className="h-4 w-4" />
+                <span className="hidden sm:inline">Estatísticas</span>
+              </TabsTrigger>
+              <TabsTrigger value="farmacias" className="flex items-center gap-2">
+                <Store className="h-4 w-4" />
+                <span className="hidden sm:inline">Farmácias</span>
+              </TabsTrigger>
+              <TabsTrigger value="administradores" className="flex items-center gap-2">
+                <UserCog className="h-4 w-4" />
+                <span className="hidden sm:inline">Administradores</span>
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Aba de Farmácias */}
-          <TabsContent value="farmacias" className="flex-1 overflow-y-auto mt-6">
+            {/* Aba de Farmácias */}
+            <TabsContent value="farmacias" className="flex-1 overflow-y-auto m-0">
             <Card className="border-none shadow-lg">
               <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -305,7 +308,7 @@ const Admin = () => {
           </TabsContent>
 
           {/* Aba de Estatísticas */}
-          <TabsContent value="estatisticas" className="flex-1 overflow-y-auto mt-6">
+          <TabsContent value="estatisticas" className="flex-1 overflow-y-auto m-0">
             <AdminStatistics 
               totalFarmacias={farmacias.length}
               farmaciasAtivas={farmacias.filter(f => f.ativa).length}
@@ -314,10 +317,11 @@ const Admin = () => {
           </TabsContent>
 
           {/* Aba de Administradores */}
-          <TabsContent value="administradores" className="flex-1 overflow-y-auto mt-6">
+          <TabsContent value="administradores" className="flex-1 overflow-y-auto m-0">
             <AdminManagers />
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
       </main>
 
       <AdminFarmaciaModal
