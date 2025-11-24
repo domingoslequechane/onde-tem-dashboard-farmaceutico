@@ -699,6 +699,15 @@ export type Database = {
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_user_blocked: { Args: { _user_id: string }; Returns: boolean }
+      list_admins: {
+        Args: never
+        Returns: {
+          email: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }[]
+      }
       longtransactionsenabled: { Args: never; Returns: boolean }
       populate_geometry_columns:
         | { Args: { use_typmod?: boolean }; Returns: string }
