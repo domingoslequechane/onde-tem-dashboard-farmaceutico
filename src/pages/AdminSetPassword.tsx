@@ -20,40 +20,32 @@ const AdminSetPassword = () => {
   const [isValidating, setIsValidating] = useState(true);
 
   useEffect(() => {
-    validateToken();
+    checkSession();
   }, []);
 
-  const validateToken = async () => {
+  const checkSession = async () => {
     try {
-      const token = searchParams.get('token');
-      const type = searchParams.get('type');
+      // Aguardar o Supabase processar o token da URL automaticamente
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-      if (!token || type !== 'recovery') {
+      if (error || !session) {
         toast({
-          title: "Link inválido",
-          description: "Este link de convite é inválido ou expirou.",
+          title: "Link inválido ou expirado",
+          description: "Este link de convite é inválido ou expirou. Solicite um novo convite ao administrador.",
           variant: "destructive",
         });
         navigate('/admin/login');
         return;
       }
 
-      // Verificar o token com Supabase
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: token,
-        type: 'recovery',
-      });
-
-      if (error) {
-        throw error;
-      }
-
       setIsValidating(false);
     } catch (error: any) {
-      console.error('Erro ao validar token:', error);
+      console.error('Erro ao validar sessão:', error);
       toast({
-        title: "Link expirado",
-        description: "Este link de convite expirou. Solicite um novo convite ao administrador.",
+        title: "Erro ao validar convite",
+        description: "Ocorreu um erro ao validar o convite. Tente novamente.",
         variant: "destructive",
       });
       navigate('/admin/login');
