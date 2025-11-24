@@ -351,6 +351,7 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          account_status: Database["public"]["Enums"]["account_status"]
           created_at: string | null
           display_name: string | null
           id: string
@@ -358,6 +359,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_status?: Database["public"]["Enums"]["account_status"]
           created_at?: string | null
           display_name?: string | null
           id?: string
@@ -365,6 +367,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_status?: Database["public"]["Enums"]["account_status"]
           created_at?: string | null
           display_name?: string | null
           id?: string
@@ -750,11 +753,11 @@ export type Database = {
       list_admins: {
         Args: never
         Returns: {
+          account_status: Database["public"]["Enums"]["account_status"]
           created_at: string
           display_name: string
           email: string
           id: string
-          last_sign_in_at: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }[]
@@ -1419,6 +1422,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_status: "invited" | "active" | "blocked"
       app_role: "admin" | "farmacia" | "super_admin"
     }
     CompositeTypes: {
@@ -1555,6 +1559,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_status: ["invited", "active", "blocked"],
       app_role: ["admin", "farmacia", "super_admin"],
     },
   },

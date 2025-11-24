@@ -21,7 +21,7 @@ interface Admin {
   email?: string;
   display_name?: string;
   created_at?: string;
-  last_sign_in_at?: string;
+  account_status?: 'invited' | 'active' | 'blocked';
 }
 
 interface LoginHistory {
@@ -329,8 +329,8 @@ const AdminManagers = () => {
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Função</TableHead>
+                  <TableHead>Estado da Conta</TableHead>
                   <TableHead>Adicionado em</TableHead>
-                  <TableHead>Último Login</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -342,22 +342,36 @@ const AdminManagers = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  admins.map((admin) => (
-                    <TableRow key={admin.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{admin.display_name || '-'}</TableCell>
-                      <TableCell>{admin.email || admin.user_id}</TableCell>
-                      <TableCell>
-                        <Badge className={admin.role === 'super_admin' ? 'bg-destructive' : 'bg-primary'}>
-                          {admin.role === 'super_admin' ? 'Super-Admin' : 'Admin'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {admin.created_at ? format(new Date(admin.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {admin.last_sign_in_at ? format(new Date(admin.last_sign_in_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : 'Nunca'}
-                      </TableCell>
-                      <TableCell className="text-right">
+                  admins.map((admin) => {
+                    const getStatusBadge = (status?: string) => {
+                      switch (status) {
+                        case 'invited':
+                          return <Badge variant="outline" className="border-yellow-500 text-yellow-700 dark:text-yellow-400">Convite</Badge>;
+                        case 'active':
+                          return <Badge variant="outline" className="border-green-500 text-green-700 dark:text-green-400">Activo</Badge>;
+                        case 'blocked':
+                          return <Badge variant="outline" className="border-red-500 text-red-700 dark:text-red-400">Bloqueado</Badge>;
+                        default:
+                          return <Badge variant="outline">-</Badge>;
+                      }
+                    };
+
+                    return (
+                      <TableRow key={admin.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">{admin.display_name || '-'}</TableCell>
+                        <TableCell>{admin.email || admin.user_id}</TableCell>
+                        <TableCell>
+                          <Badge className={admin.role === 'super_admin' ? 'bg-destructive' : 'bg-primary'}>
+                            {admin.role === 'super_admin' ? 'Super-Admin' : 'Admin'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(admin.account_status)}
+                        </TableCell>
+                        <TableCell>
+                          {admin.created_at ? format(new Date(admin.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
                           {currentUserRole === 'super_admin' && (
                             <>
@@ -390,9 +404,10 @@ const AdminManagers = () => {
                             </>
                           )}
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
