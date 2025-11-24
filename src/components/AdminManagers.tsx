@@ -42,6 +42,7 @@ const AdminManagers = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
+  const [isUnblockDialogOpen, setIsUnblockDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
   const [email, setEmail] = useState('');
@@ -466,25 +467,9 @@ const AdminManagers = () => {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  onClick={async () => {
-                                    if (!confirm('Desbloquear este administrador?')) return;
-                                    try {
-                                      const { error } = await supabase.rpc('unblock_admin', {
-                                        target_user_id: admin.user_id
-                                      });
-                                      if (error) throw error;
-                                      toast({
-                                        title: "Usuário desbloqueado",
-                                        description: `${admin.display_name || admin.email} foi desbloqueado.`,
-                                      });
-                                      fetchAdmins();
-                                    } catch (error: any) {
-                                      toast({
-                                        title: "Erro ao desbloquear",
-                                        description: error.message,
-                                        variant: "destructive",
-                                      });
-                                    }
+                                  onClick={() => {
+                                    setSelectedAdmin(admin);
+                                    setIsUnblockDialogOpen(true);
                                   }}
                                   title="Desbloquear"
                                 >
@@ -706,6 +691,51 @@ const AdminManagers = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Bloquear
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isUnblockDialogOpen} onOpenChange={setIsUnblockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desbloquear Administrador</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja desbloquear {selectedAdmin?.display_name || selectedAdmin?.email}? 
+              Este usuário poderá acessar o sistema novamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!selectedAdmin) return;
+                setIsLoading(true);
+                try {
+                  const { error } = await supabase.rpc('unblock_admin', {
+                    target_user_id: selectedAdmin.user_id
+                  });
+                  if (error) throw error;
+                  toast({
+                    title: "Usuário desbloqueado",
+                    description: `${selectedAdmin.display_name || selectedAdmin.email} foi desbloqueado.`,
+                  });
+                  setIsUnblockDialogOpen(false);
+                  setSelectedAdmin(null);
+                  fetchAdmins();
+                } catch (error: any) {
+                  toast({
+                    title: "Erro ao desbloquear",
+                    description: error.message,
+                    variant: "destructive",
+                  });
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              className="bg-green-600 text-white hover:bg-green-700"
+            >
+              Desbloquear
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
