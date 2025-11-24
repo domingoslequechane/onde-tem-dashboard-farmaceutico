@@ -265,6 +265,36 @@ export type Database = {
         }
         Relationships: []
       }
+      login_history: {
+        Row: {
+          email: string | null
+          id: string
+          ip_address: string | null
+          login_at: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          login_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          login_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       medicamentos: {
         Row: {
           categoria: string | null
@@ -321,16 +351,22 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          created_at: string | null
+          display_name: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          created_at?: string | null
+          display_name?: string | null
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          created_at?: string | null
+          display_name?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -685,6 +721,17 @@ export type Database = {
         Returns: boolean
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
+      get_login_history: {
+        Args: { limit_count?: number }
+        Returns: {
+          display_name: string
+          email: string
+          id: string
+          login_at: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -702,12 +749,16 @@ export type Database = {
       list_admins: {
         Args: never
         Returns: {
+          created_at: string
+          display_name: string
           email: string
           id: string
+          last_sign_in_at: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }[]
       }
+      log_user_login: { Args: never; Returns: undefined }
       longtransactionsenabled: { Args: never; Returns: boolean }
       populate_geometry_columns:
         | { Args: { use_typmod?: boolean }; Returns: string }
