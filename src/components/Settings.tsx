@@ -85,7 +85,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-4xl">
+    <div className="space-y-4 sm:space-y-6 w-full">
       {/* Informações da Farmácia */}
       <Card className="border-none shadow-lg">
         <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b px-4 sm:px-6 py-4">
