@@ -45,55 +45,53 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
         </div>
         
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl gap-1">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl gap-1">
             <TabsTrigger 
               value="dashboard" 
-              className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
+              className="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
             >
               <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Início</span>
+              <span className="truncate">Início</span>
             </TabsTrigger>
             <TabsTrigger 
               value="estoque" 
-              className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
+              className="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
             >
               <Package className="h-4 w-4 flex-shrink-0" />
-              <span>Estoque</span>
+              <span className="truncate">Estoque</span>
             </TabsTrigger>
             <TabsTrigger 
               value="demanda" 
-              className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
+              className="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
             >
               <TrendingUp className="h-4 w-4 flex-shrink-0" />
-              <span>Demanda</span>
+              <span className="truncate">Demanda</span>
             </TabsTrigger>
             <TabsTrigger 
               value="configuracoes" 
-              className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
+              className="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all col-span-2 sm:col-span-1"
             >
               <SettingsIcon className="h-4 w-4 flex-shrink-0" />
-              <span className="hidden sm:inline">Config.</span>
-              <span className="sm:hidden">Config</span>
+              <span className="truncate">Config.</span>
             </TabsTrigger>
             <TabsTrigger 
               value="suporte" 
-              className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
+              className="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all col-span-2 sm:col-span-1"
             >
               <MessageSquare className="h-4 w-4 flex-shrink-0" />
-              <span>Suporte</span>
+              <span className="truncate">Suporte</span>
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="dashboard" className="mt-0 animate-fade-in">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              <div className="lg:col-span-1 animate-slide-up">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+              <div className="animate-slide-up">
                 <StockControl />
               </div>
-              <div className="lg:col-span-1 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+              <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
                 <DemandAnalysis />
               </div>
-              <div className="lg:col-span-1 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <div className="md:col-span-2 xl:col-span-1 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                 <ServiceImpact />
               </div>
             </div>

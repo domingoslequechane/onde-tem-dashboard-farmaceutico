@@ -143,34 +143,34 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
     <>
       <Card className={`border-none shadow-lg ${expanded ? "" : "h-fit"}`}>
         <CardHeader className="pb-4 bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
-          <CardTitle className="flex items-center justify-between text-lg sm:text-xl">
+          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-lg sm:text-xl">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-primary text-primary-foreground">
                 <Package size={20} />
               </div>
               <span className="truncate">Gestão de Medicamentos</span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button 
                 size="sm" 
                 onClick={() => {
                   setEditingMedicine(null);
                   setIsModalOpen(true);
                 }}
-                className="bg-secondary hover:bg-secondary/90 flex-shrink-0 gap-1"
+                className="bg-secondary hover:bg-secondary/90 flex-1 sm:flex-none gap-1"
               >
                 <Plus size={16} />
-                <span className="hidden sm:inline">Novo</span>
+                <span>Novo</span>
               </Button>
               <Button 
                 size="sm" 
                 onClick={fetchMedicines} 
                 variant="outline"
-                className="flex-shrink-0 gap-1"
+                className="flex-1 sm:flex-none gap-1"
                 disabled={isLoading}
               >
                 <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
-                <span className="hidden sm:inline">Atualizar</span>
+                <span>Atualizar</span>
               </Button>
             </div>
           </CardTitle>
@@ -213,16 +213,27 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
           ) : (
             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
               {displayedMedicines.map((medicine) => (
-                <div 
+                 <div 
                   key={medicine.id} 
-                  className="p-4 bg-card border rounded-lg hover:shadow-md transition-all duration-200 hover:border-primary/50"
+                  className="p-3 sm:p-4 bg-card border rounded-lg hover:shadow-md transition-all duration-200 hover:border-primary/50"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <p className="font-semibold text-foreground truncate">{medicine.nome}</p>
+                  <div className="flex flex-col sm:flex-row items-start gap-3">
+                    <div className="flex-1 min-w-0 w-full">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <p className="font-semibold text-foreground text-sm sm:text-base">{medicine.nome}</p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditingMedicine(medicine);
+                            setIsModalOpen(true);
+                          }}
+                          className="h-8 w-8 sm:hidden flex-shrink-0"
+                        >
+                          <Edit size={14} />
+                        </Button>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                         <span className="px-2 py-1 bg-muted rounded text-xs font-medium">
                           {medicine.categoria}
                         </span>
@@ -232,10 +243,10 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                         <span>Qtd: <strong>{medicine.quantidade}</strong></span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
                       <Badge 
                         variant={medicine.disponivel && medicine.quantidade > 0 ? "default" : "destructive"}
-                        className={medicine.disponivel && medicine.quantidade > 0 ? "bg-secondary" : ""}
+                        className={`text-xs ${medicine.disponivel && medicine.quantidade > 0 ? "bg-secondary" : ""}`}
                       >
                         {medicine.disponivel && medicine.quantidade > 0 ? 'Disponível' : 'Indisponível'}
                       </Badge>
@@ -246,7 +257,7 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                           setEditingMedicine(medicine);
                           setIsModalOpen(true);
                         }}
-                        className="h-9 w-9"
+                        className="h-9 w-9 hidden sm:flex"
                       >
                         <Edit size={16} />
                       </Button>
