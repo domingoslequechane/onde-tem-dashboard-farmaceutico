@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, TrendingUp, Search, MapPin, AlertCircle, CheckCircle, Store, Users } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface AdminStatisticsProps {
   totalFarmacias: number;
@@ -126,30 +127,40 @@ const AdminStatistics = ({ totalFarmacias, farmaciasAtivas, farmaciasInativas }:
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="space-y-4">
-            {stats.topZones.map((zone, index) => {
-              const percentage = (zone.searches / stats.totalSearches) * 100;
-              return (
-                <div key={zone.name} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-lg text-muted-foreground">#{index + 1}</span>
-                      <span className="font-medium text-foreground">{zone.name}</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-primary">{zone.searches.toLocaleString('pt-BR')}</p>
-                      <p className="text-xs text-muted-foreground">{percentage.toFixed(1)}%</p>
-                    </div>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2.5">
-                    <div 
-                      className="bg-primary h-2.5 rounded-full transition-all duration-500"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={stats.topZones}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="name" 
+                  className="text-xs"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                  labelStyle={{ color: 'hsl(var(--foreground))' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="searches" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={2}
+                  dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
