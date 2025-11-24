@@ -126,7 +126,7 @@ const AdminLogin = () => {
               <img 
                 src={ondeTemLogo} 
                 alt="Onde Tem?" 
-                className="h-8" 
+                className="h-12" 
               />
             </div>
             <div className="flex items-center gap-2 mb-4 justify-center md:justify-start">

@@ -82,7 +82,7 @@ const Auth = () => {
               <img 
                 src={ondeTemLogo} 
                 alt="Onde Tem?" 
-                className="h-8" 
+                className="h-12" 
               />
             </div>
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
