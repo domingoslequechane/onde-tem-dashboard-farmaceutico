@@ -31,6 +31,9 @@ const AdminManagers = () => {
   const fetchAdmins = async () => {
     setIsLoading(true);
     try {
+      // Get current user's email first
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('id, user_id, role')
@@ -39,19 +42,14 @@ const AdminManagers = () => {
 
       if (rolesError) throw rolesError;
 
-      // Get emails from auth.users
-      const { data, error: usersError } = await supabase.auth.admin.listUsers();
-      
-      if (usersError) throw usersError;
-
-      // Map user_id to email
+      // For now, we can only show the current admin's email
+      // Other admins will show their user_id
       const adminsWithEmails: Admin[] = (rolesData || []).map((admin: any) => {
-        const user = data.users?.find((u: any) => u.id === admin.user_id);
         return {
           id: admin.id,
           user_id: admin.user_id,
           role: admin.role,
-          email: user?.email || admin.user_id
+          email: admin.user_id === user?.id ? user?.email : admin.user_id
         };
       });
 
