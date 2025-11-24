@@ -155,52 +155,13 @@ const Admin = () => {
           </div>
         </div>
 
-        {/* Cards de Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="border-none shadow-lg">
-            <CardHeader className="pb-3 bg-gradient-to-br from-primary/5 to-secondary/5">
-              <div className="flex items-center justify-between">
-                <CardDescription className="text-sm font-medium">Total de Farmácias</CardDescription>
-                <Store className="h-5 w-5 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <p className="text-3xl sm:text-4xl font-bold text-primary">{farmacias.length}</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-none shadow-lg">
-            <CardHeader className="pb-3 bg-gradient-to-br from-secondary/5 to-primary/5">
-              <div className="flex items-center justify-between">
-                <CardDescription className="text-sm font-medium">Farmácias Ativas</CardDescription>
-                <Users className="h-5 w-5 text-secondary" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <p className="text-3xl sm:text-4xl font-bold text-secondary">
-                {farmacias.filter(f => f.ativa).length}
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-none shadow-lg">
-            <CardHeader className="pb-3 bg-gradient-to-br from-destructive/5 to-destructive/10">
-              <div className="flex items-center justify-between">
-                <CardDescription className="text-sm font-medium">Farmácias Inativas</CardDescription>
-                <TrendingUp className="h-5 w-5 text-destructive" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <p className="text-3xl sm:text-4xl font-bold text-destructive">
-                {farmacias.filter(f => !f.ativa).length}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Tabs para diferentes seções */}
-        <Tabs defaultValue="farmacias" className="space-y-6">
+        <Tabs defaultValue="estatisticas" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-auto">
+            <TabsTrigger value="estatisticas" className="flex items-center gap-2">
+              <BarChart className="h-4 w-4" />
+              <span className="hidden sm:inline">Estatísticas</span>
+            </TabsTrigger>
             <TabsTrigger value="farmacias" className="flex items-center gap-2">
               <Store className="h-4 w-4" />
               <span className="hidden sm:inline">Farmácias</span>
@@ -208,10 +169,6 @@ const Admin = () => {
             <TabsTrigger value="administradores" className="flex items-center gap-2">
               <UserCog className="h-4 w-4" />
               <span className="hidden sm:inline">Administradores</span>
-            </TabsTrigger>
-            <TabsTrigger value="estatisticas" className="flex items-center gap-2">
-              <BarChart className="h-4 w-4" />
-              <span className="hidden sm:inline">Estatísticas</span>
             </TabsTrigger>
           </TabsList>
 
@@ -347,14 +304,18 @@ const Admin = () => {
             </Card>
           </TabsContent>
 
+          {/* Aba de Estatísticas */}
+          <TabsContent value="estatisticas">
+            <AdminStatistics 
+              totalFarmacias={farmacias.length}
+              farmaciasAtivas={farmacias.filter(f => f.ativa).length}
+              farmaciasInativas={farmacias.filter(f => !f.ativa).length}
+            />
+          </TabsContent>
+
           {/* Aba de Administradores */}
           <TabsContent value="administradores">
             <AdminManagers />
-          </TabsContent>
-
-          {/* Aba de Estatísticas */}
-          <TabsContent value="estatisticas">
-            <AdminStatistics />
           </TabsContent>
         </Tabs>
       </main>
