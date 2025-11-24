@@ -42,6 +42,7 @@ const AdminManagers = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -243,7 +244,7 @@ const AdminManagers = () => {
     }
   };
 
-  const handleDeleteAdmin = async (userId: string) => {
+  const openDeleteDialog = (admin: Admin) => {
     if (currentUserRole !== 'super_admin') {
       toast({
         title: "Sem permissão",
@@ -253,7 +254,7 @@ const AdminManagers = () => {
       return;
     }
 
-    if (userId === currentUserId) {
+    if (admin.user_id === currentUserId) {
       toast({
         title: "Ação não permitida",
         description: "Você não pode remover a si mesmo.",
@@ -262,12 +263,18 @@ const AdminManagers = () => {
       return;
     }
 
-    if (!confirm('Tem certeza que deseja remover este administrador?')) return;
+    setSelectedAdmin(admin);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const handleDeleteAdmin = async () => {
+    if (!selectedAdmin) return;
+
+    setIsLoading(true);
     try {
       // Usar função security definer para remover
       const { error } = await supabase.rpc('delete_admin', {
-        target_user_id: userId
+        target_user_id: selectedAdmin.user_id
       });
 
       if (error) throw error;
@@ -277,6 +284,8 @@ const AdminManagers = () => {
         description: "O administrador foi removido com sucesso.",
       });
 
+      setIsDeleteDialogOpen(false);
+      setSelectedAdmin(null);
       fetchAdmins();
     } catch (error: any) {
       toast({
@@ -284,6 +293,8 @@ const AdminManagers = () => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -395,7 +406,7 @@ const AdminManagers = () => {
                               <Button
                                 variant="outline"
                                 size="icon"
-                                onClick={() => handleDeleteAdmin(admin.user_id)}
+                                onClick={() => openDeleteDialog(admin)}
                                 title="Remover"
                                 disabled={admin.user_id === currentUserId}
                               >
@@ -607,6 +618,27 @@ const AdminManagers = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Bloquear
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover Administrador</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover {selectedAdmin?.display_name || selectedAdmin?.email}? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAdmin}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remover
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
