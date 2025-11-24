@@ -9,6 +9,7 @@ import AdminLogin from "./pages/AdminLogin";
 import Admin from "./pages/Admin";
 import AdminSettings from "./pages/AdminSettings";
 import AdminResetPassword from "./pages/AdminResetPassword";
+import AdminSetPassword from "./pages/AdminSetPassword";
 import FarmaciaResetPassword from "./pages/FarmaciaResetPassword";
 import FarmaciaSettings from "./pages/FarmaciaSettings";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/reset-password" element={<AdminResetPassword />} />
+          <Route path="/admin/set-password" element={<AdminSetPassword />} />
           <Route path="/farmacia/reset-password" element={<FarmaciaResetPassword />} />
           <Route path="/farmacia/settings" element={<FarmaciaSettings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
