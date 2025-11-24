@@ -40,7 +40,7 @@ export function DeletePharmacyDialog({
   onClose,
   onSuccess,
 }: DeletePharmacyDialogProps) {
-  const [step, setStep] = useState<"initial" | "code" | "final">("initial");
+  const [step, setStep] = useState<"initial" | "code" | "final" | "processing">("initial");
   const [verificationCode, setVerificationCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -84,7 +84,9 @@ export function DeletePharmacyDialog({
   const handleConfirmDeletion = async () => {
     if (!pharmacy) return;
 
+    setStep("processing");
     setIsLoading(true);
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -106,12 +108,14 @@ export function DeletePharmacyDialog({
     } catch (error: any) {
       console.error("Error deleting pharmacy:", error);
       toast.error(error.message || "Erro ao eliminar farmácia");
+      setStep("final"); // Volta para o modal de confirmação em caso de erro
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleClose = () => {
+    if (step === "processing") return; // Não permite fechar enquanto processa
     setStep("initial");
     setVerificationCode("");
     setIsLoading(false);
@@ -229,12 +233,42 @@ export function DeletePharmacyDialog({
               disabled={isLoading}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Confirmar Eliminação
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Processing Dialog */}
+      <Dialog open={step === "processing"} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-destructive" />
+              Eliminando Farmácia
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-8">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="relative">
+                <div className="h-20 w-20 rounded-full border-4 border-muted"></div>
+                <div className="absolute top-0 h-20 w-20 rounded-full border-4 border-destructive border-t-transparent animate-spin"></div>
+              </div>
+              <div className="text-center space-y-2">
+                <p className="font-medium text-foreground">
+                  Processando eliminação...
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Por favor, aguarde enquanto eliminamos todos os dados da farmácia.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Esta operação pode levar alguns segundos.
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
