@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Power, PowerOff, Key, Edit, Search, Store, Users, TrendingUp, Shield, UserCog, BarChart, Trash2 } from 'lucide-react';
+import { Plus, Power, PowerOff, Key, Edit, Search, Store, Users, TrendingUp, UserCog, BarChart, Trash2 } from 'lucide-react';
 import Header from '@/components/Header';
 import AdminFarmaciaModal from '@/components/AdminFarmaciaModal';
 import AdminManagers from '@/components/AdminManagers';
@@ -141,23 +141,6 @@ const Admin = () => {
       
       <main className="flex-1 overflow-hidden flex flex-col">
         <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl flex-1 flex flex-col overflow-hidden">
-          {/* Cabeçalho */}
-          <div className="mb-6 sm:mb-8 animate-fade-in flex-shrink-0">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-3 rounded-lg bg-destructive text-destructive-foreground">
-                <Shield size={28} />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">
-                  Painel Administrativo
-                </h1>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  Gerencie farmácias e acompanhe o desempenho da plataforma
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Tabs para diferentes seções */}
           <Tabs defaultValue="estatisticas" className="flex-1 flex flex-col overflow-hidden">
             <TabsList className="grid w-full grid-cols-3 lg:w-auto flex-shrink-0 mb-6">
