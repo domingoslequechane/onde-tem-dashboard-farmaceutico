@@ -74,7 +74,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="w-full xl:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-background">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-background">
         <div className="w-full max-w-md">
           {/* Logo and Brand */}
           <div className="mb-6">
@@ -192,7 +192,7 @@ const Auth = () => {
       </div>
 
       {/* Right Side - Illustration */}
-      <div className="hidden xl:flex xl:w-1/2 bg-gradient-to-br from-primary via-primary-light to-primary/80 items-center justify-center p-12 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary-light to-primary/80 items-center justify-center p-12 relative overflow-hidden">
         {/* Decorative circles */}
         <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
