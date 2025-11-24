@@ -87,12 +87,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Verification code confirmed");
 
-    // Get pharmacy data to find user_id
-    const { data: pharmacyData, error: pharmacyError } = await supabase
+    // Get pharmacy data to find user_id (use admin client to bypass RLS)
+    const { data: pharmacyData, error: pharmacyError } = await supabaseAdmin
       .from("farmacias")
       .select("user_id, nome")
       .eq("id", pharmacyId)
-      .single();
+      .maybeSingle();
 
     if (pharmacyError || !pharmacyData) {
       console.error("Pharmacy not found:", pharmacyError);
@@ -102,9 +102,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Starting deletion process for pharmacy: ${pharmacyData.nome}`);
 
     // Delete in order (respecting foreign key constraints)
+    // Use admin client for all deletions to bypass RLS
     
     // 1. Delete stock items
-    const { error: stockError } = await supabase
+    const { error: stockError } = await supabaseAdmin
       .from("estoque")
       .delete()
       .eq("farmacia_id", pharmacyId);
@@ -117,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Stock deleted successfully");
 
     // 2. Delete pharmacy record
-    const { error: pharmacyDeleteError } = await supabase
+    const { error: pharmacyDeleteError } = await supabaseAdmin
       .from("farmacias")
       .delete()
       .eq("id", pharmacyId);
@@ -131,7 +132,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // 3. Delete user role
     if (pharmacyData.user_id) {
-      const { error: roleDeleteError } = await supabase
+      const { error: roleDeleteError } = await supabaseAdmin
         .from("user_roles")
         .delete()
         .eq("user_id", pharmacyData.user_id);
