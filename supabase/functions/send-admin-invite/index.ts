@@ -71,8 +71,13 @@ const handler = async (req: Request): Promise<Response> => {
     // Aguardar trigger criar registro em user_roles
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Definir display_name usando função security definer
-    const { error: nameError } = await supabaseClient.rpc('set_admin_display_name', {
+    // Definir display_name usando SERVICE_ROLE_KEY para ter permissões
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { error: nameError } = await supabaseAdmin.rpc('set_admin_display_name', {
       target_user_id: newUser.user!.id,
       new_display_name: displayName
     });
@@ -82,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Gerar link de reset de senha
-    const { data: resetData, error: resetError } = await supabaseClient.auth.admin.generateLink({
+    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
     });
@@ -92,16 +97,17 @@ const handler = async (req: Request): Promise<Response> => {
       throw resetError;
     }
 
-    const inviteLink = resetData.properties.action_link.replace(
-      '/auth/v1/verify',
-      `${Deno.env.get('APP_URL') || 'https://91e2f1f8-ea96-415f-9224-8bd034d01d6f.lovableproject.com'}/admin/set-password`
-    );
+    // Construir URL corretamente
+    const appUrl = Deno.env.get('APP_URL') || 'https://91e2f1f8-ea96-415f-9224-8bd034d01d6f.lovableproject.com';
+    const tokenHash = resetData.properties.hashed_token;
+    const inviteLink = `${appUrl}/admin/set-password?token=${tokenHash}&type=recovery`;
 
     console.log("Link gerado:", inviteLink);
 
     // Enviar email de convite
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
     const { error: emailError } = await resend.emails.send({
-      from: "OndeTem <onboarding@resend.dev>",
+      from: `OndeTem <${fromEmail}>`,
       to: [email],
       subject: "Convite para Administrador - OndeTem",
       html: `
