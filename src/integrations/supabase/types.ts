@@ -812,6 +812,10 @@ export type Database = {
         }
         Returns: string
       }
+      set_admin_display_name: {
+        Args: { new_display_name: string; target_user_id: string }
+        Returns: undefined
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
@@ -1394,6 +1398,14 @@ export type Database = {
         Returns: unknown
       }
       unlockrows: { Args: { "": string }; Returns: number }
+      update_admin_info: {
+        Args: {
+          new_display_name: string
+          new_role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Returns: undefined
+      }
       updategeometrysrid: {
         Args: {
           catalogn_name: string
