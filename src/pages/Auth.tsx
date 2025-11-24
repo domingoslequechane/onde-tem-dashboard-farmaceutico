@@ -192,17 +192,14 @@ const Auth = () => {
       </div>
 
       {/* Right Side - Illustration */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary via-primary-light to-primary/80 items-center justify-center p-12 relative overflow-hidden">
-        {/* Decorative circles */}
-        <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+      <div 
+        className="hidden md:flex md:w-1/2 items-center justify-center p-12 relative overflow-hidden bg-cover bg-center"
+        style={{ backgroundImage: `url(${networkIllustration})` }}
+      >
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/85 to-primary-dark/90"></div>
         
         <div className="relative z-10 text-center">
-          <img 
-            src={networkIllustration} 
-            alt="Rede de Farmácias" 
-            className="w-full max-w-lg mx-auto mb-8 drop-shadow-2xl rounded-2xl"
-          />
           <h2 className="text-3xl font-bold text-white mb-4">
             Conectando Farmácias e Clientes
           </h2>
