@@ -73,77 +73,77 @@ const Settings = ({ farmacia }: SettingsProps) => {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-4 sm:space-y-6 max-w-4xl">
       {/* Informações da Farmácia */}
       <Card className="border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary text-primary-foreground">
-              <Building2 size={20} />
+        <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b px-4 sm:px-6 py-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-primary text-primary-foreground">
+              <Building2 className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div>
-              <CardTitle className="text-xl">Informações da Farmácia</CardTitle>
-              <CardDescription>Gerencie os dados da sua farmácia</CardDescription>
+              <CardTitle className="text-base sm:text-lg">Informações da Farmácia</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Gerencie os dados da sua farmácia</CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="nome" className="text-sm font-medium">Nome da Farmácia</Label>
+        <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="nome" className="text-xs sm:text-sm font-medium">Nome da Farmácia</Label>
               <Input
                 id="nome"
                 value={pharmacyData.nome}
                 onChange={(e) => setPharmacyData({ ...pharmacyData, nome: e.target.value })}
-                className="h-11"
+                className="h-9 sm:h-10 text-sm"
                 placeholder="Ex: Farmácia Central"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="telefone" className="text-sm font-medium">Telefone</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="telefone" className="text-xs sm:text-sm font-medium">Telefone</Label>
               <Input
                 id="telefone"
                 value={pharmacyData.telefone}
                 onChange={(e) => setPharmacyData({ ...pharmacyData, telefone: e.target.value })}
-                className="h-11"
+                className="h-9 sm:h-10 text-sm"
                 placeholder="(+258) 84 000 0000"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp" className="text-sm font-medium">WhatsApp</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="whatsapp" className="text-xs sm:text-sm font-medium">WhatsApp</Label>
               <Input
                 id="whatsapp"
                 value={pharmacyData.whatsapp}
                 onChange={(e) => setPharmacyData({ ...pharmacyData, whatsapp: e.target.value })}
-                className="h-11"
+                className="h-9 sm:h-10 text-sm"
                 placeholder="(+258) 84 000 0000"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="horario" className="text-sm font-medium">Horário de Funcionamento</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="horario" className="text-xs sm:text-sm font-medium">Horário de Funcionamento</Label>
               <Input
                 id="horario"
                 value={pharmacyData.horario_funcionamento}
                 onChange={(e) => setPharmacyData({ ...pharmacyData, horario_funcionamento: e.target.value })}
-                className="h-11"
+                className="h-9 sm:h-10 text-sm"
                 placeholder="Ex: 08:00 - 20:00"
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="endereco" className="text-sm font-medium">Endereço Completo</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="endereco" className="text-xs sm:text-sm font-medium">Endereço Completo</Label>
             <Input
               id="endereco"
               value={pharmacyData.endereco_completo}
               onChange={(e) => setPharmacyData({ ...pharmacyData, endereco_completo: e.target.value })}
-              className="h-11"
+              className="h-9 sm:h-10 text-sm"
               placeholder="Rua, Número, Bairro, Cidade"
             />
           </div>
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+          <div className="flex items-center justify-between p-3 sm:p-4 bg-muted rounded-lg">
             <div className="space-y-0.5">
-              <Label htmlFor="ativa" className="text-sm font-medium">Status da Farmácia</Label>
-              <p className="text-xs text-muted-foreground">
+              <Label htmlFor="ativa" className="text-xs sm:text-sm font-medium">Status da Farmácia</Label>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 {pharmacyData.ativa ? 'Farmácia está ativa e visível' : 'Farmácia está inativa'}
               </p>
             </div>
@@ -246,14 +246,13 @@ const Settings = ({ farmacia }: SettingsProps) => {
       </Card>
 
       {/* Botão de Salvar */}
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-end pt-2 sm:pt-4">
         <Button 
           onClick={handleSave} 
           disabled={isSaving} 
-          size="lg" 
-          className="h-12 px-8 bg-primary hover:bg-primary/90 gap-2"
+          className="h-10 sm:h-11 px-6 sm:px-8 bg-primary hover:bg-primary/90 gap-2 text-sm w-full sm:w-auto"
         >
-          <Save className="h-5 w-5" />
+          <Save className="h-4 w-4" />
           {isSaving ? 'Salvando...' : 'Salvar Configurações'}
         </Button>
       </div>

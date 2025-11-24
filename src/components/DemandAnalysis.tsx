@@ -30,35 +30,35 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
   return (
     <div className={`space-y-4 md:space-y-6 ${!expanded ? 'h-fit' : ''}`}>
       <Card>
-        <CardHeader className="pb-3 md:pb-4">
-          <CardTitle className="flex items-center text-base md:text-lg">
-            <BarChart3 className="mr-2 flex-shrink-0" size={18} />
+        <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
+          <CardTitle className="flex items-center text-sm sm:text-base">
+            <BarChart3 className="mr-2 flex-shrink-0 h-4 w-4" />
             <span className="truncate">Análise de Demanda</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 md:space-y-6">
+        <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
           {/* Demand Chart */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-900 text-sm md:text-base">Top 5 Medicamentos Mais Procurados</h4>
+          <div className="space-y-2">
+            <h4 className="font-medium text-gray-900 text-xs sm:text-sm">Top 5 Medicamentos Mais Procurados</h4>
             {demandData.slice(0, expanded ? 5 : 3).map((item) => (
-              <div key={item.name} className="space-y-2">
-                <div className="flex justify-between text-xs md:text-sm">
+              <div key={item.name} className="space-y-1.5">
+                <div className="flex justify-between text-[10px] sm:text-xs">
                   <span className="text-gray-700 truncate mr-2">{item.name}</span>
-                  <div className="flex space-x-2 md:space-x-4 flex-shrink-0">
+                  <div className="flex space-x-1.5 sm:space-x-3 flex-shrink-0">
                     <span className="font-medium text-green-600">✓ {item.found}</span>
                     <span className="font-medium text-red-600">✗ {item.notFound}</span>
-                    <span className="font-medium hidden sm:inline">{item.searches} buscas</span>
+                    <span className="font-medium hidden sm:inline">{item.searches}</span>
                   </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
                   <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-1000"
+                    className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000"
                     style={{ width: `${(item.searches / 50) * 100}%` }}
                   />
                 </div>
                 {expanded && (
-                  <div className="text-xs text-gray-500">
-                    Taxa de sucesso: {Math.round((item.found / item.searches) * 100)}%
+                  <div className="text-[10px] text-gray-500">
+                    Taxa: {Math.round((item.found / item.searches) * 100)}%
                   </div>
                 )}
               </div>
@@ -69,23 +69,23 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
 
       {/* Heat Map */}
       <Card>
-        <CardHeader className="pb-3 md:pb-4">
-          <CardTitle className="flex items-center text-base md:text-lg">
-            <MapPin className="mr-2 flex-shrink-0" size={16} />
+        <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
+          <CardTitle className="flex items-center text-sm sm:text-base">
+            <MapPin className="mr-2 flex-shrink-0 h-4 w-4" />
             <span className="truncate">Mapa de Demanda por Região</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+        <CardContent className="px-4 sm:px-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2 mb-3">
             {neighborhoods.map((area) => (
               <div 
                 key={area.name}
-                className={`${area.color} text-white p-2 sm:p-3 rounded cursor-pointer hover:opacity-90 transition-opacity`}
+                className={`${area.color} text-white p-2 rounded cursor-pointer hover:opacity-90 transition-opacity`}
                 onClick={() => handleRegionClick(area)}
               >
-                <div className="font-medium text-xs sm:text-sm truncate">{area.name}</div>
-                <div className="text-xs opacity-90 truncate">{area.level}</div>
-                <div className="text-xs mt-1">
+                <div className="font-medium text-[10px] sm:text-xs truncate">{area.name}</div>
+                <div className="text-[9px] sm:text-xs opacity-90 truncate">{area.level}</div>
+                <div className="text-[9px] sm:text-xs mt-0.5">
                   {area.searches} buscas
                 </div>
               </div>
