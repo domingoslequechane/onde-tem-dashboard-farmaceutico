@@ -113,14 +113,16 @@ const handler = async (req: Request): Promise<Response> => {
       // Aguardar trigger criar registro em user_roles
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // Definir display_name
-      const { error: nameError } = await supabaseClient.rpc('set_admin_display_name', {
-        target_user_id: userId,
-        new_display_name: displayName
-      });
+      // Atualizar o role criado pelo trigger para o role correto
+      const { error: roleError } = await supabaseClient
+        .from('user_roles')
+        .update({ role: role, display_name: displayName })
+        .eq('user_id', userId);
 
-      if (nameError) {
-        console.error("Erro ao definir display_name:", nameError);
+      if (roleError) {
+        console.error("Erro ao atualizar role:", roleError);
+      } else {
+        console.log(`Role atualizado para ${role}`);
       }
     }
 
