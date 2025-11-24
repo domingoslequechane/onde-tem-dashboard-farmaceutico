@@ -20,27 +20,31 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Get authorization token
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("Unauthorized");
+    }
+
+    // Create authenticated Supabase client
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
+        global: {
+          headers: { Authorization: authHeader },
+        },
         auth: {
           persistSession: false,
         },
       }
     );
 
-    // Verify admin authentication
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("Unauthorized");
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error("Auth error:", authError);
       throw new Error("Unauthorized");
     }
 
@@ -52,6 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (roleError || roleData?.role !== "admin") {
+      console.error("Role verification failed:", roleError);
       throw new Error("Unauthorized - Admin only");
     }
 
