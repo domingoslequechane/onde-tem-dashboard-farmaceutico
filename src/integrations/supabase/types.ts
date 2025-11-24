@@ -1316,7 +1316,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "farmacia"
+      app_role: "admin" | "farmacia" | "super_admin"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -1452,7 +1452,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "farmacia"],
+      app_role: ["admin", "farmacia", "super_admin"],
     },
   },
 } as const
