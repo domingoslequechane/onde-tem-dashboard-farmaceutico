@@ -46,48 +46,86 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { email, displayName, role }: InviteRequest = await req.json();
 
-    console.log("Criando conta para:", email);
+    console.log("Processando convite para:", email);
 
-    // Criar usuário com senha temporária (será resetada no primeiro acesso)
-    const tempPassword = crypto.randomUUID();
-    const { data: newUser, error: signUpError } = await supabaseClient.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: {
-        display_name: displayName,
-        role: role,
-        invited: true
+    // Verificar se o usuário já existe
+    const { data: existingUsers } = await supabaseClient.auth.admin.listUsers();
+    const existingUser = existingUsers?.users.find(u => u.email === email);
+
+    let userId: string;
+
+    if (existingUser) {
+      console.log("Usuário já existe, reenviando convite");
+      userId = existingUser.id;
+
+      // Atualizar o role se necessário
+      const { data: currentRole } = await supabaseClient
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (currentRole?.role !== role) {
+        const { error: updateError } = await supabaseClient.rpc('update_admin_info', {
+          target_user_id: userId,
+          new_display_name: displayName,
+          new_role: role
+        });
+
+        if (updateError) {
+          console.error("Erro ao atualizar role:", updateError);
+        }
       }
-    });
 
-    if (signUpError) {
-      console.error("Erro ao criar usuário:", signUpError);
-      throw signUpError;
-    }
+      // Atualizar display_name se fornecido
+      const { error: nameError } = await supabaseClient.rpc('set_admin_display_name', {
+        target_user_id: userId,
+        new_display_name: displayName
+      });
 
-    console.log("Usuário criado:", newUser.user?.id);
+      if (nameError) {
+        console.error("Erro ao atualizar display_name:", nameError);
+      }
+    } else {
+      console.log("Criando nova conta para:", email);
 
-    // Aguardar trigger criar registro em user_roles
-    await new Promise(resolve => setTimeout(resolve, 1500));
+      // Criar novo usuário
+      const tempPassword = crypto.randomUUID();
+      const { data: newUser, error: signUpError } = await supabaseClient.auth.admin.createUser({
+        email,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          display_name: displayName,
+          role: role,
+          invited: true
+        }
+      });
 
-    // Definir display_name usando SERVICE_ROLE_KEY para ter permissões
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+      if (signUpError) {
+        console.error("Erro ao criar usuário:", signUpError);
+        throw signUpError;
+      }
 
-    const { error: nameError } = await supabaseAdmin.rpc('set_admin_display_name', {
-      target_user_id: newUser.user!.id,
-      new_display_name: displayName
-    });
+      userId = newUser.user!.id;
+      console.log("Usuário criado:", userId);
 
-    if (nameError) {
-      console.error("Erro ao definir display_name:", nameError);
+      // Aguardar trigger criar registro em user_roles
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Definir display_name
+      const { error: nameError } = await supabaseClient.rpc('set_admin_display_name', {
+        target_user_id: userId,
+        new_display_name: displayName
+      });
+
+      if (nameError) {
+        console.error("Erro ao definir display_name:", nameError);
+      }
     }
 
     // Gerar link de reset de senha
-    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+    const { data: resetData, error: resetError } = await supabaseClient.auth.admin.generateLink({
       type: 'recovery',
       email: email,
     });
@@ -102,7 +140,7 @@ const handler = async (req: Request): Promise<Response> => {
     const tokenHash = resetData.properties.hashed_token;
     const inviteLink = `${appUrl}/admin/set-password?token=${tokenHash}&type=recovery`;
 
-    console.log("Link gerado:", inviteLink);
+    console.log("Link gerado para:", email);
 
     // Enviar email de convite
     const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
@@ -158,8 +196,9 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Convite enviado com sucesso",
-        userId: newUser.user?.id 
+        message: existingUser ? "Convite reenviado com sucesso" : "Convite enviado com sucesso",
+        userId: userId,
+        isResend: !!existingUser
       }),
       {
         status: 200,
