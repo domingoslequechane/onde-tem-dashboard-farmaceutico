@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Trash2, UserCog, Edit, Ban, Clock } from 'lucide-react';
+import { Plus, Trash2, UserCog, Edit, Ban, Clock, Mail } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -132,6 +132,44 @@ const AdminManagers = () => {
     } catch (error: any) {
       toast({
         title: "Erro ao criar administrador",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendInvite = async (admin: Admin) => {
+    if (currentUserRole !== 'super_admin') {
+      toast({
+        title: "Sem permissão",
+        description: "Apenas Super-Admins podem reenviar convites.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-admin-invite', {
+        body: {
+          email: admin.email,
+          displayName: admin.display_name,
+          role: admin.role
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Convite reenviado!",
+        description: `Um novo email de convite foi enviado para ${admin.email}`,
+        duration: 5000,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao reenviar convite",
         description: error.message,
         variant: "destructive",
       });
@@ -386,6 +424,17 @@ const AdminManagers = () => {
                         <div className="flex gap-2 justify-end">
                           {currentUserRole === 'super_admin' && (
                             <>
+                              {admin.account_status === 'invited' && (
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleResendInvite(admin)}
+                                  title="Reenviar Convite"
+                                  disabled={isLoading}
+                                >
+                                  <Mail className="h-4 w-4 text-primary" />
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="icon"
