@@ -26,8 +26,8 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
         <EmergencyAlert onClose={() => setShowEmergencyAlert(false)} />
       )}
 
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl pb-24 sm:pb-8">
-        <Tabs defaultValue="dashboard" className="w-full">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl pb-24 sm:pb-8 overflow-hidden">
+        <Tabs defaultValue="dashboard" className="w-full h-full flex flex-col">
           <TabsList className="fixed bottom-0 left-0 right-0 z-50 grid w-full grid-cols-5 h-auto p-1.5 bg-background border-t border-border shadow-lg sm:static sm:grid-cols-5 sm:mb-6 sm:p-1.5 sm:bg-muted/50 sm:rounded-xl sm:gap-1 sm:border-0 sm:shadow-none">
             <TabsTrigger 
               value="dashboard" 
@@ -66,8 +66,8 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="dashboard" className="mt-0 animate-fade-in">
-            <div className="space-y-4 sm:space-y-6">
+          <TabsContent value="dashboard" className="mt-0 animate-fade-in overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-200px)]">
+            <div className="space-y-4 sm:space-y-6 pr-2">
               {/* Resultados Onde Tem - Full width on top */}
               <div className="animate-slide-up">
                 <ServiceImpact />
@@ -85,19 +85,19 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
             </div>
           </TabsContent>
           
-          <TabsContent value="estoque" className="mt-0 animate-fade-in">
+          <TabsContent value="estoque" className="mt-0 animate-fade-in overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-200px)] pr-2">
             <StockControl expanded={true} />
           </TabsContent>
           
-          <TabsContent value="demanda" className="mt-0 animate-fade-in">
+          <TabsContent value="demanda" className="mt-0 animate-fade-in overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-200px)] pr-2">
             <DemandAnalysis expanded={true} />
           </TabsContent>
           
-          <TabsContent value="configuracoes" className="mt-0 animate-fade-in">
+          <TabsContent value="configuracoes" className="mt-0 animate-fade-in overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-200px)] pr-2">
             <Settings farmacia={farmacia} />
           </TabsContent>
           
-          <TabsContent value="suporte" className="mt-0 animate-fade-in">
+          <TabsContent value="suporte" className="mt-0 animate-fade-in overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-200px)] pr-2">
             <Support />
           </TabsContent>
         </Tabs>
