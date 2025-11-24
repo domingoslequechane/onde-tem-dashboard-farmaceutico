@@ -84,15 +84,20 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
           </TabsList>
           
           <TabsContent value="dashboard" className="mt-0 animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+            <div className="space-y-4 sm:space-y-6">
+              {/* Resultados Onde Tem - Full width on top */}
               <div className="animate-slide-up">
-                <StockControl />
-              </div>
-              <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                <DemandAnalysis />
-              </div>
-              <div className="md:col-span-2 xl:col-span-1 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                 <ServiceImpact />
+              </div>
+              
+              {/* Grid with Stock Control and Demand Analysis */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                  <StockControl />
+                </div>
+                <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                  <DemandAnalysis />
+                </div>
               </div>
             </div>
           </TabsContent>
