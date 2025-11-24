@@ -26,7 +26,7 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
         <EmergencyAlert onClose={() => setShowEmergencyAlert(false)} />
       )}
 
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl pb-24 sm:pb-8">
         {/* Welcome Section */}
         <div className="mb-6 sm:mb-8 animate-fade-in">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
@@ -45,41 +45,41 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
         </div>
         
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl gap-1">
+          <TabsList className="fixed bottom-0 left-0 right-0 z-50 grid w-full grid-cols-5 h-auto p-2 bg-background border-t border-border shadow-lg sm:static sm:grid-cols-5 sm:mb-6 sm:p-1.5 sm:bg-muted/50 sm:rounded-xl sm:gap-1 sm:border-0 sm:shadow-none">
             <TabsTrigger 
               value="dashboard" 
-              className="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
+              className="flex flex-col items-center justify-center gap-1 px-2 py-2 text-xs rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-card sm:data-[state=active]:shadow-sm"
             >
-              <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">Início</span>
+              <LayoutDashboard className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate text-[10px] sm:text-xs">Início</span>
             </TabsTrigger>
             <TabsTrigger 
               value="estoque" 
-              className="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
+              className="flex flex-col items-center justify-center gap-1 px-2 py-2 text-xs rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-card sm:data-[state=active]:shadow-sm"
             >
-              <Package className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">Estoque</span>
+              <Package className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate text-[10px] sm:text-xs">Estoque</span>
             </TabsTrigger>
             <TabsTrigger 
               value="demanda" 
-              className="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all"
+              className="flex flex-col items-center justify-center gap-1 px-2 py-2 text-xs rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-card sm:data-[state=active]:shadow-sm"
             >
-              <TrendingUp className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">Demanda</span>
+              <TrendingUp className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate text-[10px] sm:text-xs">Demanda</span>
             </TabsTrigger>
             <TabsTrigger 
               value="configuracoes" 
-              className="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all col-span-2 sm:col-span-1"
+              className="flex flex-col items-center justify-center gap-1 px-2 py-2 text-xs rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-card sm:data-[state=active]:shadow-sm"
             >
-              <SettingsIcon className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">Config.</span>
+              <SettingsIcon className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate text-[10px] sm:text-xs">Config.</span>
             </TabsTrigger>
             <TabsTrigger 
               value="suporte" 
-              className="flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 text-xs sm:text-sm rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all col-span-2 sm:col-span-1"
+              className="flex flex-col items-center justify-center gap-1 px-2 py-2 text-xs rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-card sm:data-[state=active]:shadow-sm"
             >
-              <MessageSquare className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">Suporte</span>
+              <MessageSquare className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate text-[10px] sm:text-xs">Suporte</span>
             </TabsTrigger>
           </TabsList>
           
