@@ -2,3 +2,9 @@ project_id = "uacernprfbnascyfrkrb"
 
 [functions.health-check]
 verify_jwt = false
+
+[functions.send-deletion-code]
+verify_jwt = true
+
+[functions.delete-pharmacy]
+verify_jwt = true
