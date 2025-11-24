@@ -97,6 +97,30 @@ export type Database = {
           },
         ]
       }
+      deletion_codes: {
+        Row: {
+          admin_id: string
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+        }
+        Insert: {
+          admin_id: string
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+        }
+        Update: {
+          admin_id?: string
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       estoque: {
         Row: {
           atualizado_em: string | null
@@ -505,6 +529,7 @@ export type Database = {
               whatsapp: string
             }[]
           }
+      delete_expired_codes: { Args: never; Returns: undefined }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {

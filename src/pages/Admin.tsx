@@ -8,11 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Power, PowerOff, Key, Edit, Search, Store, Users, TrendingUp, Shield, UserCog, BarChart } from 'lucide-react';
+import { Plus, Power, PowerOff, Key, Edit, Search, Store, Users, TrendingUp, Shield, UserCog, BarChart, Trash2 } from 'lucide-react';
 import Header from '@/components/Header';
 import AdminFarmaciaModal from '@/components/AdminFarmaciaModal';
 import AdminManagers from '@/components/AdminManagers';
 import AdminStatistics from '@/components/AdminStatistics';
+import { DeletePharmacyDialog } from '@/components/DeletePharmacyDialog';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Admin = () => {
   const [user, setUser] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFarmacia, setEditingFarmacia] = useState<any>(null);
+  const [deletingPharmacy, setDeletingPharmacy] = useState<{ id: string; nome: string } | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -324,6 +326,15 @@ const Admin = () => {
                                 >
                                   <Key className="h-4 w-4" />
                                 </Button>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => setDeletingPharmacy({ id: farmacia.id, nome: farmacia.nome })}
+                                  title="Eliminar Farmácia"
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -356,6 +367,13 @@ const Admin = () => {
         }}
         onSuccess={fetchFarmacias}
         farmacia={editingFarmacia}
+      />
+
+      <DeletePharmacyDialog
+        pharmacy={deletingPharmacy}
+        adminEmail={user?.email || ''}
+        onClose={() => setDeletingPharmacy(null)}
+        onSuccess={fetchFarmacias}
       />
     </div>
   );
