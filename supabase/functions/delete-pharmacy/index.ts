@@ -17,7 +17,28 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Get authorization token
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("Unauthorized");
+    }
+
+    // Create authenticated Supabase client
     const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+        auth: {
+          persistSession: false,
+        },
+      }
+    );
+
+    // Create service role client for admin operations
+    const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       {
@@ -27,45 +48,30 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        auth: {
-          persistSession: false,
-        },
-      }
-    );
-
-    // Verify admin authentication
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("Unauthorized");
-    }
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error("Auth error:", authError);
       throw new Error("Unauthorized");
     }
 
     // Verify user is admin
-    const { data: roleData, error: roleError } = await supabaseClient
+    const { data: roleData, error: roleError } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .single();
 
     if (roleError || roleData?.role !== "admin") {
+      console.error("Role verification failed:", roleError);
       throw new Error("Unauthorized - Admin only");
     }
 
     const { pharmacyId, verificationCode }: DeletePharmacyRequest = await req.json();
 
     // Verify code
-    const { data: codeData, error: codeError } = await supabaseClient
+    const { data: codeData, error: codeError } = await supabase
       .from("deletion_codes")
       .select("*")
       .eq("admin_id", user.id)
@@ -76,17 +82,19 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (codeError || !codeData) {
+      console.error("Code verification failed:", codeError);
       throw new Error("Código inválido ou expirado");
     }
 
     // Get pharmacy data to find user_id
-    const { data: pharmacyData, error: pharmacyError } = await supabaseClient
+    const { data: pharmacyData, error: pharmacyError } = await supabase
       .from("farmacias")
       .select("user_id, nome")
       .eq("id", pharmacyId)
       .single();
 
     if (pharmacyError || !pharmacyData) {
+      console.error("Pharmacy not found:", pharmacyError);
       throw new Error("Farmácia não encontrada");
     }
 
@@ -95,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Delete in order (respecting foreign key constraints)
     
     // 1. Delete stock items
-    const { error: stockError } = await supabaseClient
+    const { error: stockError } = await supabase
       .from("estoque")
       .delete()
       .eq("farmacia_id", pharmacyId);
@@ -108,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Stock deleted successfully");
 
     // 2. Delete pharmacy record
-    const { error: pharmacyDeleteError } = await supabaseClient
+    const { error: pharmacyDeleteError } = await supabase
       .from("farmacias")
       .delete()
       .eq("id", pharmacyId);
@@ -122,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // 3. Delete user role
     if (pharmacyData.user_id) {
-      const { error: roleDeleteError } = await supabaseClient
+      const { error: roleDeleteError } = await supabase
         .from("user_roles")
         .delete()
         .eq("user_id", pharmacyData.user_id);
@@ -134,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("User role deleted successfully");
 
       // 4. Delete auth user (using service role key)
-      const { error: userDeleteError } = await supabase.auth.admin.deleteUser(
+      const { error: userDeleteError } = await supabaseAdmin.auth.admin.deleteUser(
         pharmacyData.user_id
       );
 
@@ -147,7 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // 5. Delete used verification code
-    await supabaseClient
+    await supabase
       .from("deletion_codes")
       .delete()
       .eq("id", codeData.id);
