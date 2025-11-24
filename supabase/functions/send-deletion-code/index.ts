@@ -76,8 +76,8 @@ const handler = async (req: Request): Promise<Response> => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     console.log("Generated verification code");
 
-    // Store code in database with 10 minute expiration
-    const { error: insertError } = await supabase
+    // Store code in database with 10 minute expiration (use admin client to bypass RLS)
+    const { error: insertError } = await supabaseAdmin
       .from("deletion_codes")
       .insert({
         admin_id: user.id,
