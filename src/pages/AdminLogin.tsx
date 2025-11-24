@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Eye, EyeOff, Shield, Activity } from 'lucide-react';
+import { Eye, EyeOff, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import ondeTemLogo from '@/assets/onde-tem-logo.png';
+import networkIllustration from '@/assets/pharmacy-network-illustration.png';
 import { z } from 'zod';
 
 const adminAuthSchema = z.object({
@@ -116,162 +116,178 @@ const AdminLogin = () => {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/10 via-background to-destructive/10">
-      <div className="w-full max-w-md">
-        <Card className="border-none shadow-2xl overflow-hidden backdrop-blur-sm bg-card/95">
-          <div className="bg-gradient-to-br from-destructive to-destructive/80 p-8 text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm">
-                <Shield className="h-10 w-10 text-white" />
-              </div>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-              Painel Administrativo
-            </h1>
-            <p className="text-destructive-foreground/90 text-sm">
-              Acesso restrito aos administradores
-            </p>
-          </div>
-
-          <CardContent className="p-6 sm:p-8">
-            <div className="mb-6 flex justify-center">
+    <div className="min-h-screen flex">
+      {/* Left Side - Form */}
+      <div className="w-full md:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-background">
+        <div className="w-full max-w-md">
+          {/* Logo and Header */}
+          <div className="mb-6 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
               <img 
                 src={ondeTemLogo} 
                 alt="Onde Tem?" 
-                className="h-16 w-auto object-contain" 
+                className="h-8" 
               />
             </div>
+            <div className="flex items-center gap-2 mb-4 justify-center md:justify-start">
+              <Shield className="h-6 w-6 text-destructive" />
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+                {isRecoveryMode ? 'Recuperar Senha' : 'Painel Administrativo'}
+              </h1>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {isRecoveryMode ? 'Digite seu email para recuperar o acesso' : 'Acesso restrito aos administradores'}
+            </p>
+          </div>
 
-            {isRecoveryMode ? (
-              <form onSubmit={handlePasswordRecovery} className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Email
-                  </label>
-                  <Input
-                    type="email"
-                    placeholder="admin@ondetem.com"
-                    value={recoveryEmail}
-                    onChange={(e) => setRecoveryEmail(e.target.value)}
-                    className="h-12"
-                    required
-                  />
-                </div>
+          {/* Form */}
+          {isRecoveryMode ? (
+            <form onSubmit={handlePasswordRecovery} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Email
+                </label>
+                <Input
+                  type="email"
+                  placeholder="admin@ondetem.com"
+                  value={recoveryEmail}
+                  onChange={(e) => setRecoveryEmail(e.target.value)}
+                  className="h-11"
+                  required
+                />
+              </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full h-12 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold text-base shadow-lg"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Enviando...
-                    </div>
-                  ) : (
-                    "Enviar Email de Recuperação"
-                  )}
-                </Button>
-
-                <div className="text-center">
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="text-muted-foreground hover:text-foreground text-sm p-0"
-                    onClick={() => setIsRecoveryMode(false)}
-                  >
-                    Voltar ao Login
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Email
-                  </label>
-                  <Input
-                    type="email"
-                    placeholder="admin@ondetem.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-12"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2 relative">
-                  <label className="text-sm font-medium text-foreground">
-                    Senha
-                  </label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="h-12 pr-12"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-muted"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </Button>
+              <Button 
+                type="submit" 
+                className="w-full h-11 text-sm font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Enviando...
                   </div>
-                </div>
+                ) : (
+                  "Enviar Email"
+                )}
+              </Button>
 
-                <div className="flex justify-end">
+              <div className="space-y-2 pt-1 text-center md:text-left">
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline transition-colors"
+                  onClick={() => setIsRecoveryMode(false)}
+                >
+                  Voltar ao Login
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Email
+                </label>
+                <Input
+                  type="email"
+                  placeholder="admin@ondetem.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-11"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Senha
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-11 pr-12"
+                    required
+                  />
                   <Button
                     type="button"
-                    variant="link"
-                    className="text-sm text-primary hover:text-primary-dark p-0 h-auto"
-                    onClick={() => setIsRecoveryMode(true)}
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-muted"
+                    onClick={() => setShowPassword(!showPassword)}
                   >
-                    Esqueceu a senha?
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </Button>
                 </div>
+              </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full h-12 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold text-base shadow-lg"
-                  disabled={isLoading}
+              <Button 
+                type="submit" 
+                className="w-full h-11 text-sm font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Verificando...
+                  </div>
+                ) : (
+                  <>
+                    <Shield className="h-4 w-4" />
+                    Acessar Painel
+                  </>
+                )}
+              </Button>
+              
+              <div className="space-y-2 pt-1 text-center md:text-left">
+                <button
+                  type="button"
+                  className="text-primary hover:text-primary/80 text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
+                  onClick={() => setIsRecoveryMode(true)}
                 >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Verificando...
-                    </div>
-                  ) : (
-                    <>
-                      <Shield className="mr-2 h-5 w-5" />
-                      Acessar Painel
-                    </>
-                  )}
-                </Button>
-                
-                <div className="text-center">
-                  <Button 
-                    type="button"
-                    variant="link" 
-                    className="text-muted-foreground hover:text-foreground text-sm p-0"
-                    onClick={() => navigate('/auth')}
-                  >
-                    Voltar para login de farmácia
-                  </Button>
-                </div>
-              </form>
-            )}
-          </CardContent>
-        </Card>
+                  Esqueceu sua senha?
+                </button>
+                <button 
+                  type="button"
+                  className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
+                  onClick={() => navigate('/auth')}
+                >
+                  Voltar para login de farmácia
+                </button>
+              </div>
+            </form>
+          )}
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          © 2025 Onde Tem? - Painel Administrativo
-        </p>
+          {/* Footer */}
+          <p className="text-center md:text-left text-xs text-muted-foreground mt-6">
+            © 2025 Onde Tem? - Painel Administrativo
+          </p>
+        </div>
+      </div>
+
+      {/* Right Side - Illustration with destructive theme */}
+      <div 
+        className="hidden md:flex md:w-1/2 items-center justify-center p-12 relative overflow-hidden bg-cover bg-center"
+        style={{ backgroundImage: `url(${networkIllustration})` }}
+      >
+        {/* Dark overlay with destructive color */}
+        <div className="absolute inset-0 bg-gradient-to-br from-destructive/90 via-destructive/85 to-destructive-dark/90"></div>
+        
+        <div className="relative z-10 text-center">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 rounded-full bg-white/20 backdrop-blur-sm">
+              <Shield className="h-16 w-16 text-white" />
+            </div>
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Painel Administrativo
+          </h2>
+          <p className="text-white/90 text-lg max-w-md mx-auto">
+            Gerencie toda a rede de farmácias, monitore estatísticas e configure o sistema com segurança.
+          </p>
+        </div>
       </div>
     </div>
   );
