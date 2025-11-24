@@ -537,13 +537,45 @@ const AdminManagers = () => {
                       const getDeviceInfo = (userAgent?: string) => {
                         if (!userAgent) return 'Não disponível';
                         
-                        if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone')) {
-                          return 'Mobile';
-                        } else if (userAgent.includes('Tablet') || userAgent.includes('iPad')) {
-                          return 'Tablet';
-                        } else {
-                          return 'Desktop';
+                        // Extrair informações do dispositivo
+                        let deviceInfo = '';
+                        
+                        // Detectar modelo de celular Android
+                        const androidModel = userAgent.match(/\(([^)]*Android[^)]*)\)/i);
+                        if (androidModel) {
+                          const modelMatch = userAgent.match(/;\s*([^;]*?)\s*Build/i);
+                          if (modelMatch) {
+                            deviceInfo = modelMatch[1].trim();
+                          }
                         }
+                        
+                        // Detectar iPhone/iPad
+                        if (userAgent.includes('iPhone')) {
+                          deviceInfo = 'iPhone';
+                        } else if (userAgent.includes('iPad')) {
+                          deviceInfo = 'iPad';
+                        }
+                        
+                        // Detectar navegador e SO para desktop
+                        if (!deviceInfo) {
+                          const osMatch = userAgent.match(/\(([^)]+)\)/);
+                          if (osMatch) {
+                            const os = osMatch[1];
+                            if (os.includes('Windows')) deviceInfo = 'Windows PC';
+                            else if (os.includes('Mac')) deviceInfo = 'Mac';
+                            else if (os.includes('Linux')) deviceInfo = 'Linux PC';
+                            else deviceInfo = os.split(';')[0].trim();
+                          }
+                        }
+                        
+                        // Detectar navegador
+                        let browser = '';
+                        if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) browser = 'Chrome';
+                        else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) browser = 'Safari';
+                        else if (userAgent.includes('Firefox')) browser = 'Firefox';
+                        else if (userAgent.includes('Edg')) browser = 'Edge';
+                        
+                        return deviceInfo ? `${deviceInfo}${browser ? ' - ' + browser : ''}` : userAgent.substring(0, 50) + '...';
                       };
 
                       return (
@@ -556,7 +588,7 @@ const AdminManagers = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <span className="text-sm text-muted-foreground" title={log.user_agent || 'Não disponível'}>
+                            <span className="text-sm" title={log.user_agent || 'Não disponível'}>
                               {getDeviceInfo(log.user_agent)}
                             </span>
                           </TableCell>
