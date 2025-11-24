@@ -154,32 +154,29 @@ const Auth = () => {
             <div className="space-y-2 pt-1">
               {!showForgotPassword ? (
                 <>
-                  <Button 
+                  <button 
                     type="button"
-                    variant="link" 
-                    className="text-primary hover:text-primary/80 text-sm p-0 block"
+                    className="text-primary hover:text-primary/80 text-sm underline-offset-4 hover:underline transition-colors block"
                     onClick={() => setShowForgotPassword(true)}
                   >
                     Esqueceu sua senha?
-                  </Button>
-                  <Button 
+                  </button>
+                  <button 
                     type="button"
-                    variant="link" 
-                    className="text-muted-foreground hover:text-foreground text-sm p-0 block"
+                    className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline transition-colors block"
                     onClick={() => navigate('/admin/login')}
                   >
                     Acesso Administrativo
-                  </Button>
+                  </button>
                 </>
               ) : (
-                <Button 
+                <button 
                   type="button"
-                  variant="link" 
-                  className="text-muted-foreground hover:text-foreground text-sm p-0"
+                  className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline transition-colors"
                   onClick={() => setShowForgotPassword(false)}
                 >
                   Voltar para login
-                </Button>
+                </button>
               )}
             </div>
           </form>
