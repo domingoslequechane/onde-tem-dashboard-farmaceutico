@@ -131,15 +131,15 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col overflow-hidden">
       <Header 
         user={user ? { email: user.email, name: 'Administrador' } : null} 
         onLogout={handleLogout} 
       />
       
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl flex-1 flex flex-col overflow-hidden">
         {/* Cabeçalho */}
-        <div className="mb-6 sm:mb-8 animate-fade-in">
+        <div className="mb-6 sm:mb-8 animate-fade-in flex-shrink-0">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-3 rounded-lg bg-destructive text-destructive-foreground">
               <Shield size={28} />
@@ -156,8 +156,8 @@ const Admin = () => {
         </div>
 
         {/* Tabs para diferentes seções */}
-        <Tabs defaultValue="estatisticas" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
+        <Tabs defaultValue="estatisticas" className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto flex-shrink-0">
             <TabsTrigger value="estatisticas" className="flex items-center gap-2">
               <BarChart className="h-4 w-4" />
               <span className="hidden sm:inline">Estatísticas</span>
@@ -173,7 +173,7 @@ const Admin = () => {
           </TabsList>
 
           {/* Aba de Farmácias */}
-          <TabsContent value="farmacias" className="space-y-6">
+          <TabsContent value="farmacias" className="flex-1 overflow-y-auto mt-6">
             <Card className="border-none shadow-lg">
               <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -305,7 +305,7 @@ const Admin = () => {
           </TabsContent>
 
           {/* Aba de Estatísticas */}
-          <TabsContent value="estatisticas">
+          <TabsContent value="estatisticas" className="flex-1 overflow-y-auto mt-6">
             <AdminStatistics 
               totalFarmacias={farmacias.length}
               farmaciasAtivas={farmacias.filter(f => f.ativa).length}
@@ -314,7 +314,7 @@ const Admin = () => {
           </TabsContent>
 
           {/* Aba de Administradores */}
-          <TabsContent value="administradores">
+          <TabsContent value="administradores" className="flex-1 overflow-y-auto mt-6">
             <AdminManagers />
           </TabsContent>
         </Tabs>

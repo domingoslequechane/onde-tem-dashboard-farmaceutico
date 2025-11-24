@@ -29,6 +29,48 @@ const AdminStatistics = ({ totalFarmacias, farmaciasAtivas, farmaciasInativas }:
 
   return (
     <div className="space-y-6">
+      {/* Cards de Métricas de Pesquisas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-none shadow-lg">
+          <CardHeader className="pb-3 bg-gradient-to-br from-primary/5 to-secondary/5">
+            <div className="flex items-center justify-between">
+              <CardDescription className="text-sm font-medium">Total de Pesquisas</CardDescription>
+              <Search className="h-5 w-5 text-primary" />
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <p className="text-3xl font-bold text-primary">{stats.totalSearches.toLocaleString('pt-BR')}</p>
+            <p className="text-xs text-muted-foreground mt-1">Últimos 30 dias</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-lg">
+          <CardHeader className="pb-3 bg-gradient-to-br from-secondary/5 to-primary/5">
+            <div className="flex items-center justify-between">
+              <CardDescription className="text-sm font-medium">Taxa de Sucesso</CardDescription>
+              <CheckCircle className="h-5 w-5 text-secondary" />
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <p className="text-3xl font-bold text-secondary">{stats.successRate}%</p>
+            <p className="text-xs text-muted-foreground mt-1">Buscas com resultados</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-lg">
+          <CardHeader className="pb-3 bg-gradient-to-br from-destructive/5 to-destructive/10">
+            <div className="flex items-center justify-between">
+              <CardDescription className="text-sm font-medium">Taxa de Erro</CardDescription>
+              <AlertCircle className="h-5 w-5 text-destructive" />
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <p className="text-3xl font-bold text-destructive">{stats.errorRate}%</p>
+            <p className="text-xs text-muted-foreground mt-1">Buscas sem resultados</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Cards de Totais de Farmácias */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-none shadow-lg">
@@ -68,48 +110,6 @@ const AdminStatistics = ({ totalFarmacias, farmaciasAtivas, farmaciasInativas }:
             <p className="text-3xl sm:text-4xl font-bold text-destructive">
               {farmaciasInativas}
             </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Cards de Métricas de Pesquisas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-none shadow-lg">
-          <CardHeader className="pb-3 bg-gradient-to-br from-primary/5 to-secondary/5">
-            <div className="flex items-center justify-between">
-              <CardDescription className="text-sm font-medium">Total de Pesquisas</CardDescription>
-              <Search className="h-5 w-5 text-primary" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <p className="text-3xl font-bold text-primary">{stats.totalSearches.toLocaleString('pt-BR')}</p>
-            <p className="text-xs text-muted-foreground mt-1">Últimos 30 dias</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-lg">
-          <CardHeader className="pb-3 bg-gradient-to-br from-secondary/5 to-primary/5">
-            <div className="flex items-center justify-between">
-              <CardDescription className="text-sm font-medium">Taxa de Sucesso</CardDescription>
-              <CheckCircle className="h-5 w-5 text-secondary" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <p className="text-3xl font-bold text-secondary">{stats.successRate}%</p>
-            <p className="text-xs text-muted-foreground mt-1">Buscas com resultados</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-lg">
-          <CardHeader className="pb-3 bg-gradient-to-br from-destructive/5 to-destructive/10">
-            <div className="flex items-center justify-between">
-              <CardDescription className="text-sm font-medium">Taxa de Erro</CardDescription>
-              <AlertCircle className="h-5 w-5 text-destructive" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <p className="text-3xl font-bold text-destructive">{stats.errorRate}%</p>
-            <p className="text-xs text-muted-foreground mt-1">Buscas sem resultados</p>
           </CardContent>
         </Card>
       </div>
