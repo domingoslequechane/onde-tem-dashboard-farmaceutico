@@ -29,15 +29,15 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl pb-24 sm:pb-8">
         {/* Welcome Section */}
         <div className="mb-4 sm:mb-6 animate-fade-in">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">
             Bem-vindo, {user?.name}! 👋
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-3">
+          <p className="text-sm sm:text-base text-muted-foreground mb-3">
             Gerencie seu estoque e analise a demanda em tempo real
           </p>
           
-          <div className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white rounded-full text-xs sm:text-sm font-medium shadow-md">
-            <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <div className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-500 text-white rounded-full text-sm sm:text-base font-medium shadow-md">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <span>Farmácia Verificada</span>

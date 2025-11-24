@@ -31,18 +31,18 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
     <div className={`space-y-4 md:space-y-6 ${!expanded ? 'h-fit' : ''}`}>
       <Card>
         <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
-          <CardTitle className="flex items-center text-sm sm:text-base">
-            <BarChart3 className="mr-2 flex-shrink-0 h-4 w-4" />
+          <CardTitle className="flex items-center text-base sm:text-lg">
+            <BarChart3 className="mr-2 flex-shrink-0 h-5 w-5" />
             <span className="truncate">Análise de Demanda</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
           {/* Demand Chart */}
           <div className="space-y-2">
-            <h4 className="font-medium text-gray-900 text-xs sm:text-sm">Top 5 Medicamentos Mais Procurados</h4>
+            <h4 className="font-medium text-gray-900 text-sm sm:text-base">Top 5 Medicamentos Mais Procurados</h4>
             {demandData.slice(0, expanded ? 5 : 3).map((item) => (
               <div key={item.name} className="space-y-1.5">
-                <div className="flex justify-between text-[10px] sm:text-xs">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-700 truncate mr-2">{item.name}</span>
                   <div className="flex space-x-1.5 sm:space-x-3 flex-shrink-0">
                     <span className="font-medium text-green-600">✓ {item.found}</span>
