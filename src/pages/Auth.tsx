@@ -21,12 +21,24 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
+
+      // Verificar se o usuário é farmácia
+      const { data: roleData, error: roleError } = await supabase
+        .rpc('get_user_role', { _user_id: data.user.id });
+
+      if (roleError) throw roleError;
+
+      // Se não for farmácia (é admin), fazer logout e mostrar erro
+      if (!roleData || roleData !== 'farmacia') {
+        await supabase.auth.signOut();
+        throw new Error('Esta farmácia não existe. Verifique suas credenciais.');
+      }
 
       toast({
         title: "Login realizado com sucesso!",

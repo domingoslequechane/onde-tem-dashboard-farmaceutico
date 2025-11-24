@@ -33,6 +33,18 @@ const Index = () => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session?.user) {
+      // Verificar se o usuário é farmácia
+      const { data: roleData, error: roleError } = await supabase
+        .rpc('get_user_role', { _user_id: session.user.id });
+
+      if (roleError || !roleData || roleData !== 'farmacia') {
+        // Se for admin ou não tiver role, fazer logout
+        await supabase.auth.signOut();
+        navigate('/auth');
+        setIsLoading(false);
+        return;
+      }
+
       setUser(session.user);
       setIsAuthenticated(true);
       await loadFarmaciaData(session.user.id);
