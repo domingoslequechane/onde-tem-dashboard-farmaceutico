@@ -142,11 +142,11 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
   return (
     <>
       <Card className={`border-none shadow-lg ${expanded ? "" : "h-fit"}`}>
-        <CardHeader className="pb-4 bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
-          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-lg sm:text-xl">
+        <CardHeader className="pb-3 px-4 sm:px-6 bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
+          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm sm:text-base">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary text-primary-foreground">
-                <Package size={20} />
+              <div className="p-1.5 rounded-lg bg-primary text-primary-foreground">
+                <Package className="h-4 w-4" />
               </div>
               <span className="truncate">Gestão de Medicamentos</span>
             </div>
@@ -157,41 +157,41 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                   setEditingMedicine(null);
                   setIsModalOpen(true);
                 }}
-                className="bg-secondary hover:bg-secondary/90 flex-1 sm:flex-none gap-1"
+                className="bg-secondary hover:bg-secondary/90 flex-1 sm:flex-none gap-1 h-8 text-xs"
               >
-                <Plus size={16} />
+                <Plus className="h-3.5 w-3.5" />
                 <span>Novo</span>
               </Button>
               <Button 
                 size="sm" 
                 onClick={fetchMedicines} 
                 variant="outline"
-                className="flex-1 sm:flex-none gap-1"
+                className="flex-1 sm:flex-none gap-1 h-8 text-xs"
                 disabled={isLoading}
               >
-                <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 <span>Atualizar</span>
               </Button>
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <CardContent className="space-y-3 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+              <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Buscar medicamento..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-11"
+                className="pl-9 h-9 text-sm"
               />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-48 h-11">
+              <SelectTrigger className="w-full sm:w-40 h-9 text-sm">
                 <SelectValue placeholder="Categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas Categorias</SelectItem>
+                <SelectItem value="all">Todas</SelectItem>
                 {categories.map(category => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
@@ -200,27 +200,27 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-2" />
-              Carregando medicamentos...
+            <div className="text-center py-8 text-muted-foreground">
+              <RefreshCw className="animate-spin h-6 w-6 mx-auto mb-2" />
+              <p className="text-sm">Carregando medicamentos...</p>
             </div>
           ) : displayedMedicines.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p className="font-medium">Nenhum medicamento encontrado</p>
-              <p className="text-sm">Adicione medicamentos ao seu estoque</p>
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <p className="font-medium text-sm">Nenhum medicamento encontrado</p>
+              <p className="text-xs">Adicione medicamentos ao seu estoque</p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+            <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
               {displayedMedicines.map((medicine) => (
                  <div 
                   key={medicine.id} 
-                  className="p-3 sm:p-4 bg-card border rounded-lg hover:shadow-md transition-all duration-200 hover:border-primary/50"
+                  className="p-2.5 sm:p-3 bg-card border rounded-lg hover:shadow-md transition-all duration-200 hover:border-primary/50"
                 >
-                  <div className="flex flex-col sm:flex-row items-start gap-3">
+                  <div className="flex flex-col sm:flex-row items-start gap-2">
                     <div className="flex-1 min-w-0 w-full">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <p className="font-semibold text-foreground text-sm sm:text-base">{medicine.nome}</p>
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <p className="font-semibold text-foreground text-xs sm:text-sm truncate">{medicine.nome}</p>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -228,13 +228,13 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                             setEditingMedicine(medicine);
                             setIsModalOpen(true);
                           }}
-                          className="h-8 w-8 sm:hidden flex-shrink-0"
+                          className="h-7 w-7 sm:hidden flex-shrink-0"
                         >
-                          <Edit size={14} />
+                          <Edit className="h-3 w-3" />
                         </Button>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                        <span className="px-2 py-1 bg-muted rounded text-xs font-medium">
+                      <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
+                        <span className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-medium">
                           {medicine.categoria}
                         </span>
                         <span className="font-semibold text-foreground">
@@ -246,7 +246,7 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                     <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
                       <Badge 
                         variant={medicine.disponivel && medicine.quantidade > 0 ? "default" : "destructive"}
-                        className={`text-xs ${medicine.disponivel && medicine.quantidade > 0 ? "bg-secondary" : ""}`}
+                        className={`text-[10px] px-1.5 py-0 ${medicine.disponivel && medicine.quantidade > 0 ? "bg-secondary" : ""}`}
                       >
                         {medicine.disponivel && medicine.quantidade > 0 ? 'Disponível' : 'Indisponível'}
                       </Badge>
@@ -257,9 +257,9 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                           setEditingMedicine(medicine);
                           setIsModalOpen(true);
                         }}
-                        className="h-9 w-9 hidden sm:flex"
+                        className="h-7 w-7 hidden sm:flex"
                       >
-                        <Edit size={16} />
+                        <Edit className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>

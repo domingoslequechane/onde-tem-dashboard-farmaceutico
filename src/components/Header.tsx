@@ -32,25 +32,25 @@ const Header = ({ user, onLogout }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm">
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="flex h-16 sm:h-20 items-center justify-between">
+        <div className="flex h-14 sm:h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
             <img 
               src={ondeTemLogo} 
               alt="Onde Tem?" 
-              className="h-10 sm:h-12 md:h-14 w-auto object-contain" 
+              className="h-8 sm:h-10 md:h-12 w-auto object-contain" 
             />
           </div>
           
           {/* Desktop User Info & Actions */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <div 
-              className="flex items-center gap-3 px-4 py-2 rounded-lg bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
               onClick={() => isAdminPage && navigate('/admin/settings')}
               title={isAdminPage ? 'Configurações' : undefined}
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <User size={18} />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <User size={16} />
               </div>
               <div className="text-left">
                 <p className="text-sm font-medium">{user?.name}</p>
@@ -59,14 +59,14 @@ const Header = ({ user, onLogout }: HeaderProps) => {
                 </p>
               </div>
               {isAdminPage && (
-                <Settings size={16} className="text-muted-foreground" />
+                <Settings size={14} className="text-muted-foreground" />
               )}
             </div>
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="default" className="gap-2">
-                  <LogOut size={16} />
+                <Button variant="outline" size="sm" className="gap-2 h-9">
+                  <LogOut size={14} />
                   Sair
                 </Button>
               </AlertDialogTrigger>
@@ -91,8 +91,8 @@ const Header = ({ user, onLogout }: HeaderProps) => {
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu size={24} />
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Menu size={20} />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px] sm:w-[320px]">
