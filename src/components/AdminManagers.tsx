@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Trash2, UserCog, Edit, Ban, Clock, Mail } from 'lucide-react';
+import { Plus, Trash2, UserCog, Edit, Ban, Clock, Mail, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -358,13 +358,24 @@ const AdminManagers = () => {
               <CardDescription className="mt-1">Gerencie outros administradores do sistema</CardDescription>
             </div>
             {currentUserRole === 'super_admin' && (
-              <Button 
-                onClick={() => setIsModalOpen(true)}
-                className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Administrador
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="bg-primary hover:bg-primary/90 flex-1 sm:flex-initial"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar Administrador
+                </Button>
+                <Button
+                  onClick={fetchAdmins}
+                  variant="outline"
+                  size="icon"
+                  title="Recarregar lista"
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
