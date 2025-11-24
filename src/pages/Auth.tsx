@@ -77,8 +77,8 @@ const Auth = () => {
       <div className="w-full md:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-background">
         <div className="w-full max-w-md">
           {/* Logo and Brand */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-4">
+          <div className="mb-6 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
               <img 
                 src={ondeTemLogo} 
                 alt="Onde Tem?" 
@@ -151,19 +151,19 @@ const Auth = () => {
               )}
             </Button>
             
-            <div className="space-y-2 pt-1">
+            <div className="space-y-2 pt-1 text-center md:text-left">
               {!showForgotPassword ? (
                 <>
                   <button 
                     type="button"
-                    className="text-primary hover:text-primary/80 text-sm underline-offset-4 hover:underline transition-colors block"
+                    className="text-primary hover:text-primary/80 text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
                     onClick={() => setShowForgotPassword(true)}
                   >
                     Esqueceu sua senha?
                   </button>
                   <button 
                     type="button"
-                    className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline transition-colors block"
+                    className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
                     onClick={() => navigate('/admin/login')}
                   >
                     Acesso Administrativo
@@ -182,7 +182,7 @@ const Auth = () => {
           </form>
 
           {/* Footer */}
-          <p className="text-xs text-muted-foreground mt-6">
+          <p className="text-center md:text-left text-xs text-muted-foreground mt-6">
             © 2025 Onde Tem? - Saúde que se encontra
           </p>
         </div>
