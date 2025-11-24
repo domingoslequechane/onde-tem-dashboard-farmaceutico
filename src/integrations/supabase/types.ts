@@ -153,6 +153,8 @@ export type Database = {
           data_vencimento: string | null
           endereco_completo: string
           estado: string
+          horario_abertura: string | null
+          horario_fechamento: string | null
           horario_funcionamento: string | null
           id: string
           latitude: number
@@ -175,6 +177,8 @@ export type Database = {
           data_vencimento?: string | null
           endereco_completo: string
           estado: string
+          horario_abertura?: string | null
+          horario_fechamento?: string | null
           horario_funcionamento?: string | null
           id?: string
           latitude: number
@@ -197,6 +201,8 @@ export type Database = {
           data_vencimento?: string | null
           endereco_completo?: string
           estado?: string
+          horario_abertura?: string | null
+          horario_fechamento?: string | null
           horario_funcionamento?: string | null
           id?: string
           latitude?: number

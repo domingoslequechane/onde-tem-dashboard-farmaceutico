@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Save, Building2, Bell } from 'lucide-react';
+import { CreditCard, Save, Building2 } from 'lucide-react';
 
 interface SettingsProps {
   farmacia?: any;
@@ -21,7 +21,13 @@ const Settings = ({ farmacia }: SettingsProps) => {
     telefone: '',
     whatsapp: '',
     endereco_completo: '',
-    horario_funcionamento: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    cep: '',
+    ponto_referencia: '',
+    horario_abertura: '',
+    horario_fechamento: '',
     ativa: true,
   });
 
@@ -32,7 +38,13 @@ const Settings = ({ farmacia }: SettingsProps) => {
         telefone: farmacia.telefone || '',
         whatsapp: farmacia.whatsapp || '',
         endereco_completo: farmacia.endereco_completo || '',
-        horario_funcionamento: farmacia.horario_funcionamento || '',
+        bairro: farmacia.bairro || '',
+        cidade: farmacia.cidade || '',
+        estado: farmacia.estado || '',
+        cep: farmacia.cep || '',
+        ponto_referencia: farmacia.ponto_referencia || '',
+        horario_abertura: farmacia.horario_abertura || '',
+        horario_fechamento: farmacia.horario_fechamento || '',
         ativa: farmacia.ativa ?? true,
       });
     }
@@ -88,7 +100,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="nome" className="text-xs sm:text-sm font-medium">Nome da Farmácia</Label>
               <Input
@@ -99,46 +111,123 @@ const Settings = ({ farmacia }: SettingsProps) => {
                 placeholder="Ex: Farmácia Central"
               />
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="telefone" className="text-xs sm:text-sm font-medium">Telefone</Label>
+                <Input
+                  id="telefone"
+                  value={pharmacyData.telefone}
+                  onChange={(e) => setPharmacyData({ ...pharmacyData, telefone: e.target.value })}
+                  className="h-9 sm:h-10 text-sm"
+                  placeholder="(+258) 84 000 0000"
+                />
+              </div>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="whatsapp" className="text-xs sm:text-sm font-medium">WhatsApp</Label>
+                <Input
+                  id="whatsapp"
+                  value={pharmacyData.whatsapp}
+                  onChange={(e) => setPharmacyData({ ...pharmacyData, whatsapp: e.target.value })}
+                  className="h-9 sm:h-10 text-sm"
+                  placeholder="(+258) 84 000 0000"
+                />
+              </div>
+            </div>
+
             <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="telefone" className="text-xs sm:text-sm font-medium">Telefone</Label>
+              <Label className="text-xs sm:text-sm font-medium">Horário de Funcionamento</Label>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="horario_abertura" className="text-[10px] sm:text-xs text-muted-foreground">Abertura</Label>
+                  <Input
+                    id="horario_abertura"
+                    type="time"
+                    value={pharmacyData.horario_abertura}
+                    onChange={(e) => setPharmacyData({ ...pharmacyData, horario_abertura: e.target.value })}
+                    className="h-9 sm:h-10 text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="horario_fechamento" className="text-[10px] sm:text-xs text-muted-foreground">Fechamento</Label>
+                  <Input
+                    id="horario_fechamento"
+                    type="time"
+                    value={pharmacyData.horario_fechamento}
+                    onChange={(e) => setPharmacyData({ ...pharmacyData, horario_fechamento: e.target.value })}
+                    className="h-9 sm:h-10 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="endereco" className="text-xs sm:text-sm font-medium">Endereço Completo</Label>
               <Input
-                id="telefone"
-                value={pharmacyData.telefone}
-                onChange={(e) => setPharmacyData({ ...pharmacyData, telefone: e.target.value })}
+                id="endereco"
+                value={pharmacyData.endereco_completo}
+                onChange={(e) => setPharmacyData({ ...pharmacyData, endereco_completo: e.target.value })}
                 className="h-9 sm:h-10 text-sm"
-                placeholder="(+258) 84 000 0000"
+                placeholder="Rua e número"
               />
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="bairro" className="text-xs sm:text-sm font-medium">Bairro</Label>
+                <Input
+                  id="bairro"
+                  value={pharmacyData.bairro}
+                  onChange={(e) => setPharmacyData({ ...pharmacyData, bairro: e.target.value })}
+                  className="h-9 sm:h-10 text-sm"
+                  placeholder="Nome do bairro"
+                />
+              </div>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="cidade" className="text-xs sm:text-sm font-medium">Cidade</Label>
+                <Input
+                  id="cidade"
+                  value={pharmacyData.cidade}
+                  onChange={(e) => setPharmacyData({ ...pharmacyData, cidade: e.target.value })}
+                  className="h-9 sm:h-10 text-sm"
+                  placeholder="Nome da cidade"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="estado" className="text-xs sm:text-sm font-medium">Província</Label>
+                <Input
+                  id="estado"
+                  value={pharmacyData.estado}
+                  onChange={(e) => setPharmacyData({ ...pharmacyData, estado: e.target.value })}
+                  className="h-9 sm:h-10 text-sm"
+                  placeholder="Nome da província"
+                />
+              </div>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="cep" className="text-xs sm:text-sm font-medium">CEP / Código Postal</Label>
+                <Input
+                  id="cep"
+                  value={pharmacyData.cep}
+                  onChange={(e) => setPharmacyData({ ...pharmacyData, cep: e.target.value })}
+                  className="h-9 sm:h-10 text-sm"
+                  placeholder="Código postal"
+                />
+              </div>
+            </div>
+
             <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="whatsapp" className="text-xs sm:text-sm font-medium">WhatsApp</Label>
+              <Label htmlFor="ponto_referencia" className="text-xs sm:text-sm font-medium">Ponto de Referência</Label>
               <Input
-                id="whatsapp"
-                value={pharmacyData.whatsapp}
-                onChange={(e) => setPharmacyData({ ...pharmacyData, whatsapp: e.target.value })}
+                id="ponto_referencia"
+                value={pharmacyData.ponto_referencia}
+                onChange={(e) => setPharmacyData({ ...pharmacyData, ponto_referencia: e.target.value })}
                 className="h-9 sm:h-10 text-sm"
-                placeholder="(+258) 84 000 0000"
+                placeholder="Ex: Próximo ao mercado central"
               />
             </div>
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="horario" className="text-xs sm:text-sm font-medium">Horário de Funcionamento</Label>
-              <Input
-                id="horario"
-                value={pharmacyData.horario_funcionamento}
-                onChange={(e) => setPharmacyData({ ...pharmacyData, horario_funcionamento: e.target.value })}
-                className="h-9 sm:h-10 text-sm"
-                placeholder="Ex: 08:00 - 20:00"
-              />
-            </div>
-          </div>
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="endereco" className="text-xs sm:text-sm font-medium">Endereço Completo</Label>
-            <Input
-              id="endereco"
-              value={pharmacyData.endereco_completo}
-              onChange={(e) => setPharmacyData({ ...pharmacyData, endereco_completo: e.target.value })}
-              className="h-9 sm:h-10 text-sm"
-              placeholder="Rua, Número, Bairro, Cidade"
-            />
           </div>
           <div className="flex items-center justify-between p-3 sm:p-4 bg-muted rounded-lg">
             <div className="space-y-0.5">
@@ -158,15 +247,15 @@ const Settings = ({ farmacia }: SettingsProps) => {
 
       {/* Assinatura */}
       <Card className="border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
+        <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary text-primary-foreground">
-                <CreditCard size={20} />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-primary text-primary-foreground">
+                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div>
-                <CardTitle className="text-xl">Assinatura</CardTitle>
-                <CardDescription>Gerencie seu plano e pagamentos</CardDescription>
+                <CardTitle className="text-base sm:text-lg">Assinatura</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Gerencie seu plano e pagamentos</CardDescription>
               </div>
             </div>
             <Badge 
@@ -177,11 +266,11 @@ const Settings = ({ farmacia }: SettingsProps) => {
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6 p-6">
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+        <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+          <div className="flex items-center justify-between p-3 sm:p-4 bg-muted rounded-lg">
             <div>
-              <p className="font-medium text-foreground">Plano Atual</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="font-medium text-foreground text-sm sm:text-base">Plano Atual</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 {farmacia?.plano === 'premium' ? 'Acesso a todos os recursos' : 'Recursos básicos'}
               </p>
             </div>
@@ -194,9 +283,9 @@ const Settings = ({ farmacia }: SettingsProps) => {
           </div>
 
           {farmacia?.data_vencimento && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Data de Vencimento</Label>
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-xs sm:text-sm font-medium">Data de Vencimento</Label>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {new Date(farmacia.data_vencimento).toLocaleDateString('pt-BR', {
                   day: '2-digit',
                   month: 'long',
@@ -208,40 +297,9 @@ const Settings = ({ farmacia }: SettingsProps) => {
 
           <Separator />
 
-          <Button className="w-full h-11 bg-secondary hover:bg-secondary/90" size="lg">
+          <Button className="w-full h-10 sm:h-11 bg-secondary hover:bg-secondary/90 text-sm sm:text-base">
             Gerenciar Pagamento
           </Button>
-        </CardContent>
-      </Card>
-
-      {/* Notificações */}
-      <Card className="border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary text-primary-foreground">
-              <Bell size={20} />
-            </div>
-            <div>
-              <CardTitle className="text-xl">Notificações</CardTitle>
-              <CardDescription>Configure suas preferências de notificações</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4 p-6">
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-            <div className="space-y-0.5">
-              <Label htmlFor="email-alerts" className="text-sm font-medium">Alertas por Email</Label>
-              <p className="text-xs text-muted-foreground">Receba notificações importantes por email</p>
-            </div>
-            <Switch id="email-alerts" />
-          </div>
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-            <div className="space-y-0.5">
-              <Label htmlFor="sms-alerts" className="text-sm font-medium">Alertas por SMS</Label>
-              <p className="text-xs text-muted-foreground">Receba notificações por mensagem de texto</p>
-            </div>
-            <Switch id="sms-alerts" />
-          </div>
         </CardContent>
       </Card>
 
