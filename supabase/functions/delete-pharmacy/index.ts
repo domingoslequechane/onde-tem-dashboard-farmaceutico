@@ -20,41 +20,32 @@ const handler = async (req: Request): Promise<Response> => {
     // Get authorization token
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.error("Missing Authorization header");
       throw new Error("Unauthorized");
     }
 
-    // Create authenticated Supabase client
+    const token = authHeader.replace("Bearer ", "");
+
+    // Create Supabase clients
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-        auth: {
-          persistSession: false,
-        },
-      }
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    // Create service role client for admin operations
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: {
-          persistSession: false,
-        },
-      }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Verify user authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Verify user authentication using the token
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
       console.error("Auth error:", authError);
       throw new Error("Unauthorized");
     }
+
+    console.log("User authenticated:", user.id);
 
     // Verify user is admin
     const { data: roleData, error: roleError } = await supabase
@@ -63,10 +54,17 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("user_id", user.id)
       .single();
 
-    if (roleError || roleData?.role !== "admin") {
-      console.error("Role verification failed:", roleError);
+    if (roleError) {
+      console.error("Role query error:", roleError);
       throw new Error("Unauthorized - Admin only");
     }
+
+    if (!roleData || roleData.role !== "admin") {
+      console.error("User is not admin. Role:", roleData?.role);
+      throw new Error("Unauthorized - Admin only");
+    }
+
+    console.log("User verified as admin");
 
     const { pharmacyId, verificationCode }: DeletePharmacyRequest = await req.json();
 
@@ -85,6 +83,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Code verification failed:", codeError);
       throw new Error("Código inválido ou expirado");
     }
+
+    console.log("Verification code confirmed");
 
     // Get pharmacy data to find user_id
     const { data: pharmacyData, error: pharmacyError } = await supabase
