@@ -33,29 +33,13 @@ const AdminManagers = () => {
   const fetchAdmins = async () => {
     setIsLoading(true);
     try {
-      // Get current user's email first
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('id, user_id, role')
-        .eq('role', 'admin')
-        .order('user_id', { ascending: false });
+      // Usar função RPC security definer para evitar recursão RLS
+      const { data: adminsData, error: adminsError } = await supabase
+        .rpc('list_admins');
 
-      if (rolesError) throw rolesError;
+      if (adminsError) throw adminsError;
 
-      // For now, we can only show the current admin's email
-      // Other admins will show their user_id
-      const adminsWithEmails: Admin[] = (rolesData || []).map((admin: any) => {
-        return {
-          id: admin.id,
-          user_id: admin.user_id,
-          role: admin.role,
-          email: admin.user_id === user?.id ? user?.email : admin.user_id
-        };
-      });
-
-      setAdmins(adminsWithEmails);
+      setAdmins(adminsData || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar administradores",
@@ -222,7 +206,9 @@ const AdminManagers = () => {
                     <TableRow key={admin.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">{admin.email || admin.user_id}</TableCell>
                       <TableCell>
-                        <Badge className="bg-primary">Administrador</Badge>
+                        <Badge className={admin.role === 'super_admin' ? 'bg-destructive' : 'bg-primary'}>
+                          {admin.role === 'super_admin' ? 'Super-Admin' : 'Administrador'}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
