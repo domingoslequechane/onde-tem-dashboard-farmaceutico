@@ -137,13 +137,16 @@ const AdminManagers = () => {
       if (authError) throw authError;
       if (!authData.user) throw new Error('Erro ao criar usuário');
 
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .update({ display_name: displayName.trim() })
-        .eq('user_id', authData.user.id)
-        .eq('role', selectedRole);
+      // Aguardar um momento para o trigger criar o registro em user_roles
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (roleError) throw roleError;
+      // Usar função security definer para definir display_name
+      const { error: nameError } = await supabase.rpc('set_admin_display_name', {
+        target_user_id: authData.user.id,
+        new_display_name: displayName.trim()
+      });
+
+      if (nameError) throw nameError;
 
       toast({
         title: "Administrador criado!",
@@ -174,13 +177,12 @@ const AdminManagers = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .update({
-          role: selectedRole,
-          display_name: displayName.trim()
-        })
-        .eq('user_id', selectedAdmin.user_id);
+      // Usar função security definer para atualizar
+      const { error } = await supabase.rpc('update_admin_info', {
+        target_user_id: selectedAdmin.user_id,
+        new_display_name: displayName.trim(),
+        new_role: selectedRole
+      });
 
       if (error) throw error;
 
