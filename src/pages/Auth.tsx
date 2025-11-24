@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff, Network } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import ondeTemLogo from '@/assets/onde-tem-logo.png';
@@ -74,28 +74,27 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-background">
+      <div className="w-full xl:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-background">
         <div className="w-full max-w-md">
           {/* Logo and Brand */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-6">
-              <Network className="w-8 h-8 text-primary" />
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-4">
               <img 
                 src={ondeTemLogo} 
                 alt="Onde Tem?" 
                 className="h-8" 
               />
             </div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
               {showForgotPassword ? 'Recuperar Senha' : 'Bem-vindo de volta!'}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {showForgotPassword ? 'Digite seu email para recuperar o acesso' : 'Entre para gerenciar sua farmácia'}
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-5">
+          <form onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
                 Email
@@ -105,7 +104,7 @@ const Auth = () => {
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12"
+                className="h-11"
                 required
               />
             </div>
@@ -121,7 +120,7 @@ const Auth = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 pr-12"
+                    className="h-11 pr-12"
                     required
                   />
                   <Button
@@ -139,7 +138,7 @@ const Auth = () => {
 
             <Button 
               type="submit" 
-              className="w-full h-12 text-base font-semibold"
+              className="w-full h-11 text-sm font-semibold"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -152,7 +151,7 @@ const Auth = () => {
               )}
             </Button>
             
-            <div className="text-center space-y-3 pt-2">
+            <div className="text-center space-y-2 pt-1">
               {!showForgotPassword ? (
                 <>
                   <Button 
@@ -186,14 +185,14 @@ const Auth = () => {
           </form>
 
           {/* Footer */}
-          <p className="text-center text-xs text-muted-foreground mt-8">
+          <p className="text-center text-xs text-muted-foreground mt-6">
             © 2025 Onde Tem? - Saúde que se encontra
           </p>
         </div>
       </div>
 
       {/* Right Side - Illustration */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary-light to-primary/80 items-center justify-center p-12 relative overflow-hidden">
+      <div className="hidden xl:flex xl:w-1/2 bg-gradient-to-br from-primary via-primary-light to-primary/80 items-center justify-center p-12 relative overflow-hidden">
         {/* Decorative circles */}
         <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -202,7 +201,7 @@ const Auth = () => {
           <img 
             src={networkIllustration} 
             alt="Rede de Farmácias" 
-            className="w-full max-w-lg mx-auto mb-8 drop-shadow-2xl"
+            className="w-full max-w-lg mx-auto mb-8 drop-shadow-2xl rounded-2xl"
           />
           <h2 className="text-3xl font-bold text-white mb-4">
             Conectando Farmácias e Clientes
