@@ -85,10 +85,10 @@ const Auth = () => {
                 className="h-12" 
               />
             </div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
               {showForgotPassword ? 'Recuperar Senha' : 'Bem-vindo de volta!'}
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base md:text-sm text-muted-foreground">
               {showForgotPassword ? 'Digite seu email para recuperar o acesso' : 'Entre para gerenciar sua farmácia'}
             </p>
           </div>
@@ -96,7 +96,7 @@ const Auth = () => {
           {/* Form */}
           <form onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
+              <label className="text-base font-medium text-foreground">
                 Email
               </label>
               <Input
@@ -111,7 +111,7 @@ const Auth = () => {
             
             {!showForgotPassword && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
+                <label className="text-base font-medium text-foreground">
                   Senha
                 </label>
                 <div className="relative">
@@ -138,7 +138,7 @@ const Auth = () => {
 
             <Button 
               type="submit" 
-              className="w-full h-11 text-sm font-semibold"
+              className="w-full h-11 text-base font-semibold"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -156,14 +156,14 @@ const Auth = () => {
                 <>
                   <button 
                     type="button"
-                    className="text-primary hover:text-primary/80 text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
+                    className="text-primary hover:text-primary/80 text-base md:text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
                     onClick={() => setShowForgotPassword(true)}
                   >
                     Esqueceu sua senha?
                   </button>
                   <button 
                     type="button"
-                    className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
+                    className="text-muted-foreground hover:text-foreground text-base md:text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
                     onClick={() => navigate('/admin/login')}
                   >
                     Acesso Administrativo

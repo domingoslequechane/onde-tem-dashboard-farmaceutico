@@ -131,11 +131,11 @@ const AdminLogin = () => {
             </div>
             <div className="flex items-center gap-2 mb-4 justify-center md:justify-start">
               <Shield className="h-6 w-6 text-destructive" />
-              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
                 {isRecoveryMode ? 'Recuperar Senha' : 'Painel Administrativo'}
               </h1>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base md:text-sm text-muted-foreground">
               {isRecoveryMode ? 'Digite seu email para recuperar o acesso' : 'Acesso restrito aos administradores'}
             </p>
           </div>
@@ -144,7 +144,7 @@ const AdminLogin = () => {
           {isRecoveryMode ? (
             <form onSubmit={handlePasswordRecovery} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
+                <label className="text-base font-medium text-foreground">
                   Email
                 </label>
                 <Input
@@ -159,7 +159,7 @@ const AdminLogin = () => {
 
               <Button 
                 type="submit" 
-                className="w-full h-11 text-sm font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                className="w-full h-11 text-base font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -175,7 +175,7 @@ const AdminLogin = () => {
               <div className="space-y-2 pt-1 text-center md:text-left">
                 <button
                   type="button"
-                  className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline transition-colors"
+                  className="text-muted-foreground hover:text-foreground text-base md:text-sm underline-offset-4 hover:underline transition-colors"
                   onClick={() => setIsRecoveryMode(false)}
                 >
                   Voltar ao Login
@@ -185,7 +185,7 @@ const AdminLogin = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
+                <label className="text-base font-medium text-foreground">
                   Email
                 </label>
                 <Input
@@ -199,7 +199,7 @@ const AdminLogin = () => {
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
+                <label className="text-base font-medium text-foreground">
                   Senha
                 </label>
                 <div className="relative">
@@ -225,7 +225,7 @@ const AdminLogin = () => {
 
               <Button 
                 type="submit" 
-                className="w-full h-11 text-sm font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                className="w-full h-11 text-base font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -244,14 +244,14 @@ const AdminLogin = () => {
               <div className="space-y-2 pt-1 text-center md:text-left">
                 <button
                   type="button"
-                  className="text-primary hover:text-primary/80 text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
+                  className="text-primary hover:text-primary/80 text-base md:text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
                   onClick={() => setIsRecoveryMode(true)}
                 >
                   Esqueceu sua senha?
                 </button>
                 <button 
                   type="button"
-                  className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
+                  className="text-muted-foreground hover:text-foreground text-base md:text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
                   onClick={() => navigate('/auth')}
                 >
                   Voltar para login de farmácia

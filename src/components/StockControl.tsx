@@ -143,10 +143,10 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
     <>
       <Card className={`border-none shadow-lg ${expanded ? "" : "h-fit"}`}>
         <CardHeader className="pb-3 px-4 sm:px-6 bg-gradient-to-br from-primary/5 to-secondary/5 border-b">
-          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm sm:text-base">
+          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-base sm:text-lg">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-primary text-primary-foreground">
-                <Package className="h-4 w-4" />
+                <Package className="h-5 w-5" />
               </div>
               <span className="truncate">Gestão de Medicamentos</span>
             </div>
