@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Dashboard from '@/components/Dashboard';
+import ModernDashboard from '@/components/ModernDashboard';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ const Index = () => {
   }
 
   return (
-    <Dashboard 
+    <ModernDashboard 
       user={user ? { 
         email: user.email, 
         name: farmacia?.nome || user.email?.split('@')[0] || 'Usuário' 
