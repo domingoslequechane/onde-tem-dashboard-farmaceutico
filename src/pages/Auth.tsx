@@ -151,13 +151,13 @@ const Auth = () => {
               )}
             </Button>
             
-            <div className="text-center space-y-2 pt-1">
+            <div className="space-y-2 pt-1">
               {!showForgotPassword ? (
                 <>
                   <Button 
                     type="button"
                     variant="link" 
-                    className="text-primary hover:text-primary/80 text-sm p-0 block w-full"
+                    className="text-primary hover:text-primary/80 text-sm p-0 block"
                     onClick={() => setShowForgotPassword(true)}
                   >
                     Esqueceu sua senha?
@@ -165,7 +165,7 @@ const Auth = () => {
                   <Button 
                     type="button"
                     variant="link" 
-                    className="text-muted-foreground hover:text-foreground text-sm p-0 block w-full"
+                    className="text-muted-foreground hover:text-foreground text-sm p-0 block"
                     onClick={() => navigate('/admin/login')}
                   >
                     Acesso Administrativo
@@ -185,7 +185,7 @@ const Auth = () => {
           </form>
 
           {/* Footer */}
-          <p className="text-center text-xs text-muted-foreground mt-6">
+          <p className="text-xs text-muted-foreground mt-6">
             © 2025 Onde Tem? - Saúde que se encontra
           </p>
         </div>
