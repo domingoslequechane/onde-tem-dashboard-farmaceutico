@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Trash2, Copy, RefreshCw, UserCog, Edit, Ban, Clock } from 'lucide-react';
+import { Plus, Trash2, UserCog, Edit, Ban, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -45,7 +45,6 @@ const AdminManagers = () => {
   const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [generatedPassword, setGeneratedPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<'admin' | 'super_admin'>('admin');
 
   useEffect(() => {
@@ -94,27 +93,10 @@ const AdminManagers = () => {
     }
   };
 
-  const generatePassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setGeneratedPassword(password);
-  };
-
-  const copyPassword = () => {
-    navigator.clipboard.writeText(generatedPassword);
-    toast({
-      title: "Senha copiada!",
-      description: "A senha foi copiada para a área de transferência.",
-    });
-  };
-
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !generatedPassword || !displayName) {
+    if (!email || !displayName) {
       toast({
         title: "Dados incompletos",
         description: "Preencha todos os campos obrigatórios.",
@@ -125,38 +107,24 @@ const AdminManagers = () => {
 
     setIsLoading(true);
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password: generatedPassword,
-        options: {
-          emailRedirectTo: `${window.location.origin}/admin/reset-password`,
-          data: { email: email.trim() }
+      const { error } = await supabase.functions.invoke('send-admin-invite', {
+        body: {
+          email: email.trim(),
+          displayName: displayName.trim(),
+          role: selectedRole
         }
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Erro ao criar usuário');
-
-      // Aguardar um momento para o trigger criar o registro em user_roles
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Usar função security definer para definir display_name
-      const { error: nameError } = await supabase.rpc('set_admin_display_name', {
-        target_user_id: authData.user.id,
-        new_display_name: displayName.trim()
-      });
-
-      if (nameError) throw nameError;
+      if (error) throw error;
 
       toast({
-        title: "Administrador criado!",
-        description: `${displayName} foi criado com sucesso.`,
+        title: "Convite enviado!",
+        description: `Um email de convite foi enviado para ${email}`,
         duration: 5000,
       });
 
       setEmail('');
       setDisplayName('');
-      setGeneratedPassword('');
       setSelectedRole('admin');
       setIsModalOpen(false);
       fetchAdmins();
@@ -527,39 +495,9 @@ const AdminManagers = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="admin-senha">Senha Automática *</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="admin-senha"
-                  type="text"
-                  value={generatedPassword}
-                  readOnly
-                  placeholder="Clique para gerar"
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={generatePassword}
-                  title="Gerar nova senha"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-                {generatedPassword && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={copyPassword}
-                    title="Copiar senha"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
+            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+              Um email de convite será enviado para o endereço informado
+            </p>
 
             <div className="flex gap-3 justify-end pt-4">
               <Button 
@@ -575,7 +513,7 @@ const AdminManagers = () => {
                 className="bg-primary hover:bg-primary/90"
                 disabled={isLoading}
               >
-                {isLoading ? 'Criando...' : 'Criar Administrador'}
+                {isLoading ? 'Enviando convite...' : 'Enviar Convite'}
               </Button>
             </div>
           </form>
