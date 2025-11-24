@@ -368,7 +368,10 @@ const AdminManagers = () => {
                   Adicionar Administrador
                 </Button>
                 <Button
-                  onClick={fetchAdmins}
+                  onClick={() => {
+                    fetchAdmins();
+                    fetchLoginHistory();
+                  }}
                   variant="outline"
                   size="icon"
                   title="Recarregar lista"
