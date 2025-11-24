@@ -40,6 +40,9 @@ const Auth = () => {
         throw new Error('Esta farmácia não existe. Verifique suas credenciais.');
       }
 
+      // Registrar login no histórico
+      await supabase.rpc('log_user_login');
+
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo de volta.",

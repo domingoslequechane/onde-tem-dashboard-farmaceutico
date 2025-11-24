@@ -13,6 +13,7 @@ import Header from '@/components/Header';
 import AdminFarmaciaModal from '@/components/AdminFarmaciaModal';
 import AdminManagers from '@/components/AdminManagers';
 import AdminStatistics from '@/components/AdminStatistics';
+import PharmacyLoginHistory from '@/components/PharmacyLoginHistory';
 import { DeletePharmacyDialog } from '@/components/DeletePharmacyDialog';
 
 const Admin = () => {
@@ -285,6 +286,11 @@ const Admin = () => {
                 </div>
               </CardContent>
             </Card>
+            
+            {/* Histórico de Logins das Farmácias */}
+            <div className="mt-6">
+              <PharmacyLoginHistory />
+            </div>
           </TabsContent>
 
           {/* Aba de Estatísticas */}
