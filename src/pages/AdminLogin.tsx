@@ -56,6 +56,9 @@ const AdminLogin = () => {
         throw new Error('Acesso negado. Você não possui privilégios de administrador.');
       }
 
+      // Registrar login no histórico
+      await supabase.rpc('log_user_login');
+
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo ao painel administrativo.",
