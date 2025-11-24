@@ -46,21 +46,19 @@ const Header = ({ user, onLogout }: HeaderProps) => {
           <div className="hidden md:flex items-center gap-3">
             <div 
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
-              onClick={() => isAdminPage && navigate('/admin/settings')}
-              title={isAdminPage ? 'Configurações' : undefined}
+              onClick={() => isAdminPage ? navigate('/admin/settings') : navigate('/farmacia/settings')}
+              title="Configurações"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 <User size={16} />
               </div>
-              <div className="text-left">
-                <p className="text-sm font-medium">{user?.name}</p>
+              <div className="text-left min-w-0">
+                <p className="text-sm font-medium truncate max-w-[180px]">{user?.name}</p>
                 <p className="text-xs text-muted-foreground truncate max-w-[150px]">
                   {user?.email}
                 </p>
               </div>
-              {isAdminPage && (
-                <Settings size={14} className="text-muted-foreground" />
-              )}
+              <Settings size={14} className="text-muted-foreground" />
             </div>
             
             <AlertDialog>
@@ -99,7 +97,7 @@ const Header = ({ user, onLogout }: HeaderProps) => {
                 <div className="flex flex-col gap-6 py-6">
                   <div 
                     className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
-                    onClick={() => isAdminPage && navigate('/admin/settings')}
+                    onClick={() => isAdminPage ? navigate('/admin/settings') : navigate('/farmacia/settings')}
                   >
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground flex-shrink-0">
                       <User size={20} />
@@ -110,9 +108,7 @@ const Header = ({ user, onLogout }: HeaderProps) => {
                         {user?.email}
                       </p>
                     </div>
-                    {isAdminPage && (
-                      <Settings size={16} className="text-muted-foreground" />
-                    )}
+                    <Settings size={16} className="text-muted-foreground flex-shrink-0" />
                   </div>
 
                   <AlertDialog>

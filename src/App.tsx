@@ -10,6 +10,7 @@ import Admin from "./pages/Admin";
 import AdminSettings from "./pages/AdminSettings";
 import AdminResetPassword from "./pages/AdminResetPassword";
 import FarmaciaResetPassword from "./pages/FarmaciaResetPassword";
+import FarmaciaSettings from "./pages/FarmaciaSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/reset-password" element={<AdminResetPassword />} />
           <Route path="/farmacia/reset-password" element={<FarmaciaResetPassword />} />
+          <Route path="/farmacia/settings" element={<FarmaciaSettings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
