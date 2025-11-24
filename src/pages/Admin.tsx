@@ -47,14 +47,11 @@ const Admin = () => {
       return;
     }
 
-    // Verificar se é admin
-    const { data: roles, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    // Verificar se é admin usando a função security definer
+    const { data: roleData, error: roleError } = await supabase
+      .rpc('get_user_role', { _user_id: user.id });
 
-    if (error || !roles || roles.role !== 'admin') {
+    if (roleError || !roleData || (roleData !== 'admin' && roleData !== 'super_admin')) {
       toast({
         title: "Acesso negado",
         description: "Você não possui privilégios de administrador.",
