@@ -735,8 +735,10 @@ export type Database = {
           display_name: string
           email: string
           id: string
+          ip_address: string
           login_at: string
           role: Database["public"]["Enums"]["app_role"]
+          user_agent: string
           user_id: string
         }[]
       }

@@ -31,6 +31,8 @@ interface LoginHistory {
   role: string;
   login_at: string;
   display_name?: string;
+  user_agent?: string;
+  ip_address?: string;
 }
 
 const AdminManagers = () => {
@@ -519,29 +521,49 @@ const AdminManagers = () => {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Função</TableHead>
+                    <TableHead>Dispositivo</TableHead>
                     <TableHead>Data e Hora</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loginHistory.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                         Nenhum login registrado
                       </TableCell>
                     </TableRow>
                   ) : (
-                    loginHistory.map((log) => (
-                      <TableRow key={log.id} className="hover:bg-muted/50">
-                        <TableCell className="font-medium">{log.display_name || '-'}</TableCell>
-                        <TableCell>{log.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={log.role === 'super_admin' ? 'border-destructive text-destructive' : ''}>
-                            {log.role === 'super_admin' ? 'Super-Admin' : log.role === 'admin' ? 'Admin' : 'Farmácia'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{format(new Date(log.login_at), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR })}</TableCell>
-                      </TableRow>
-                    ))
+                    loginHistory.map((log) => {
+                      const getDeviceInfo = (userAgent?: string) => {
+                        if (!userAgent) return 'Não disponível';
+                        
+                        if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone')) {
+                          return 'Mobile';
+                        } else if (userAgent.includes('Tablet') || userAgent.includes('iPad')) {
+                          return 'Tablet';
+                        } else {
+                          return 'Desktop';
+                        }
+                      };
+
+                      return (
+                        <TableRow key={log.id} className="hover:bg-muted/50">
+                          <TableCell className="font-medium">{log.display_name || '-'}</TableCell>
+                          <TableCell>{log.email}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={log.role === 'super_admin' ? 'border-destructive text-destructive' : ''}>
+                              {log.role === 'super_admin' ? 'Super-Admin' : log.role === 'admin' ? 'Admin' : 'Farmácia'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground" title={log.user_agent || 'Não disponível'}>
+                              {getDeviceInfo(log.user_agent)}
+                            </span>
+                          </TableCell>
+                          <TableCell>{format(new Date(log.login_at), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR })}</TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
