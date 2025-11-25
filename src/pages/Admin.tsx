@@ -215,9 +215,9 @@ const Admin = () => {
                             <TableCell className="font-medium">{farmacia.nome}</TableCell>
                             <TableCell className="text-sm text-muted-foreground">{farmacia.email || 'N/A'}</TableCell>
                             <TableCell>
-                              <Badge variant={farmacia.account_status === 'invited' ? 'secondary' : farmacia.account_status === 'active' ? 'default' : 'destructive'} 
+                              <Badge variant={farmacia.account_status === 'pendente' ? 'secondary' : farmacia.account_status === 'active' ? 'default' : 'destructive'} 
                                      className={farmacia.account_status === 'active' ? 'bg-secondary' : ''}>
-                                {farmacia.account_status === 'invited' ? 'Convite' : farmacia.account_status === 'active' ? 'Activo' : 'Bloqueado'}
+                                {farmacia.account_status === 'pendente' ? 'Pendente' : farmacia.account_status === 'active' ? 'Activo' : 'Bloqueado'}
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -243,7 +243,7 @@ const Admin = () => {
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                {farmacia.account_status === 'invited' && (
+                                {farmacia.account_status === 'pendente' && (
                                   <Button
                                     variant="outline"
                                     size="icon"

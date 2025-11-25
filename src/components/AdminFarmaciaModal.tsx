@@ -98,7 +98,7 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
             plano: formData.plano,
             status_assinatura: formData.status_assinatura,
             ativa: formData.ativa,
-            account_status: 'invited',
+            account_status: 'pendente',
             // Valores padrão para campos obrigatórios
             cidade: 'A definir',
             estado: 'A definir',
