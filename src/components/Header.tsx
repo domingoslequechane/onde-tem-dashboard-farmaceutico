@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import ondeTemLogo from '@/assets/onde-tem-logo.png';
+import ondeTemLogo from '@/assets/ondtem-logo.svg';
 import { Button } from '@/components/ui/button';
 import { LogOut, User, Menu, Settings } from 'lucide-react';
 import {
@@ -38,7 +38,7 @@ const Header = ({ user, onLogout, isVerified = false }: HeaderProps) => {
           <div className="flex items-center gap-2 sm:gap-3">
             <img 
               src={ondeTemLogo} 
-              alt="Onde Tem?" 
+              alt="ONDTem" 
               className="h-8 sm:h-10 md:h-12 w-auto object-contain" 
             />
             {isVerified && !isAdminPage && (

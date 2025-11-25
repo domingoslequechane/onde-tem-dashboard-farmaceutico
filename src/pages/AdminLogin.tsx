@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import ondeTemLogo from '@/assets/onde-tem-logo.png';
+import ondeTemLogo from '@/assets/ondtem-logo.svg';
 import networkIllustration from '@/assets/pharmacy-network-illustration.png';
 import { z } from 'zod';
 
@@ -125,7 +125,7 @@ const AdminLogin = () => {
             <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
               <img 
                 src={ondeTemLogo} 
-                alt="Onde Tem?" 
+                alt="ONDTem" 
                 className="h-12" 
               />
             </div>
@@ -149,7 +149,7 @@ const AdminLogin = () => {
                 </label>
                 <Input
                   type="email"
-                  placeholder="admin@ondetem.com"
+                  placeholder="admin@ondtem.com"
                   value={recoveryEmail}
                   onChange={(e) => setRecoveryEmail(e.target.value)}
                   className="h-11"
@@ -190,7 +190,7 @@ const AdminLogin = () => {
                 </label>
                 <Input
                   type="email"
-                  placeholder="admin@ondetem.com"
+                  placeholder="admin@ondtem.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-11"

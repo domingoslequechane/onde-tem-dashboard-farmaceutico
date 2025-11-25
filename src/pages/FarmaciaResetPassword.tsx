@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Eye, EyeOff, KeyRound, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import ondeTemLogo from '@/assets/onde-tem-logo.png';
+import ondeTemLogo from '@/assets/ondtem-logo.svg';
 
 const FarmaciaResetPassword = () => {
   const navigate = useNavigate();
@@ -107,7 +107,7 @@ const FarmaciaResetPassword = () => {
             <div className="mb-6 flex justify-center">
               <img 
                 src={ondeTemLogo} 
-                alt="Onde Tem?" 
+                alt="ONDTem" 
                 className="h-16 w-auto object-contain" 
               />
             </div>

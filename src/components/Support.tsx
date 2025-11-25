@@ -29,7 +29,7 @@ const Support = () => {
               Enquanto isso, você pode nos contatar por:
             </p>
             <p className="text-sm sm:text-base font-medium text-green-600 mt-1.5">
-              suporte@ondetem.com
+              suporte@ondtem.com
             </p>
           </div>
         </div>
