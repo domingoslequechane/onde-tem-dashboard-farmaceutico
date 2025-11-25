@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import ondeTemLogo from '@/assets/onde-tem-logo.png';
+import ondeTemLogo from '@/assets/ondtem-logo.svg';
 import networkIllustration from '@/assets/pharmacy-network-illustration.png';
 
 const Auth = () => {
@@ -96,7 +96,7 @@ const Auth = () => {
             <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
               <img 
                 src={ondeTemLogo} 
-                alt="Onde Tem?" 
+                alt="ONDTem" 
                 className="h-12" 
               />
             </div>

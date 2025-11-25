@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Lock, AlertCircle } from 'lucide-react';
-import ondeLogo from '@/assets/onde-tem-logo.png';
+import ondeLogo from '@/assets/ondtem-logo.svg';
 
 const AdminSetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -126,7 +126,7 @@ const AdminSetPassword = () => {
           <div className="flex justify-center mb-2">
             <img 
               src={ondeLogo} 
-              alt="OndeTem Logo" 
+              alt="ONDTem Logo" 
               className="h-12 w-auto"
             />
           </div>
