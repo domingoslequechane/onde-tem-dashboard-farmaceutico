@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Save, Building2 } from 'lucide-react';
+import { PhoneInput } from '@/components/PhoneInput';
 
 interface SettingsProps {
   farmacia?: any;
@@ -24,7 +25,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
     bairro: '',
     cidade: '',
     estado: '',
-    cep: '',
+    nuit: '',
     ponto_referencia: '',
     horario_abertura: '',
     horario_fechamento: '',
@@ -41,7 +42,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
         bairro: farmacia.bairro || '',
         cidade: farmacia.cidade || '',
         estado: farmacia.estado || '',
-        cep: farmacia.cep || '',
+        nuit: farmacia.cep || '',
         ponto_referencia: farmacia.ponto_referencia || '',
         horario_abertura: farmacia.horario_abertura || '',
         horario_fechamento: farmacia.horario_fechamento || '',
@@ -60,11 +61,34 @@ const Settings = ({ farmacia }: SettingsProps) => {
       return;
     }
 
+    // Validate NUIT (max 9 characters)
+    if (pharmacyData.nuit && pharmacyData.nuit.length > 9) {
+      toast({
+        title: "Erro de validação",
+        description: "NUIT deve ter no máximo 9 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const { error } = await supabase
         .from('farmacias')
-        .update(pharmacyData)
+        .update({
+          nome: pharmacyData.nome,
+          telefone: pharmacyData.telefone,
+          whatsapp: pharmacyData.whatsapp,
+          endereco_completo: pharmacyData.endereco_completo,
+          bairro: pharmacyData.bairro,
+          cidade: pharmacyData.cidade,
+          estado: pharmacyData.estado,
+          cep: pharmacyData.nuit,
+          ponto_referencia: pharmacyData.ponto_referencia,
+          horario_abertura: pharmacyData.horario_abertura,
+          horario_fechamento: pharmacyData.horario_fechamento,
+          ativa: pharmacyData.ativa,
+        })
         .eq('id', farmacia.id);
 
       if (error) throw error;
@@ -115,22 +139,18 @@ const Settings = ({ farmacia }: SettingsProps) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="telefone" className="text-xs sm:text-sm font-medium">Telefone</Label>
-                <Input
-                  id="telefone"
+                <PhoneInput
                   value={pharmacyData.telefone}
-                  onChange={(e) => setPharmacyData({ ...pharmacyData, telefone: e.target.value })}
-                  className="h-9 sm:h-10 text-sm"
-                  placeholder="(+258) 84 000 0000"
+                  onChange={(value) => setPharmacyData({ ...pharmacyData, telefone: value })}
+                  placeholder="84 000 0000"
                 />
               </div>
               <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="whatsapp" className="text-xs sm:text-sm font-medium">WhatsApp</Label>
-                <Input
-                  id="whatsapp"
+                <PhoneInput
                   value={pharmacyData.whatsapp}
-                  onChange={(e) => setPharmacyData({ ...pharmacyData, whatsapp: e.target.value })}
-                  className="h-9 sm:h-10 text-sm"
-                  placeholder="(+258) 84 000 0000"
+                  onChange={(value) => setPharmacyData({ ...pharmacyData, whatsapp: value })}
+                  placeholder="84 000 0000"
                 />
               </div>
             </div>
@@ -168,7 +188,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
                 value={pharmacyData.endereco_completo}
                 onChange={(e) => setPharmacyData({ ...pharmacyData, endereco_completo: e.target.value })}
                 className="h-9 sm:h-10 text-sm"
-                placeholder="Rua e número"
+                placeholder="Ex: Av. Julius Nyerere, 123"
               />
             </div>
 
@@ -203,17 +223,21 @@ const Settings = ({ farmacia }: SettingsProps) => {
                   value={pharmacyData.estado}
                   onChange={(e) => setPharmacyData({ ...pharmacyData, estado: e.target.value })}
                   className="h-9 sm:h-10 text-sm"
-                  placeholder="Nome da província"
+                  placeholder="Ex: Maputo"
                 />
               </div>
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="cep" className="text-xs sm:text-sm font-medium">CEP / Código Postal</Label>
+                <Label htmlFor="nuit" className="text-xs sm:text-sm font-medium">NUIT</Label>
                 <Input
-                  id="cep"
-                  value={pharmacyData.cep}
-                  onChange={(e) => setPharmacyData({ ...pharmacyData, cep: e.target.value })}
+                  id="nuit"
+                  value={pharmacyData.nuit}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 9);
+                    setPharmacyData({ ...pharmacyData, nuit: value });
+                  }}
                   className="h-9 sm:h-10 text-sm"
-                  placeholder="Código postal"
+                  placeholder="123456789"
+                  maxLength={9}
                 />
               </div>
             </div>
