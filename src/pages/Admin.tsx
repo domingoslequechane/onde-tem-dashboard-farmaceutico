@@ -215,8 +215,16 @@ const Admin = () => {
                             <TableCell className="font-medium">{farmacia.nome}</TableCell>
                             <TableCell className="text-sm text-muted-foreground">{farmacia.email || 'N/A'}</TableCell>
                             <TableCell>
-                              <Badge variant={farmacia.account_status === 'pendente' ? 'secondary' : farmacia.account_status === 'active' ? 'default' : 'destructive'} 
-                                     className={farmacia.account_status === 'active' ? 'bg-secondary' : ''}>
+                              <Badge 
+                                variant={farmacia.account_status === 'blocked' ? 'destructive' : 'secondary'}
+                                className={
+                                  farmacia.account_status === 'pendente' 
+                                    ? 'bg-amber-500 hover:bg-amber-600 text-white' 
+                                    : farmacia.account_status === 'active' 
+                                    ? 'bg-green-500 hover:bg-green-600 text-white' 
+                                    : ''
+                                }
+                              >
                                 {farmacia.account_status === 'pendente' ? 'Pendente' : farmacia.account_status === 'active' ? 'Activo' : 'Bloqueado'}
                               </Badge>
                             </TableCell>
