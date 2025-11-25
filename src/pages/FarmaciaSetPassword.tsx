@@ -77,11 +77,23 @@ const FarmaciaSetPassword = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { data: { user }, error } = await supabase.auth.updateUser({
         password: password
       });
 
       if (error) throw error;
+
+      // Atualizar o status da conta para 'active' após definir senha
+      if (user) {
+        const { error: updateError } = await supabase
+          .from('user_roles')
+          .update({ account_status: 'active' })
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('Erro ao atualizar status:', updateError);
+        }
+      }
 
       toast({
         title: "Senha definida com sucesso!",
