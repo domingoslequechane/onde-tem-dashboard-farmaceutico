@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
+import FarmaciaNavigation from '@/components/FarmaciaNavigation';
 import DemandAnalysis from '@/components/DemandAnalysis';
-import { Package, TrendingUp, Settings, MessageSquare, LayoutDashboard } from 'lucide-react';
 
 const FarmaciaDemanda = () => {
   const navigate = useNavigate();
@@ -76,91 +76,11 @@ const FarmaciaDemanda = () => {
         isVerified={true}
       />
 
+      <FarmaciaNavigation />
+
       <main className="flex-1 container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl pb-24 sm:pb-8 overflow-y-auto">
         <DemandAnalysis expanded={true} />
       </main>
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg sm:hidden">
-        <div className="grid grid-cols-5 h-auto p-1.5">
-          <button
-            onClick={() => navigate('/farmacia/dashboard')}
-            className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-xs rounded-lg text-muted-foreground hover:text-foreground transition-all"
-          >
-            <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
-            <span className="truncate text-[9px] leading-tight">Início</span>
-          </button>
-          <button
-            onClick={() => navigate('/farmacia/estoque')}
-            className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-xs rounded-lg text-muted-foreground hover:text-foreground transition-all"
-          >
-            <Package className="h-5 w-5 flex-shrink-0" />
-            <span className="truncate text-[9px] leading-tight">Estoque</span>
-          </button>
-          <button
-            onClick={() => navigate('/farmacia/demanda')}
-            className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-xs rounded-lg bg-primary/10 text-primary transition-all"
-          >
-            <TrendingUp className="h-5 w-5 flex-shrink-0" />
-            <span className="truncate text-[9px] leading-tight">Demanda</span>
-          </button>
-          <button
-            onClick={() => navigate('/farmacia/configuracoes')}
-            className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-xs rounded-lg text-muted-foreground hover:text-foreground transition-all"
-          >
-            <Settings className="h-5 w-5 flex-shrink-0" />
-            <span className="truncate text-[9px] leading-tight">Config.</span>
-          </button>
-          <button
-            onClick={() => navigate('/farmacia/suporte')}
-            className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-xs rounded-lg text-muted-foreground hover:text-foreground transition-all"
-          >
-            <MessageSquare className="h-5 w-5 flex-shrink-0" />
-            <span className="truncate text-[9px] leading-tight">Suporte</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Desktop Navigation */}
-      <div className="hidden sm:block container mx-auto px-6 pb-8 max-w-7xl">
-        <div className="flex gap-2 justify-center bg-muted/50 rounded-xl p-1.5">
-          <button
-            onClick={() => navigate('/farmacia/dashboard')}
-            className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg text-muted-foreground hover:text-foreground transition-all"
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            Início
-          </button>
-          <button
-            onClick={() => navigate('/farmacia/estoque')}
-            className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg text-muted-foreground hover:text-foreground transition-all"
-          >
-            <Package className="h-4 w-4" />
-            Estoque
-          </button>
-          <button
-            onClick={() => navigate('/farmacia/demanda')}
-            className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg bg-card shadow-sm text-primary transition-all"
-          >
-            <TrendingUp className="h-4 w-4" />
-            Demanda
-          </button>
-          <button
-            onClick={() => navigate('/farmacia/configuracoes')}
-            className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg text-muted-foreground hover:text-foreground transition-all"
-          >
-            <Settings className="h-4 w-4" />
-            Configurações
-          </button>
-          <button
-            onClick={() => navigate('/farmacia/suporte')}
-            className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg text-muted-foreground hover:text-foreground transition-all"
-          >
-            <MessageSquare className="h-4 w-4" />
-            Suporte
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
