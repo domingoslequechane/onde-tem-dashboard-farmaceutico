@@ -93,8 +93,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Code stored in database");
 
     // Send email with code
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "OndeTem <onboarding@resend.dev>";
     const emailResponse = await resend.emails.send({
-      from: "OndeTem <onboarding@resend.dev>",
+      from: fromEmail,
       to: [adminEmail],
       subject: "Código de Verificação - Eliminação de Farmácia",
       html: `
