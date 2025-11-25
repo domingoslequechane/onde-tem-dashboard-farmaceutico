@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,23 +25,68 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
   const [formData, setFormData] = useState({
-    nome: farmacia?.nome || '',
-    email: '', // Email não é armazenado na tabela farmacias, apenas usado na criação
-    telefone: farmacia?.telefone || '',
-    whatsapp: farmacia?.whatsapp || '',
-    endereco_completo: farmacia?.endereco_completo || '',
-    bairro: farmacia?.bairro || '',
-    cidade: farmacia?.cidade || '',
-    estado: farmacia?.estado || '',
-    cep: farmacia?.cep || '',
-    latitude: farmacia?.latitude?.toString() || '',
-    longitude: farmacia?.longitude?.toString() || '',
-    horario_abertura: farmacia?.horario_funcionamento?.split(' - ')[0] || '08:00',
-    horario_fechamento: farmacia?.horario_funcionamento?.split(' - ')[1] || '20:00',
-    plano: farmacia?.plano || 'free',
-    status_assinatura: farmacia?.status_assinatura || 'ativa',
-    ativa: farmacia?.ativa ?? true,
+    nome: '',
+    email: '',
+    telefone: '',
+    whatsapp: '',
+    endereco_completo: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    cep: '',
+    latitude: '',
+    longitude: '',
+    horario_abertura: '08:00',
+    horario_fechamento: '20:00',
+    plano: 'free',
+    status_assinatura: 'ativa',
+    ativa: true,
   });
+
+  // Atualizar o formulário quando a farmácia em edição mudar
+  useEffect(() => {
+    if (farmacia) {
+      setFormData({
+        nome: farmacia.nome || '',
+        email: '', // Email não é armazenado na tabela farmacias
+        telefone: farmacia.telefone || '',
+        whatsapp: farmacia.whatsapp || '',
+        endereco_completo: farmacia.endereco_completo || '',
+        bairro: farmacia.bairro || '',
+        cidade: farmacia.cidade || '',
+        estado: farmacia.estado || '',
+        cep: farmacia.cep || '',
+        latitude: farmacia.latitude?.toString() || '',
+        longitude: farmacia.longitude?.toString() || '',
+        horario_abertura: farmacia.horario_funcionamento?.split(' - ')[0] || '08:00',
+        horario_fechamento: farmacia.horario_funcionamento?.split(' - ')[1] || '20:00',
+        plano: farmacia.plano || 'free',
+        status_assinatura: farmacia.status_assinatura || 'ativa',
+        ativa: farmacia.ativa ?? true,
+      });
+    } else {
+      // Reset do formulário para nova farmácia
+      setFormData({
+        nome: '',
+        email: '',
+        telefone: '',
+        whatsapp: '',
+        endereco_completo: '',
+        bairro: '',
+        cidade: '',
+        estado: '',
+        cep: '',
+        latitude: '',
+        longitude: '',
+        horario_abertura: '08:00',
+        horario_fechamento: '20:00',
+        plano: 'free',
+        status_assinatura: 'ativa',
+        ativa: true,
+      });
+      setGeneratedPassword('');
+    }
+  }, [farmacia]);
 
   const generatePassword = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
