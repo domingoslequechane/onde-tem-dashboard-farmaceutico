@@ -201,16 +201,15 @@ const Admin = () => {
                       <TableRow>
                         <TableHead>Nome</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead>Plano</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Plano</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredFarmacias.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                             Nenhuma farmácia encontrada
                           </TableCell>
                         </TableRow>
@@ -230,17 +229,12 @@ const Admin = () => {
                                     : ''
                                 }
                               >
-                                {farmacia.account_status === 'pendente' ? 'Pendente' : farmacia.account_status === 'active' ? 'Activo' : 'Bloqueado'}
+                                {farmacia.account_status === 'pendente' ? 'Convite' : farmacia.account_status === 'active' ? 'Activo' : 'Desactivado'}
                               </Badge>
                             </TableCell>
                             <TableCell>
                               <Badge variant={farmacia.plano === 'premium' ? 'default' : 'secondary'} className={farmacia.plano === 'premium' ? 'bg-primary' : ''}>
                                 {farmacia.plano || 'free'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={farmacia.ativa ? 'default' : 'destructive'} className={farmacia.ativa ? 'bg-secondary' : ''}>
-                                {farmacia.ativa ? 'Ativa' : 'Inativa'}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
