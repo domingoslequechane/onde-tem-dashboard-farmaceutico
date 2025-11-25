@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import StockControl from '@/components/StockControl';
 import DemandAnalysis from '@/components/DemandAnalysis';
@@ -16,7 +17,9 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
+  const [searchParams] = useSearchParams();
   const [showEmergencyAlert, setShowEmergencyAlert] = useState(false);
+  const defaultTab = searchParams.get('tab') || 'dashboard';
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -27,7 +30,7 @@ const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
       )}
 
       <main className="flex-1 container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl pb-24 sm:pb-8 overflow-hidden">
-        <Tabs defaultValue="dashboard" className="w-full h-full flex flex-col">
+        <Tabs defaultValue={defaultTab} className="w-full h-full flex flex-col">
           <TabsList className="fixed bottom-0 left-0 right-0 z-50 grid w-full grid-cols-5 h-auto p-1.5 bg-background border-t border-border shadow-lg sm:static sm:grid-cols-5 sm:mb-6 sm:p-1.5 sm:bg-muted/50 sm:rounded-xl sm:gap-1 sm:border-0 sm:shadow-none">
             <TabsTrigger 
               value="dashboard" 
