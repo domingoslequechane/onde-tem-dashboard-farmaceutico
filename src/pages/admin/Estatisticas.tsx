@@ -24,12 +24,9 @@ const AdminEstatisticas = () => {
     }
 
     const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id)
-      .single();
+      .rpc('get_user_role', { _user_id: session.user.id });
 
-    if (roleData?.role !== 'admin' && roleData?.role !== 'super_admin') {
+    if (roleData !== 'admin' && roleData !== 'super_admin') {
       await supabase.auth.signOut();
       navigate('/admin/login');
       return;
