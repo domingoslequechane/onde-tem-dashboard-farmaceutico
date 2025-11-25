@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Power, PowerOff, Key, Edit, Search, Store, Users, TrendingUp, UserCog, BarChart, Trash2 } from 'lucide-react';
 import Header from '@/components/Header';
+import AdminNavigation from '@/components/AdminNavigation';
 import AdminFarmaciaModal from '@/components/AdminFarmaciaModal';
 import AdminManagers from '@/components/AdminManagers';
 import AdminStatistics from '@/components/AdminStatistics';
@@ -18,6 +19,7 @@ import { DeletePharmacyDialog } from '@/components/DeletePharmacyDialog';
 
 const Admin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [farmacias, setFarmacias] = useState<any[]>([]);
   const [filteredFarmacias, setFilteredFarmacias] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -128,6 +130,12 @@ const Admin = () => {
     );
   }
 
+  const currentTab = location.pathname === '/admin/administradores' 
+    ? 'administradores' 
+    : location.pathname === '/admin/farmacias' 
+    ? 'farmacias' 
+    : 'estatisticas';
+
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       <div className="flex-shrink-0">
@@ -135,26 +143,23 @@ const Admin = () => {
           user={user ? { email: user.email, name: 'Administrador' } : null} 
           onLogout={handleLogout} 
         />
+        <AdminNavigation />
       </div>
       
       <main className="flex-1 overflow-hidden flex flex-col">
         <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl flex-1 flex flex-col overflow-hidden">
           {/* Tabs para diferentes seções */}
-          <Tabs defaultValue="estatisticas" className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="grid w-full grid-cols-3 lg:w-auto flex-shrink-0 mb-6">
-              <TabsTrigger value="estatisticas" className="flex items-center gap-2">
-                <BarChart className="h-4 w-4" />
-                <span className="hidden sm:inline">Estatísticas</span>
-              </TabsTrigger>
-              <TabsTrigger value="farmacias" className="flex items-center gap-2">
-                <Store className="h-4 w-4" />
-                <span className="hidden sm:inline">Farmácias</span>
-              </TabsTrigger>
-              <TabsTrigger value="administradores" className="flex items-center gap-2">
-                <UserCog className="h-4 w-4" />
-                <span className="hidden sm:inline">Administradores</span>
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={currentTab} className="flex-1 flex flex-col overflow-hidden">
+            {/* Removidas as TabsList - agora usando AdminNavigation */}
+
+            {/* Aba de Estatísticas */}
+            <TabsContent value="estatisticas" className="flex-1 overflow-y-auto m-0">
+              <AdminStatistics 
+                totalFarmacias={farmacias.length}
+                farmaciasAtivas={farmacias.filter(f => f.account_status === 'active').length}
+                farmaciasInativas={farmacias.filter(f => f.account_status === 'blocked').length}
+              />
+            </TabsContent>
 
             {/* Aba de Farmácias */}
             <TabsContent value="farmacias" className="flex-1 overflow-y-auto m-0">

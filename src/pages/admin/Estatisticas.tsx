@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
+import AdminNavigation from '@/components/AdminNavigation';
 import AdminStatistics from '@/components/AdminStatistics';
-import { Users, Building2, BarChart3 } from 'lucide-react';
 
 const AdminEstatisticas = () => {
   const navigate = useNavigate();
@@ -72,31 +72,9 @@ const AdminEstatisticas = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header user={user ? { email: user.email, name: 'Administrador' } : null} onLogout={handleLogout} />
       
-      <main className="flex-1 container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
-        <div className="mb-6 flex gap-2 bg-muted/50 rounded-xl p-1.5">
-          <button
-            onClick={() => navigate('/admin/estatisticas')}
-            className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg bg-card shadow-sm text-primary transition-all"
-          >
-            <BarChart3 className="h-4 w-4" />
-            Estatísticas
-          </button>
-          <button
-            onClick={() => navigate('/admin/farmacias')}
-            className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg text-muted-foreground hover:text-foreground transition-all"
-          >
-            <Building2 className="h-4 w-4" />
-            Farmácias
-          </button>
-          <button
-            onClick={() => navigate('/admin/administradores')}
-            className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg text-muted-foreground hover:text-foreground transition-all"
-          >
-            <Users className="h-4 w-4" />
-            Administradores
-          </button>
-        </div>
+      <AdminNavigation />
 
+      <main className="flex-1 container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         <AdminStatistics 
           totalFarmacias={totalFarmacias}
           farmaciasAtivas={farmaciasAtivas}
