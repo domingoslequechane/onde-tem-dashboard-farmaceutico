@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Power, PowerOff, Key, Edit, Search, Store, Users, TrendingUp, UserCog, BarChart, Trash2 } from 'lucide-react';
+import { Plus, Power, PowerOff, RotateCw, Edit, Search, Store, Users, TrendingUp, UserCog, BarChart, Trash2 } from 'lucide-react';
 import Header from '@/components/Header';
 import AdminNavigation from '@/components/AdminNavigation';
 import AdminFarmaciaModal from '@/components/AdminFarmaciaModal';
@@ -290,7 +290,7 @@ const Admin = () => {
                                     }}
                                     title="Reenviar Convite"
                                   >
-                                    <Key className="h-4 w-4" />
+                                    <RotateCw className="h-4 w-4" />
                                   </Button>
                                 )}
                                 <Button
