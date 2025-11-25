@@ -20,7 +20,7 @@ const FarmaciaNavigation = () => {
       {/* Desktop/Tablet Navigation */}
       <nav className="hidden sm:block bg-muted/30 border-b border-border mb-6">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex gap-1">
+          <div className="flex justify-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
