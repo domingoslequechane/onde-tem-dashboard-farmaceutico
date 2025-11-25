@@ -192,6 +192,7 @@ export type Database = {
       }
       farmacias: {
         Row: {
+          account_status: string | null
           ativa: boolean | null
           atualizado_em: string | null
           bairro: string | null
@@ -199,6 +200,7 @@ export type Database = {
           cidade: string
           criado_em: string | null
           data_vencimento: string | null
+          email: string | null
           endereco_completo: string
           estado: string
           horario_abertura: string | null
@@ -216,6 +218,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          account_status?: string | null
           ativa?: boolean | null
           atualizado_em?: string | null
           bairro?: string | null
@@ -223,6 +226,7 @@ export type Database = {
           cidade: string
           criado_em?: string | null
           data_vencimento?: string | null
+          email?: string | null
           endereco_completo: string
           estado: string
           horario_abertura?: string | null
@@ -240,6 +244,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          account_status?: string | null
           ativa?: boolean | null
           atualizado_em?: string | null
           bairro?: string | null
@@ -247,6 +252,7 @@ export type Database = {
           cidade?: string
           criado_em?: string | null
           data_vencimento?: string | null
+          email?: string | null
           endereco_completo?: string
           estado?: string
           horario_abertura?: string | null

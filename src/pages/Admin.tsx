@@ -195,10 +195,10 @@ const Admin = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nome</TableHead>
-                        <TableHead>Cidade</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Estado</TableHead>
                         <TableHead>Plano</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Assinatura</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -213,20 +213,21 @@ const Admin = () => {
                         filteredFarmacias.map((farmacia) => (
                           <TableRow key={farmacia.id} className="hover:bg-muted/50">
                             <TableCell className="font-medium">{farmacia.nome}</TableCell>
-                            <TableCell>{farmacia.cidade}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{farmacia.email || 'N/A'}</TableCell>
                             <TableCell>
-                              <Badge variant={farmacia.plano === 'premium' ? 'default' : 'secondary'} className={farmacia.plano === 'premium' ? 'bg-secondary' : ''}>
+                              <Badge variant={farmacia.account_status === 'invited' ? 'secondary' : farmacia.account_status === 'active' ? 'default' : 'destructive'} 
+                                     className={farmacia.account_status === 'active' ? 'bg-secondary' : ''}>
+                                {farmacia.account_status === 'invited' ? 'Convite' : farmacia.account_status === 'active' ? 'Activo' : 'Bloqueado'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={farmacia.plano === 'premium' ? 'default' : 'secondary'} className={farmacia.plano === 'premium' ? 'bg-primary' : ''}>
                                 {farmacia.plano || 'free'}
                               </Badge>
                             </TableCell>
                             <TableCell>
                               <Badge variant={farmacia.ativa ? 'default' : 'destructive'} className={farmacia.ativa ? 'bg-secondary' : ''}>
                                 {farmacia.ativa ? 'Ativa' : 'Inativa'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={farmacia.status_assinatura === 'ativa' ? 'default' : 'secondary'} className={farmacia.status_assinatura === 'ativa' ? 'bg-primary' : ''}>
-                                {farmacia.status_assinatura || 'N/A'}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
@@ -242,6 +243,43 @@ const Admin = () => {
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
+                                {farmacia.account_status === 'invited' && (
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={async () => {
+                                      try {
+                                        const { data: { session } } = await supabase.auth.getSession();
+                                        const response = await supabase.functions.invoke('send-pharmacy-invite', {
+                                          body: {
+                                            email: farmacia.email,
+                                            pharmacyName: farmacia.nome,
+                                            pharmacyId: farmacia.id,
+                                          },
+                                          headers: {
+                                            Authorization: `Bearer ${session?.access_token}`,
+                                          },
+                                        });
+
+                                        if (response.error) throw response.error;
+
+                                        toast({
+                                          title: "Convite reenviado!",
+                                          description: `Convite reenviado para ${farmacia.email}`,
+                                        });
+                                      } catch (error: any) {
+                                        toast({
+                                          title: "Erro",
+                                          description: error.message || "Erro ao reenviar convite",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                    title="Reenviar Convite"
+                                  >
+                                    <Key className="h-4 w-4" />
+                                  </Button>
+                                )}
                                 <Button
                                   variant="outline"
                                   size="icon"
@@ -253,19 +291,6 @@ const Admin = () => {
                                   ) : (
                                     <Power className="h-4 w-4" />
                                   )}
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => {
-                                    toast({
-                                      title: "Em breve",
-                                      description: "Funcionalidade de recuperação de acesso em desenvolvimento.",
-                                    });
-                                  }}
-                                  title="Recuperar Acesso"
-                                >
-                                  <Key className="h-4 w-4" />
                                 </Button>
                                 <Button
                                   variant="outline"

@@ -11,6 +11,7 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminResetPassword from "./pages/AdminResetPassword";
 import AdminSetPassword from "./pages/AdminSetPassword";
 import FarmaciaResetPassword from "./pages/FarmaciaResetPassword";
+import FarmaciaSetPassword from "./pages/FarmaciaSetPassword";
 import FarmaciaSettings from "./pages/FarmaciaSettings";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/admin/reset-password" element={<AdminResetPassword />} />
           <Route path="/admin/set-password" element={<AdminSetPassword />} />
           <Route path="/farmacia/reset-password" element={<FarmaciaResetPassword />} />
+          <Route path="/farmacia/set-password" element={<FarmaciaSetPassword />} />
           <Route path="/farmacia/settings" element={<FarmaciaSettings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
