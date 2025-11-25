@@ -63,8 +63,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Unauthorized - Admin only");
     }
 
-    if (!roleData || roleData.role !== "admin") {
-      console.error("User is not admin. Role:", roleData?.role);
+    if (!roleData || (roleData.role !== "admin" && roleData.role !== "super_admin")) {
+      console.error("User is not admin or super_admin. Role:", roleData?.role);
       throw new Error("Unauthorized - Admin only");
     }
 
