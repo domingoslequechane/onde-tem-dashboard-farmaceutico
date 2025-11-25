@@ -64,7 +64,7 @@ const AdminLogin = () => {
         description: "Bem-vindo ao painel administrativo.",
       });
       
-      navigate('/admin');
+      navigate('/admin/estatisticas');
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast({

@@ -88,9 +88,9 @@ const FarmaciaSetPassword = () => {
         description: "Você será redirecionado para completar as informações da farmácia.",
       });
 
-      // Redirecionar para o dashboard com a aba de configurações ativa
+      // Redirecionar para o dashboard de configurações
       setTimeout(() => {
-        navigate('/?tab=configuracoes');
+        navigate('/farmacia/configuracoes');
       }, 1500);
     } catch (error: any) {
       console.error('Erro ao definir senha:', error);
