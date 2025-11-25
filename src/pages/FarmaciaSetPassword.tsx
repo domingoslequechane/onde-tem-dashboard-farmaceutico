@@ -85,12 +85,12 @@ const FarmaciaSetPassword = () => {
 
       toast({
         title: "Senha definida com sucesso!",
-        description: "Você será redirecionado para o painel de configurações.",
+        description: "Você será redirecionado para completar as informações da farmácia.",
       });
 
-      // Redirecionar para as configurações da farmácia
+      // Redirecionar para o dashboard com a aba de configurações ativa
       setTimeout(() => {
-        navigate('/farmacia/settings');
+        navigate('/?tab=configuracoes');
       }, 1500);
     } catch (error: any) {
       console.error('Erro ao definir senha:', error);
