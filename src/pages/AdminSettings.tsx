@@ -106,7 +106,7 @@ const AdminSettings = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/admin')}
+            onClick={() => navigate('/admin/estatisticas')}
             className="mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />

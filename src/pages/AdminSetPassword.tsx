@@ -91,7 +91,7 @@ const AdminSetPassword = () => {
 
       // Aguardar um momento antes de redirecionar
       setTimeout(() => {
-        navigate('/admin');
+        navigate('/admin/estatisticas');
       }, 1500);
     } catch (error: any) {
       toast({
