@@ -488,8 +488,10 @@ const Buscar = () => {
     });
   };
 
-  const searchPharmacies = async () => {
-    if (!medicamento.trim()) {
+  const searchPharmacies = async (searchTerm?: string) => {
+    const termToSearch = searchTerm || medicamento;
+    
+    if (!termToSearch.trim()) {
       toast({
         title: 'Atenção',
         description: 'Por favor, digite o nome do medicamento',
@@ -510,14 +512,14 @@ const Buscar = () => {
 
     setSearching(true);
     
-    // Save to search history
-    saveToSearchHistory(medicamento.trim());
+    // Save to search history - use the full term
+    saveToSearchHistory(termToSearch.trim());
 
     try {
       const { data, error } = await supabase.rpc('buscar_farmacias_proximas', {
         p_latitude: userLocation.lat,
         p_longitude: userLocation.lng,
-        p_medicamento: medicamento,
+        p_medicamento: termToSearch,
         p_raio_km: raioKm,
       }) as { data: MedicamentoFarmacia[] | null; error: any };
 
@@ -693,7 +695,7 @@ const Buscar = () => {
                         className="p-2 hover:bg-muted cursor-pointer border-b last:border-b-0"
                         onClick={() => {
                           setMedicamento(med.nome);
-                          searchPharmacies();
+                          searchPharmacies(med.nome);
                         }}
                       >
                         <p className="text-sm font-medium">{med.nome}</p>
@@ -703,7 +705,7 @@ const Buscar = () => {
                 )}
               </div>
               <Button 
-                onClick={searchPharmacies}
+                onClick={() => searchPharmacies()}
                 disabled={searching || !userLocation}
                 size="icon"
                 className="flex-shrink-0"
@@ -780,7 +782,7 @@ const Buscar = () => {
                       className="p-3 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary"
                       onClick={() => {
                         setMedicamento(search);
-                        setTimeout(() => searchPharmacies(), 100);
+                        setTimeout(() => searchPharmacies(search), 100);
                       }}
                     >
                       <div className="flex justify-between items-center gap-2">
