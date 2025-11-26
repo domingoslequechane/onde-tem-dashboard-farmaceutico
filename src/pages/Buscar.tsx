@@ -49,7 +49,7 @@ const Buscar = () => {
   const [searching, setSearching] = useState(false);
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [loadingToken, setLoadingToken] = useState(true);
-  const [raioKm, setRaioKm] = useState(5);
+  const [raioKm, setRaioKm] = useState(1);
   const [allMedicamentos, setAllMedicamentos] = useState<Medicamento[]>([]);
   const [loadingMedicamentos, setLoadingMedicamentos] = useState(true);
   const [filteredMedicamentos, setFilteredMedicamentos] = useState<Medicamento[]>([]);
@@ -334,13 +334,55 @@ const Buscar = () => {
         });
         map.current.fitBounds(bounds, { padding: 50 });
       }
-
-      toast({
-        title: 'Farmácias próximas',
-        description: `Encontramos ${farmaciasComDistancia.length} farmácia${farmaciasComDistancia.length !== 1 ? 's' : ''} próxima${farmaciasComDistancia.length !== 1 ? 's' : ''}`,
-      });
     } catch (error) {
       console.error('Error fetching nearby pharmacies:', error);
+    }
+  };
+
+  const fetchAllPharmacies = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('farmacias')
+        .select('*')
+        .eq('ativa', true);
+
+      if (error) throw error;
+
+      // Clear existing markers
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+
+      // Add all pharmacy markers to map
+      (data || []).forEach((farmacia) => {
+        if (farmacia.latitude && farmacia.longitude && map.current) {
+          const marker = new mapboxgl.Marker({ color: '#10b981' })
+            .setLngLat([farmacia.longitude, farmacia.latitude])
+            .setPopup(
+              new mapboxgl.Popup().setHTML(`
+                <div class="p-2">
+                  <p class="font-semibold text-sm">${farmacia.nome}</p>
+                  <p class="text-xs text-gray-600">${farmacia.endereco_completo}</p>
+                </div>
+              `)
+            )
+            .addTo(map.current);
+          
+          markersRef.current.push(marker);
+        }
+      });
+
+      // Fit map to show all markers
+      if (markersRef.current.length > 0 && map.current) {
+        const bounds = new mapboxgl.LngLatBounds();
+        (data || []).forEach((farmacia) => {
+          if (farmacia.latitude && farmacia.longitude) {
+            bounds.extend([farmacia.longitude, farmacia.latitude]);
+          }
+        });
+        map.current.fitBounds(bounds, { padding: 80 });
+      }
+    } catch (error) {
+      console.error('Error fetching all pharmacies:', error);
     }
   };
 
@@ -364,11 +406,8 @@ const Buscar = () => {
         setLocationPermission('granted');
         toast({
           title: 'Localização obtida',
-          description: 'Buscando farmácias próximas...',
+          description: 'Mapa carregado com sucesso',
         });
-        
-        // Automatically fetch nearby pharmacies
-        fetchNearbyPharmacies(coords.lat, coords.lng);
       },
       (error) => {
         setLocationPermission('denied');
@@ -402,9 +441,10 @@ const Buscar = () => {
       .setPopup(new mapboxgl.Popup().setHTML('<p class="font-semibold">Sua Localização</p>'))
       .addTo(map.current);
 
-    // Wait for map to load before adding radius circle
+    // Wait for map to load before adding radius circle and pharmacies
     map.current.on('load', () => {
       addRadiusCircle();
+      fetchAllPharmacies(); // Show all pharmacies on initial load
     });
 
     return () => {
@@ -419,11 +459,12 @@ const Buscar = () => {
       addRadiusCircle();
     }
     
-    // Refetch nearby pharmacies when radius changes
-    if (userLocation) {
-      fetchNearbyPharmacies(userLocation.lat, userLocation.lng);
+    // Only refetch nearby pharmacies if there's an active search, otherwise show all
+    if (userLocation && medicamentos.length > 0) {
+      // Re-run search to update results with new radius
+      searchPharmacies();
     }
-  }, [raioKm, userLocation]);
+  }, [raioKm]);
 
   const addRadiusCircle = () => {
     if (!map.current || !userLocation) return;
