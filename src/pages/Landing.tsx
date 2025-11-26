@@ -514,6 +514,8 @@ const Landing = () => {
                 <img src={logo} alt="ONDTem" className="h-8" />
                 <p className="text-sm text-muted-foreground">
                   © 2025 ONDTem. Todos os direitos reservados.
+                  <br />
+                  by <a href="https://onixagence.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Onix Agence</a>
                 </p>
               </div>
               <div className="flex gap-6">
