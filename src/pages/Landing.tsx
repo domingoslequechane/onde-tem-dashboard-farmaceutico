@@ -302,34 +302,62 @@ const Landing = () => {
       </section>
 
       {/* Investment Section */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <Card className="p-8 md:p-12 bg-gradient-to-br from-primary/10 via-background to-secondary/10 border-primary/20">
-              <div className="text-center space-y-6">
-                <h2 className="text-2xl md:text-4xl font-bold text-foreground">
-                  A ONDTem é um CUSTO ou um INVESTIMENTO?
-                </h2>
-                <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-                  A ONDTem não é um custo, mas sim um investimento estratégico com retorno imediato. 
-                  O custo da nossa assinatura é insignificante comparado ao valor de:
-                </p>
-                <div className="grid md:grid-cols-3 gap-6 pt-6">
-                  <div className="space-y-2">
-                    <div className="text-3xl md:text-4xl font-bold text-primary">💰</div>
-                    <p className="text-sm md:text-base font-semibold text-foreground">Uma única venda perdida</p>
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center space-y-6 mb-12">
+              <h2 className="text-2xl md:text-4xl font-bold text-foreground">
+                A ONDTem é um CUSTO ou um INVESTIMENTO?
+              </h2>
+              <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
+                A ONDTem não é um custo, mas sim um investimento estratégico com retorno imediato. 
+                O custo da nossa assinatura é insignificante comparado ao valor de:
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="p-6 md:p-8 bg-background border-destructive/20 hover:border-destructive/40 transition-colors">
+                <div className="space-y-4 text-center">
+                  <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                    <TrendingUp className="h-8 w-8 text-destructive" />
                   </div>
-                  <div className="space-y-2">
-                    <div className="text-3xl md:text-4xl font-bold text-primary">📦</div>
-                    <p className="text-sm md:text-base font-semibold text-foreground">Capital imobilizado em stock</p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-3xl md:text-4xl font-bold text-primary">📊</div>
-                    <p className="text-sm md:text-base font-semibold text-foreground">Informação valiosa do mercado</p>
-                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-foreground">
+                    Uma única venda perdida
+                  </h3>
+                  <p className="text-sm md:text-base text-muted-foreground">
+                    Cada cliente que não encontra o que procura é receita perdida
+                  </p>
                 </div>
-              </div>
-            </Card>
+              </Card>
+
+              <Card className="p-6 md:p-8 bg-background border-primary/20 hover:border-primary/40 transition-colors">
+                <div className="space-y-4 text-center">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    <ShoppingCart className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-foreground">
+                    Capital imobilizado em stock
+                  </h3>
+                  <p className="text-sm md:text-base text-muted-foreground">
+                    Produtos parados representam dinheiro sem trabalhar
+                  </p>
+                </div>
+              </Card>
+
+              <Card className="p-6 md:p-8 bg-background border-secondary/20 hover:border-secondary/40 transition-colors">
+                <div className="space-y-4 text-center">
+                  <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto">
+                    <BarChart3 className="h-8 w-8 text-secondary" />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-foreground">
+                    Informação valiosa do mercado
+                  </h3>
+                  <p className="text-sm md:text-base text-muted-foreground">
+                    Dados estratégicos que orientam decisões lucrativas
+                  </p>
+                </div>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
