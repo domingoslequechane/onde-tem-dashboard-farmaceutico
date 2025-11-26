@@ -941,8 +941,8 @@ const Buscar = () => {
                 key={`${item.medicamento_id}-${item.farmacia_id}-${index}`} 
                 className={`p-3 space-y-2 hover:shadow-md transition-all cursor-pointer border-l-4 ${
                   selectedMedicamento?.medicamento_id === item.medicamento_id && selectedMedicamento?.farmacia_id === item.farmacia_id
-                    ? 'border-l-primary bg-primary/5' 
-                    : 'border-l-green-500 hover:border-l-green-600'
+                    ? 'border-l-green-600 bg-green-50' 
+                    : 'border-l-green-500 hover:border-l-green-600 bg-green-50/50 hover:bg-green-50'
                 }`}
                 onClick={() => showRouteToPharmacy(item, routeMode)}
               >
@@ -956,7 +956,7 @@ const Buscar = () => {
                     )}
                   </div>
                   <div className="flex flex-col items-end flex-shrink-0">
-                    <span className="text-sm font-semibold text-primary">
+                    <span className="text-sm font-semibold text-green-600">
                       {item.distancia_km.toFixed(1)} km
                     </span>
                     <span className="text-[10px] text-muted-foreground">via rota</span>
@@ -975,7 +975,7 @@ const Buscar = () => {
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex-1">
                       {item.medicamento_preco && (
-                        <p className="text-sm font-semibold text-primary">
+                        <p className="text-sm font-semibold text-green-600">
                           MT {item.medicamento_preco.toFixed(2)}
                         </p>
                       )}
