@@ -29,6 +29,8 @@ const Settings = ({ farmacia }: SettingsProps) => {
     ponto_referencia: '',
     horario_abertura: '',
     horario_fechamento: '',
+    latitude: '',
+    longitude: '',
     ativa: true,
   });
 
@@ -46,6 +48,8 @@ const Settings = ({ farmacia }: SettingsProps) => {
         ponto_referencia: farmacia.ponto_referencia || '',
         horario_abertura: farmacia.horario_abertura || '',
         horario_fechamento: farmacia.horario_fechamento || '',
+        latitude: farmacia.latitude ? String(farmacia.latitude) : '',
+        longitude: farmacia.longitude ? String(farmacia.longitude) : '',
         ativa: farmacia.ativa ?? true,
       });
     }
@@ -87,6 +91,8 @@ const Settings = ({ farmacia }: SettingsProps) => {
           ponto_referencia: pharmacyData.ponto_referencia,
           horario_abertura: pharmacyData.horario_abertura,
           horario_fechamento: pharmacyData.horario_fechamento,
+          latitude: pharmacyData.latitude ? parseFloat(pharmacyData.latitude) : null,
+          longitude: pharmacyData.longitude ? parseFloat(pharmacyData.longitude) : null,
           ativa: pharmacyData.ativa,
         })
         .eq('id', farmacia.id);
@@ -251,6 +257,33 @@ const Settings = ({ farmacia }: SettingsProps) => {
                 className="h-9 sm:h-10 text-sm"
                 placeholder="Ex: Próximo ao mercado central"
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="latitude" className="text-xs sm:text-sm font-medium">Latitude</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  value={pharmacyData.latitude}
+                  onChange={(e) => setPharmacyData({ ...pharmacyData, latitude: e.target.value })}
+                  className="h-9 sm:h-10 text-sm"
+                  placeholder="-25.9692"
+                />
+              </div>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="longitude" className="text-xs sm:text-sm font-medium">Longitude</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  value={pharmacyData.longitude}
+                  onChange={(e) => setPharmacyData({ ...pharmacyData, longitude: e.target.value })}
+                  className="h-9 sm:h-10 text-sm"
+                  placeholder="32.5732"
+                />
+              </div>
             </div>
           </div>
           <div className="flex items-center justify-between p-3 sm:p-4 bg-muted rounded-lg">
