@@ -358,10 +358,41 @@ const Buscar = () => {
           const marker = new mapboxgl.Marker({ color: '#10b981' })
             .setLngLat([farmacia.longitude, farmacia.latitude])
             .setPopup(
-              new mapboxgl.Popup().setHTML(`
-                <div class="p-2">
-                  <p class="font-semibold text-sm">${farmacia.nome}</p>
-                  <p class="text-xs text-gray-600">${farmacia.endereco_completo}</p>
+              new mapboxgl.Popup({ 
+                closeButton: true,
+                closeOnClick: true,
+                maxWidth: '300px'
+              }).setHTML(`
+                <div style="padding: 14px; font-family: system-ui, -apple-system, sans-serif;">
+                  <h3 style="margin: 0 0 10px 0; font-weight: 600; font-size: 15px; color: #0f172a; line-height: 1.3;">
+                    ${farmacia.nome}
+                  </h3>
+                  <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+                    ${farmacia.endereco_completo ? `
+                      <div style="display: flex; align-items: start; gap: 8px;">
+                        <span style="color: #10b981; font-size: 16px; flex-shrink: 0;">📍</span>
+                        <span style="color: #64748b; line-height: 1.5;">${farmacia.endereco_completo}</span>
+                      </div>
+                    ` : ''}
+                    ${farmacia.horario_abertura && farmacia.horario_fechamento ? `
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #10b981; font-size: 16px;">🕒</span>
+                        <span style="color: #64748b;">${farmacia.horario_abertura} - ${farmacia.horario_fechamento}</span>
+                      </div>
+                    ` : ''}
+                    ${farmacia.telefone ? `
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #10b981; font-size: 16px;">📞</span>
+                        <a href="tel:${farmacia.telefone}" style="color: #10b981; text-decoration: none; font-weight: 500;">${farmacia.telefone}</a>
+                      </div>
+                    ` : ''}
+                    ${farmacia.whatsapp ? `
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #10b981; font-size: 16px;">💬</span>
+                        <a href="https://wa.me/${farmacia.whatsapp.replace(/\D/g, '')}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 500;">${farmacia.whatsapp}</a>
+                      </div>
+                    ` : ''}
+                  </div>
                 </div>
               `)
             )
