@@ -880,9 +880,12 @@ const Buscar = () => {
                       </p>
                     )}
                   </div>
-                  <span className="text-xs font-medium text-primary flex-shrink-0 bg-primary/10 px-2 py-1 rounded-full">
-                    {item.distancia_km.toFixed(1)} km
-                  </span>
+                  <div className="flex flex-col items-end flex-shrink-0">
+                    <span className="text-sm font-semibold text-primary">
+                      {item.distancia_km.toFixed(1)} km
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">via rota</span>
+                  </div>
                 </div>
                 
                 <div className="pt-2 border-t border-border space-y-1">
@@ -939,7 +942,7 @@ const Buscar = () => {
                   <div className="space-y-1 text-xs">
                     <p className="flex items-center gap-2">
                       <span className="font-medium">Distância:</span>
-                      <span>{routeInfo.distance.toFixed(2)} km</span>
+                      <span>{routeInfo.distance.toFixed(2)} km (via rota)</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="font-medium">Tempo estimado:</span>
