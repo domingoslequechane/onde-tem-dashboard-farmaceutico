@@ -519,10 +519,10 @@ const Buscar = () => {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12', // Modern street style
+      style: 'mapbox://styles/mapbox/standard', // Latest Mapbox style
       center: [userLocation.lng, userLocation.lat],
       zoom: 12,
-      pitch: 0, // Flat view
+      pitch: 0,
       bearing: 0,
     });
 
