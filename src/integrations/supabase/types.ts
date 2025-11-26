@@ -567,19 +567,18 @@ export type Database = {
           p_raio_km?: number
         }
         Returns: {
-          bairro: string
           distancia_km: number
-          endereco_completo: string
+          farmacia_endereco: string
           farmacia_id: string
           farmacia_latitude: number
           farmacia_longitude: number
           farmacia_nome: string
+          farmacia_telefone: string
+          farmacia_whatsapp: string
+          medicamento_categoria: string
+          medicamento_id: string
           medicamento_nome: string
-          ponto_referencia: string
-          preco: number
-          quantidade: number
-          telefone: string
-          whatsapp: string
+          medicamento_preco: number
         }[]
       }
       delete_admin: { Args: { target_user_id: string }; Returns: undefined }
