@@ -302,92 +302,94 @@ const Landing = () => {
       </section>
 
       {/* Investment Section */}
-      <section className="py-16 md:py-24 bg-muted/20">
+      <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center space-y-4 mb-16">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center space-y-6 mb-16">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground">
-                A ONDTem é um CUSTO ou um INVESTIMENTO?
+                A ONDTem é um CUSTO ou um <span className="text-primary">INVESTIMENTO</span>?
               </h2>
-              <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
-                A ONDTem não é um custo, mas sim um investimento estratégico com retorno imediato. 
-                O custo da nossa assinatura é insignificante comparado ao valor de:
+              <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+                A ONDTem não é um custo, mas sim um <span className="font-bold text-primary">investimento estratégico</span> com retorno imediato.
               </p>
             </div>
-            
-            {/* Horizontal Timeline Structure */}
-            <div className="relative">
-              {/* Connection Line - Hidden on mobile, visible on desktop */}
-              <div className="hidden md:block absolute top-24 left-0 right-0 h-1 bg-gradient-to-r from-destructive via-primary to-secondary"></div>
-              
-              <div className="grid md:grid-cols-3 gap-8 md:gap-4 relative">
-                {/* Item 1 */}
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-br from-destructive to-destructive/80 flex items-center justify-center shadow-lg">
-                    <TrendingUp className="h-10 w-10 text-white" />
-                  </div>
-                  <div className="bg-background border-2 border-destructive/30 rounded-xl p-6 space-y-3 hover:border-destructive/60 transition-all hover:shadow-lg">
-                    <h3 className="text-xl font-bold text-foreground">
-                      Venda Perdida
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Cada cliente que não encontra o que procura representa receita perdida para sempre
-                    </p>
-                    <div className="pt-2">
-                      <span className="text-2xl font-bold text-destructive">≈ 500 MT+</span>
-                      <p className="text-xs text-muted-foreground mt-1">por venda perdida</p>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Item 2 */}
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-                    <ShoppingCart className="h-10 w-10 text-white" />
-                  </div>
-                  <div className="bg-background border-2 border-primary/30 rounded-xl p-6 space-y-3 hover:border-primary/60 transition-all hover:shadow-lg">
-                    <h3 className="text-xl font-bold text-foreground">
-                      Stock Parado
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Capital imobilizado que não gera retorno nem fluxo de caixa
+            {/* Comparison Layout */}
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
+              {/* Left Side - Cost */}
+              <div className="space-y-4">
+                <div className="bg-muted/50 rounded-2xl p-8 border-2 border-dashed border-muted-foreground/20">
+                  <h3 className="text-xl md:text-2xl font-bold text-muted-foreground mb-6 text-center">
+                    Custo da Assinatura
+                  </h3>
+                  <div className="text-center py-8">
+                    <p className="text-5xl md:text-6xl font-bold text-muted-foreground">
+                      XXX MT
                     </p>
-                    <div className="pt-2">
-                      <span className="text-2xl font-bold text-primary">≈ 10,000 MT+</span>
-                      <p className="text-xs text-muted-foreground mt-1">capital imobilizado</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Item 3 */}
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center shadow-lg">
-                    <BarChart3 className="h-10 w-10 text-white" />
-                  </div>
-                  <div className="bg-background border-2 border-secondary/30 rounded-xl p-6 space-y-3 hover:border-secondary/60 transition-all hover:shadow-lg">
-                    <h3 className="text-xl font-bold text-foreground">
-                      Decisões Cegas
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Comprar sem saber o que o mercado procura gera desperdício e prejuízo
-                    </p>
-                    <div className="pt-2">
-                      <span className="text-2xl font-bold text-secondary">Inestimável</span>
-                      <p className="text-xs text-muted-foreground mt-1">dados estratégicos</p>
-                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">por mês</p>
                   </div>
                 </div>
               </div>
 
-              {/* Bottom CTA */}
-              <div className="text-center mt-12 p-8 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 rounded-2xl border border-primary/20">
-                <p className="text-lg md:text-xl font-semibold text-foreground mb-4">
-                  A ONDTem paga-se com apenas <span className="text-primary">uma única venda</span> que você teria perdido.
-                </p>
-                <p className="text-sm md:text-base text-muted-foreground">
-                  O resto é puro lucro e crescimento para a sua farmácia.
-                </p>
+              {/* Right Side - Investment Value */}
+              <div className="space-y-4">
+                <div className="bg-gradient-to-br from-primary via-primary/90 to-secondary rounded-2xl p-8 border-2 border-primary shadow-xl">
+                  <h3 className="text-xl md:text-2xl font-bold text-white mb-6 text-center">
+                    Valor do Investimento
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 text-white">
+                      <CheckCircle2 className="h-6 w-6 shrink-0" />
+                      <p className="text-sm md:text-base">1 venda recuperada = <span className="font-bold">500+ MT</span></p>
+                    </div>
+                    <div className="flex items-center gap-3 text-white">
+                      <CheckCircle2 className="h-6 w-6 shrink-0" />
+                      <p className="text-sm md:text-base">Stock otimizado = <span className="font-bold">10,000+ MT</span> liberados</p>
+                    </div>
+                    <div className="flex items-center gap-3 text-white">
+                      <CheckCircle2 className="h-6 w-6 shrink-0" />
+                      <p className="text-sm md:text-base">Dados de mercado = <span className="font-bold">Crescimento contínuo</span></p>
+                    </div>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            {/* Bottom Cards */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-background border-2 border-destructive/30 rounded-xl p-6 text-center space-y-3 hover:border-destructive transition-colors">
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-2">
+                  <TrendingUp className="h-6 w-6 text-destructive" />
+                </div>
+                <h4 className="font-bold text-foreground">Uma Venda Perdida</h4>
+                <p className="text-2xl font-bold text-destructive">500+ MT</p>
+              </div>
+
+              <div className="bg-background border-2 border-primary/30 rounded-xl p-6 text-center space-y-3 hover:border-primary transition-colors">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                  <ShoppingCart className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="font-bold text-foreground">Capital Imobilizado</h4>
+                <p className="text-2xl font-bold text-primary">10,000+ MT</p>
+              </div>
+
+              <div className="bg-background border-2 border-secondary/30 rounded-xl p-6 text-center space-y-3 hover:border-secondary transition-colors">
+                <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-2">
+                  <BarChart3 className="h-6 w-6 text-secondary" />
+                </div>
+                <h4 className="font-bold text-foreground">Decisões Estratégicas</h4>
+                <p className="text-2xl font-bold text-secondary">Inestimável</p>
+              </div>
+            </div>
+
+            {/* Final Statement */}
+            <div className="mt-12 text-center p-8 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl">
+              <p className="text-xl md:text-2xl font-bold text-foreground">
+                O <span className="text-primary">INVESTIMENTO</span> paga-se com apenas 1 venda recuperada.
+              </p>
+              <p className="text-base md:text-lg text-muted-foreground mt-3">
+                Todo o resto é lucro puro para a sua farmácia.
+              </p>
             </div>
           </div>
         </div>
