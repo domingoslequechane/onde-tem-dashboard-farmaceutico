@@ -917,10 +917,7 @@ const Buscar = () => {
           {/* Search Header - Reduced padding */}
           <div className="p-3 border-b border-border space-y-3">
             <div>
-              <h1 className="text-lg font-bold mb-0.5">Buscar Medicamento</h1>
-              <p className="text-xs text-muted-foreground">
-                Encontre ONDTem!
-              </p>
+              <h1 className="text-lg font-bold">Encontre ONDTem!</h1>
             </div>
 
             {/* Search Input - Mobile: with radius dropdown, Desktop: separate */}
