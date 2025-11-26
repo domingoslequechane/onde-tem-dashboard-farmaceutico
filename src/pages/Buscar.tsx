@@ -5,7 +5,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X } from 'lucide-react';
+import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
@@ -56,12 +56,44 @@ const Buscar = () => {
     mode: 'walking' | 'driving';
   } | null>(null);
   const [routeMode, setRouteMode] = useState<'walking' | 'driving'>('walking');
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
   useEffect(() => {
     requestGeolocation();
     fetchMapboxToken();
     fetchAllMedicamentos();
+    loadSearchHistory();
   }, []);
+
+  const loadSearchHistory = () => {
+    try {
+      const history = localStorage.getItem('ondtem_search_history');
+      if (history) {
+        setSearchHistory(JSON.parse(history));
+      }
+    } catch (error) {
+      console.error('Error loading search history:', error);
+    }
+  };
+
+  const saveToSearchHistory = (searchTerm: string) => {
+    try {
+      const history = [...searchHistory];
+      // Remove if already exists
+      const index = history.indexOf(searchTerm);
+      if (index > -1) {
+        history.splice(index, 1);
+      }
+      // Add to beginning
+      history.unshift(searchTerm);
+      // Keep only last 10 searches
+      const newHistory = history.slice(0, 10);
+      setSearchHistory(newHistory);
+      localStorage.setItem('ondtem_search_history', JSON.stringify(newHistory));
+    } catch (error) {
+      console.error('Error saving search history:', error);
+    }
+  };
 
   const fetchAllMedicamentos = async () => {
     try {
@@ -477,6 +509,9 @@ const Buscar = () => {
     }
 
     setSearching(true);
+    
+    // Save to search history
+    saveToSearchHistory(medicamento.trim());
 
     try {
       const { data, error } = await supabase.rpc('buscar_farmacias_proximas', {
@@ -662,6 +697,43 @@ const Buscar = () => {
                         }}
                       >
                         <p className="text-sm font-medium">{med.nome}</p>
+                      </div>
+                    ))}
+                  </Card>
+                )}
+                
+                {/* Search History Dropdown */}
+                {!medicamento && searchHistory.length > 0 && medicamentos.length === 0 && !searching && (
+                  <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-[200px] overflow-y-auto shadow-lg">
+                    <div className="p-2 border-b bg-muted/50">
+                      <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Buscas Recentes
+                      </p>
+                    </div>
+                    {searchHistory.map((search, index) => (
+                      <div
+                        key={`history-${index}`}
+                        className="p-2 hover:bg-muted cursor-pointer border-b last:border-b-0 flex items-center justify-between group"
+                        onClick={() => {
+                          setMedicamento(search);
+                          setTimeout(() => searchPharmacies(), 100);
+                        }}
+                      >
+                        <p className="text-sm font-medium">{search}</p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newHistory = searchHistory.filter((_, i) => i !== index);
+                            setSearchHistory(newHistory);
+                            localStorage.setItem('ondtem_search_history', JSON.stringify(newHistory));
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
                       </div>
                     ))}
                   </Card>
