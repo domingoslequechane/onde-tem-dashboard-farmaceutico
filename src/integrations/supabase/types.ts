@@ -191,7 +191,6 @@ export type Database = {
           id: string
           medicamento_id: string
           preco: number | null
-          quantidade: number | null
         }
         Insert: {
           atualizado_em?: string | null
@@ -200,7 +199,6 @@ export type Database = {
           id?: string
           medicamento_id: string
           preco?: number | null
-          quantidade?: number | null
         }
         Update: {
           atualizado_em?: string | null
@@ -209,7 +207,6 @@ export type Database = {
           id?: string
           medicamento_id?: string
           preco?: number | null
-          quantidade?: number | null
         }
         Relationships: [
           {
