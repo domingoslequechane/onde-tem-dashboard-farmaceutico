@@ -101,18 +101,18 @@ export const LeaveReviewModal = ({
           {/* Star Rating */}
           <div className="space-y-2">
             <Label>Classificação *</Label>
-            <div className="flex gap-1 sm:gap-2 justify-center sm:justify-start">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  className="transition-transform hover:scale-110 active:scale-95"
-                >
-                  <Star
-                    className={`h-7 w-7 sm:h-8 sm:w-8 ${
+              <div className="flex gap-1 sm:gap-2 justify-center sm:justify-start">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="transition-transform hover:scale-110 active:scale-95"
+                  >
+                    <Star
+                      className={`h-8 w-8 ${
                       star <= (hoverRating || rating)
                         ? 'fill-yellow-400 text-yellow-400'
                         : 'text-muted-foreground'

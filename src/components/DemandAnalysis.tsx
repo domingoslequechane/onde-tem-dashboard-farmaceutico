@@ -57,7 +57,7 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
                   />
                 </div>
                 {expanded && (
-                  <div className="text-[10px] text-gray-500">
+                  <div className="text-xs text-gray-500">
                     Taxa: {Math.round((item.found / item.searches) * 100)}%
                   </div>
                 )}
@@ -83,9 +83,9 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
                 className={`${area.color} text-white p-2 rounded cursor-pointer hover:opacity-90 transition-opacity`}
                 onClick={() => handleRegionClick(area)}
               >
-                <div className="font-medium text-[10px] sm:text-xs truncate">{area.name}</div>
-                <div className="text-[9px] sm:text-xs opacity-90 truncate">{area.level}</div>
-                <div className="text-[9px] sm:text-xs mt-0.5">
+                <div className="font-medium text-xs sm:text-sm truncate">{area.name}</div>
+                <div className="text-xs opacity-90 truncate">{area.level}</div>
+                <div className="text-xs mt-0.5">
                   {area.searches} buscas
                 </div>
               </div>

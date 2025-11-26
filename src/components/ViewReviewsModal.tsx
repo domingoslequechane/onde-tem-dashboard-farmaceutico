@@ -99,8 +99,8 @@ export const ViewReviewsModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] w-[calc(100%-2rem)] mx-auto overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-base sm:text-lg">Avaliações</DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
+          <DialogTitle className="text-lg">Avaliações</DialogTitle>
+          <DialogDescription className="text-sm">
             {farmaciaNome} • {totalReviews} avaliação{totalReviews !== 1 ? 'ões' : ''}
           </DialogDescription>
         </DialogHeader>
@@ -119,8 +119,8 @@ export const ViewReviewsModal = ({
               <Card key={review.id} className="p-2.5 sm:p-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-xs sm:text-sm truncate">{review.cliente_nome}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    <p className="font-semibold text-sm truncate">{review.cliente_nome}</p>
+                    <p className="text-xs text-muted-foreground">
                       {format(new Date(review.criado_em), "d 'de' MMMM 'de' yyyy", {
                         locale: ptBR,
                       })}
@@ -131,7 +131,7 @@ export const ViewReviewsModal = ({
                   </div>
                 </div>
                 {review.comentario && (
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{review.comentario}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{review.comentario}</p>
                 )}
               </Card>
             ))
@@ -146,12 +146,12 @@ export const ViewReviewsModal = ({
               size="sm"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1 || loading}
-              className="h-8 sm:h-9 px-2 sm:px-3"
+              className="h-9 px-3"
             >
-              <ChevronLeft className="h-3 sm:h-4 w-3 sm:w-4 sm:mr-1" />
+              <ChevronLeft className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Anterior</span>
             </Button>
-            <span className="text-[10px] sm:text-sm text-muted-foreground whitespace-nowrap">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
               Página {currentPage} de {totalPages}
             </span>
             <Button
@@ -159,10 +159,10 @@ export const ViewReviewsModal = ({
               size="sm"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages || loading}
-              className="h-8 sm:h-9 px-2 sm:px-3"
+              className="h-9 px-3"
             >
               <span className="hidden sm:inline">Próxima</span>
-              <ChevronRight className="h-3 sm:h-4 w-3 sm:w-4 sm:ml-1" />
+              <ChevronRight className="h-4 w-4 sm:ml-1" />
             </Button>
           </div>
         )}

@@ -162,10 +162,10 @@ const Settings = ({ farmacia }: SettingsProps) => {
             </div>
 
             <div className="space-y-1.5 sm:space-y-2">
-              <Label className="text-xs sm:text-sm font-medium">Horário de Funcionamento</Label>
+              <Label className="text-sm font-medium">Horário de Funcionamento</Label>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="horario_abertura" className="text-[10px] sm:text-xs text-muted-foreground">Abertura</Label>
+                  <Label htmlFor="horario_abertura" className="text-xs text-muted-foreground">Abertura</Label>
                   <Input
                     id="horario_abertura"
                     type="time"
@@ -175,7 +175,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="horario_fechamento" className="text-[10px] sm:text-xs text-muted-foreground">Fechamento</Label>
+                  <Label htmlFor="horario_fechamento" className="text-xs text-muted-foreground">Fechamento</Label>
                   <Input
                     id="horario_fechamento"
                     type="time"
@@ -288,8 +288,8 @@ const Settings = ({ farmacia }: SettingsProps) => {
           </div>
           <div className="flex items-center justify-between p-3 sm:p-4 bg-muted rounded-lg">
             <div className="space-y-0.5">
-              <Label htmlFor="ativa" className="text-xs sm:text-sm font-medium">Status da Farmácia</Label>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">
+              <Label htmlFor="ativa" className="text-sm font-medium">Status da Farmácia</Label>
+              <p className="text-xs text-muted-foreground">
                 {pharmacyData.ativa ? 'Farmácia está ativa e visível' : 'Farmácia está inativa'}
               </p>
             </div>
