@@ -91,7 +91,7 @@ export const LeaveReviewModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md w-[calc(100%-2rem)] mx-4">
+      <DialogContent className="sm:max-w-md w-[calc(100%-2rem)] mx-auto">
         <DialogHeader>
           <DialogTitle>Deixar Avaliação</DialogTitle>
           <DialogDescription>{farmaciaNome}</DialogDescription>

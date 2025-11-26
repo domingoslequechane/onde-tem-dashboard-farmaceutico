@@ -983,7 +983,7 @@ const Buscar = () => {
       )}
 
       <AlertDialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
-        <AlertDialogContent className="w-[calc(100%-2rem)] mx-4 max-w-md">
+        <AlertDialogContent className="w-[calc(100%-2rem)] mx-auto max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
