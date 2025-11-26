@@ -20,6 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface MedicamentoFarmacia {
   medicamento_id: string;
@@ -916,7 +923,7 @@ const Buscar = () => {
               </p>
             </div>
 
-            {/* Search Input - Smaller */}
+            {/* Search Input - Mobile: with radius dropdown, Desktop: separate */}
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Input
@@ -976,6 +983,21 @@ const Buscar = () => {
                   </Card>
                 )}
               </div>
+              
+              {/* Radius Dropdown - Mobile only */}
+              <Select value={raioKm.toString()} onValueChange={(value) => setRaioKm(Number(value))}>
+                <SelectTrigger className="w-[70px] h-9 text-xs lg:hidden">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-background">
+                  {[1, 2, 3, 4, 5].map((km) => (
+                    <SelectItem key={km} value={km.toString()} className="text-xs">
+                      {km}km
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
               <Button 
                 onClick={() => searchPharmacies()}
                 disabled={searching || !userLocation}
@@ -986,8 +1008,8 @@ const Buscar = () => {
               </Button>
             </div>
 
-            {/* Radius Selector - More compact */}
-            <div className="flex items-center gap-2">
+            {/* Radius Selector - Desktop only (buttons) */}
+            <div className="hidden lg:flex items-center gap-2">
               <span className="text-[11px] text-muted-foreground whitespace-nowrap">Raio:</span>
               <div className="flex gap-1 flex-1">
                 {[1, 2, 3, 4, 5].map((km) => (
