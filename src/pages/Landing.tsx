@@ -20,28 +20,31 @@ const Landing = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header/Navigation */}
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed top-0 left-0 right-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src={logo} alt="ONDTem" className="h-8 md:h-10" />
-          <div className="flex gap-3">
+        <div className="container mx-auto px-3 md:px-4 py-3 md:py-4 flex justify-between items-center">
+          <img src={logo} alt="ONDTem" className="h-6 md:h-8 lg:h-10" />
+          <div className="flex gap-2 md:gap-3">
             <Button 
               variant="ghost" 
               onClick={() => navigate('/contacto')}
-              className="text-sm md:text-base"
+              className="text-xs md:text-sm lg:text-base px-2 md:px-4"
+              size="sm"
             >
               Contacto
             </Button>
             <Button 
               variant="ghost" 
               onClick={() => navigate('/entrar')}
-              className="text-sm md:text-base"
+              className="hidden sm:flex text-xs md:text-sm lg:text-base px-2 md:px-4"
+              size="sm"
             >
               Entrar
             </Button>
             <Button 
               onClick={() => navigate('/contacto')}
-              className="text-sm md:text-base"
+              className="text-xs md:text-sm lg:text-base px-3 md:px-4"
+              size="sm"
             >
-              Começar Agora
+              Começar
             </Button>
           </div>
         </div>
@@ -49,7 +52,7 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section 
-        className="py-16 md:py-24 lg:py-32 relative bg-cover bg-center bg-no-repeat mt-[72px]"
+        className="py-16 md:py-24 lg:py-32 relative bg-cover bg-center bg-no-repeat mt-[64px] md:mt-[72px]"
         style={{ backgroundImage: `url(${heroBackground})` }}
       >
         {/* Overlay for text readability */}

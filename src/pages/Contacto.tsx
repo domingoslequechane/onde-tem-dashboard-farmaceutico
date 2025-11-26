@@ -85,21 +85,22 @@ const Contacto = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed top-0 left-0 right-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src={logo} alt="ONDTem" className="h-8 md:h-10" />
+        <div className="container mx-auto px-3 md:px-4 py-3 md:py-4 flex justify-between items-center">
+          <img src={logo} alt="ONDTem" className="h-6 md:h-8 lg:h-10" />
           <Button 
             variant="ghost" 
             onClick={() => navigate('/')}
-            className="text-sm md:text-base"
+            className="text-xs md:text-sm lg:text-base px-2 md:px-4"
+            size="sm"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
             Voltar
           </Button>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="py-12 md:py-16 bg-gradient-to-br from-primary/5 to-secondary/5 mt-[72px]">
+      <section className="py-12 md:py-16 bg-gradient-to-br from-primary/5 to-secondary/5 mt-[64px] md:mt-[72px]">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center space-y-4">
             <h1 className="text-3xl md:text-5xl font-bold text-foreground">
