@@ -19,7 +19,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header/Navigation */}
-      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <img src={logo} alt="ONDTem" className="h-8 md:h-10" />
           <div className="flex gap-3">
@@ -49,7 +49,7 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section 
-        className="py-16 md:py-24 lg:py-32 relative bg-cover bg-center bg-no-repeat"
+        className="py-16 md:py-24 lg:py-32 relative bg-cover bg-center bg-no-repeat mt-[72px]"
         style={{ backgroundImage: `url(${heroBackground})` }}
       >
         {/* Overlay for text readability */}
