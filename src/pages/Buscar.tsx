@@ -37,10 +37,31 @@ const Buscar = () => {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [searching, setSearching] = useState(false);
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
+  const [loadingToken, setLoadingToken] = useState(true);
 
   useEffect(() => {
     requestGeolocation();
+    fetchMapboxToken();
   }, []);
+
+  const fetchMapboxToken = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+      if (error) throw error;
+      if (data?.token) {
+        setMapboxToken(data.token);
+      }
+    } catch (error) {
+      console.error('Error fetching Mapbox token:', error);
+      toast({
+        title: 'Erro ao carregar mapa',
+        description: 'Não foi possível carregar a configuração do mapa',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingToken(false);
+    }
+  };
 
   const requestGeolocation = () => {
     if (!navigator.geolocation) {
@@ -232,26 +253,7 @@ const Buscar = () => {
             </p>
           </div>
 
-          {/* Mapbox Token Input (temporary) */}
-          {!mapboxToken && (
-            <Card className="p-4 bg-muted/50 space-y-2">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <div className="space-y-2 flex-1">
-                  <p className="text-xs text-muted-foreground">
-                    Para usar o mapa, insira seu token público do Mapbox. 
-                    Obtenha em <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">mapbox.com</a>
-                  </p>
-                  <Input
-                    placeholder="Token do Mapbox"
-                    value={mapboxToken}
-                    onChange={(e) => setMapboxToken(e.target.value)}
-                    className="text-xs"
-                  />
-                </div>
-              </div>
-            </Card>
-          )}
+          {/* Mapbox Token Input (temporary) - removed */}
 
           {/* Location Status */}
           <Card className="p-3 bg-muted/30">
@@ -350,13 +352,20 @@ const Buscar = () => {
         {/* Map */}
         <div className="flex-1 relative h-[400px] lg:h-auto">
           <div ref={mapContainer} className="absolute inset-0" />
-          {!mapboxToken && (
+          {loadingToken && (
             <div className="absolute inset-0 bg-muted/90 flex items-center justify-center p-4">
               <Card className="p-6 max-w-md text-center space-y-2">
-                <AlertCircle className="h-8 w-8 text-primary mx-auto" />
-                <h3 className="font-semibold">Token do Mapbox Necessário</h3>
+                <p className="text-sm text-muted-foreground">Carregando mapa...</p>
+              </Card>
+            </div>
+          )}
+          {!loadingToken && !mapboxToken && (
+            <div className="absolute inset-0 bg-muted/90 flex items-center justify-center p-4">
+              <Card className="p-6 max-w-md text-center space-y-2">
+                <AlertCircle className="h-8 w-8 text-destructive mx-auto" />
+                <h3 className="font-semibold">Erro ao Carregar Mapa</h3>
                 <p className="text-sm text-muted-foreground">
-                  Insira seu token público do Mapbox no painel à esquerda para visualizar o mapa.
+                  Não foi possível carregar a configuração do mapa. Por favor, tente novamente mais tarde.
                 </p>
               </Card>
             </div>
