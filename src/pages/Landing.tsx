@@ -228,8 +228,8 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 md:mb-16">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
-                Por Que a ONDTem é a ÚNICA Solução de Crescimento<br className="hidden md:block" />
-                para a Sua Farmácia em Moçambique?
+                Por Que a <span className="text-primary">ONDTem</span> é a <span className="text-primary">ÚNICA</span> Solução de Crescimento<br className="hidden md:block" />
+                para a Sua Farmácia?
               </h2>
             </div>
 
