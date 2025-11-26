@@ -25,13 +25,20 @@ const Landing = () => {
           <div className="flex gap-3">
             <Button 
               variant="ghost" 
+              onClick={() => navigate('/contacto')}
+              className="text-sm md:text-base"
+            >
+              Contacto
+            </Button>
+            <Button 
+              variant="ghost" 
               onClick={() => navigate('/entrar')}
               className="text-sm md:text-base"
             >
               Entrar
             </Button>
             <Button 
-              onClick={() => navigate('/entrar')}
+              onClick={() => navigate('/contacto')}
               className="text-sm md:text-base"
             >
               Começar Agora
@@ -64,7 +71,7 @@ const Landing = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
               <Button 
                 size="lg" 
-                onClick={() => navigate('/entrar')}
+                onClick={() => navigate('/contacto')}
                 className="text-base md:text-lg px-8 py-6 h-auto"
               >
                 Quero Aumentar Minhas Vendas
