@@ -601,22 +601,22 @@ const Buscar = () => {
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden w-full">
       {/* Header */}
       <header className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-50 w-full">
-        <div className="px-3 md:px-4 py-3 md:py-4 flex justify-between items-center gap-2 max-w-full min-w-0">
+        <div className="px-3 py-2 flex justify-between items-center gap-2 max-w-full min-w-0">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/')}
-              className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
+              className="h-8 w-8 flex-shrink-0"
             >
-              <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <img src={logo} alt="ONDTem" className="h-6 md:h-8 flex-shrink-0" />
+            <img src={logo} alt="ONDTem" className="h-6 flex-shrink-0" />
           </div>
           <Button 
             variant="ghost" 
             onClick={() => navigate('/entrar')}
-            className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9 flex-shrink-0"
+            className="text-xs h-7 px-3 flex-shrink-0"
             size="sm"
           >
             Entrar
@@ -629,8 +629,8 @@ const Buscar = () => {
         {/* Search Panel */}
         <div className="w-full md:w-80 border-r border-border bg-background flex flex-col overflow-hidden">
           {/* Search Header */}
-          <div className="p-3 md:p-4 border-b border-border space-y-2 md:space-y-3">
-            <h1 className="text-lg md:text-xl font-bold truncate">Encontre ONDTem!</h1>
+          <div className="p-3 border-b border-border space-y-2">
+            <h1 className="text-base font-bold truncate">Encontre ONDTem!</h1>
 
             {/* Search Input */}
             <div className="flex gap-2 w-full min-w-0">
@@ -658,16 +658,16 @@ const Buscar = () => {
                   onBlur={() => {
                     setTimeout(() => setIsInputFocused(false), 200);
                   }}
-                  className="pr-8 h-10 md:h-11 text-sm md:text-base"
+                  className="pr-8 h-9 text-sm"
                 />
                 {(medicamento || selectedMedicamento) && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={clearSearch}
-                    className="absolute right-0 top-0 h-full w-9 md:w-10"
+                    className="absolute right-0 top-0 h-full w-8"
                   >
-                    <X className="h-4 w-4 md:h-5 md:w-5" />
+                    <X className="h-4 w-4" />
                   </Button>
                 )}
                 
@@ -677,14 +677,14 @@ const Buscar = () => {
                     {filteredMedicamentos.slice(0, 5).map((med, index) => (
                       <div
                         key={`${med.nome}-${index}`}
-                        className="p-2.5 md:p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                        className="p-2 hover:bg-muted cursor-pointer border-b last:border-b-0"
                         onClick={() => {
                           setMedicamento(med.nome);
                           searchPharmacies(med.nome);
                           setIsInputFocused(false);
                         }}
                       >
-                        <p className="text-sm md:text-base font-medium truncate">{med.nome}</p>
+                        <p className="text-sm font-medium truncate">{med.nome}</p>
                       </div>
                     ))}
                   </Card>
@@ -693,12 +693,12 @@ const Buscar = () => {
               
               {/* Radius Mobile */}
               <Select value={raioKm.toString()} onValueChange={(value) => setRaioKm(Number(value))}>
-                <SelectTrigger className="w-16 h-10 md:h-11 text-sm md:hidden">
+                <SelectTrigger className="w-16 h-9 text-xs md:hidden">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {[1, 2, 3, 4, 5].map((km) => (
-                    <SelectItem key={km} value={km.toString()} className="text-sm md:text-base">
+                    <SelectItem key={km} value={km.toString()} className="text-xs">
                       {km}km
                     </SelectItem>
                   ))}
@@ -709,15 +709,15 @@ const Buscar = () => {
                 onClick={() => searchPharmacies()}
                 disabled={searching || !userLocation}
                 size="icon"
-                className="flex-shrink-0 h-10 w-10 md:h-11 md:w-11"
+                className="flex-shrink-0 h-9 w-9"
               >
-                <Search className="h-4 w-4 md:h-5 md:w-5" />
+                <Search className="h-4 w-4" />
               </Button>
             </div>
 
             {/* Radius Desktop */}
             <div className="hidden md:flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Raio:</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Raio:</span>
               <div className="flex gap-1 flex-1">
                 {[1, 2, 3, 4, 5].map((km) => (
                   <Button
@@ -725,7 +725,7 @@ const Buscar = () => {
                     variant={raioKm === km ? "default" : "outline"}
                     size="sm"
                     onClick={() => setRaioKm(km)}
-                    className="flex-1 text-sm h-9"
+                    className="flex-1 text-xs h-7"
                   >
                     {km}km
                   </Button>
@@ -735,55 +735,55 @@ const Buscar = () => {
           </div>
 
           {/* Results */}
-          <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 md:space-y-3">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {medicamentos.length > 0 && (
-              <h2 className="text-sm md:text-base font-semibold text-muted-foreground sticky top-0 bg-background pb-2">
+              <h2 className="text-xs font-semibold text-muted-foreground sticky top-0 bg-background pb-1">
                 {medicamentos.length} Medicamento{medicamentos.length > 1 ? 's' : ''} encontrado{medicamentos.length > 1 ? 's' : ''}
               </h2>
             )}
             
             {searching && (
-              <Card className="p-4 md:p-6 text-center space-y-3">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
-                  <Search className="h-6 w-6 md:h-7 md:w-7 text-primary" />
+              <Card className="p-4 text-center space-y-2">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
+                  <Search className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="font-semibold text-base md:text-lg">Buscando...</h3>
+                <h3 className="font-semibold text-sm">Buscando...</h3>
               </Card>
             )}
             
             {!searching && medicamentos.length === 0 && medicamento && (
-              <Card className="p-4 md:p-6 text-center space-y-3">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-muted flex items-center justify-center mx-auto">
-                  <Search className="h-6 w-6 md:h-7 md:w-7 text-muted-foreground" />
+              <Card className="p-4 text-center space-y-2">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto">
+                  <Search className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <h3 className="font-semibold text-base md:text-lg">Nenhum medicamento encontrado</h3>
-                <p className="text-sm md:text-base text-muted-foreground">
+                <h3 className="font-semibold text-sm">Nenhum medicamento encontrado</h3>
+                <p className="text-xs text-muted-foreground">
                   Não encontramos "{medicamento}" em farmácias próximas.
                 </p>
               </Card>
             )}
 
             {!searching && medicamentos.length === 0 && !medicamento && searchHistory.length > 0 && (
-              <div className="space-y-2 md:space-y-3">
+              <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
-                  <h2 className="text-sm md:text-base font-semibold text-muted-foreground">Buscas Recentes</h2>
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h2 className="text-xs font-semibold text-muted-foreground">Buscas Recentes</h2>
                 </div>
                 {searchHistory.map((search, index) => (
                   <Card 
                     key={index} 
-                    className="p-2.5 md:p-3 hover:shadow-md transition-all cursor-pointer"
+                    className="p-2 hover:shadow-md transition-all cursor-pointer"
                     onClick={() => {
                       setMedicamento(search);
                       setTimeout(() => searchPharmacies(search), 100);
                     }}
                   >
                     <div className="flex justify-between items-center gap-2">
-                      <p className="font-medium text-sm md:text-base truncate flex-1">{search}</p>
+                      <p className="font-medium text-sm truncate flex-1">{search}</p>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 md:h-8 md:w-8"
+                        className="h-6 w-6"
                         onClick={(e) => {
                           e.stopPropagation();
                           const newHistory = searchHistory.filter((_, i) => i !== index);
@@ -791,7 +791,7 @@ const Buscar = () => {
                           localStorage.setItem('ondtem_search_history', JSON.stringify(newHistory));
                         }}
                       >
-                        <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   </Card>
@@ -802,43 +802,43 @@ const Buscar = () => {
             {medicamentos.map((item, index) => (
               <Card 
                 key={index} 
-                className="p-2.5 md:p-3 space-y-2 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-green-500"
+                className="p-2 space-y-1.5 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-green-500"
                 onClick={() => showRouteToPharmacy(item, routeMode)}
               >
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm md:text-base truncate">{item.medicamento_nome}</h3>
+                    <h3 className="font-semibold text-sm truncate">{item.medicamento_nome}</h3>
                     {item.medicamento_categoria && (
-                      <p className="text-xs md:text-sm text-muted-foreground truncate">{item.medicamento_categoria}</p>
+                      <p className="text-xs text-muted-foreground truncate">{item.medicamento_categoria}</p>
                     )}
                   </div>
-                  <span className="text-sm md:text-base font-semibold text-green-600 whitespace-nowrap">
+                  <span className="text-sm font-semibold text-green-600 whitespace-nowrap">
                     {item.distancia_km.toFixed(1)} km
                   </span>
                 </div>
                 
-                <div className="pt-2 border-t space-y-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-600 flex-shrink-0" />
-                    <p className="text-xs md:text-sm font-medium text-green-600 truncate">{item.farmacia_nome}</p>
+                <div className="pt-1.5 border-t space-y-1">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3 text-green-600 flex-shrink-0" />
+                    <p className="text-xs font-medium text-green-600 truncate">{item.farmacia_nome}</p>
                   </div>
                   
                   {item.medicamento_preco && (
-                    <p className="text-sm md:text-base font-semibold text-green-600">MT {item.medicamento_preco.toFixed(2)}</p>
+                    <p className="text-sm font-semibold text-green-600">MT {item.medicamento_preco.toFixed(2)}</p>
                   )}
                   
                   {item.media_avaliacoes ? (
                     <div className="flex items-center gap-1">
                       {renderStars(item.media_avaliacoes, 'sm')}
-                      <span className="text-xs md:text-sm font-semibold text-yellow-600">
+                      <span className="text-xs font-semibold text-yellow-600">
                         {item.media_avaliacoes.toFixed(1)}
                       </span>
-                      <span className="text-xs md:text-sm text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         ({item.total_avaliacoes})
                       </span>
                     </div>
                   ) : (
-                    <span className="text-xs md:text-sm text-muted-foreground">Sem avaliações</span>
+                    <span className="text-xs text-muted-foreground">Sem avaliações</span>
                   )}
                 </div>
               </Card>
@@ -852,40 +852,40 @@ const Buscar = () => {
           
           {/* Route Info */}
           {routeInfo && selectedMedicamento && (
-            <Card className="absolute top-3 left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:w-96 p-3 md:p-4 shadow-lg z-10">
+            <Card className="absolute top-3 left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:w-96 p-2 shadow-lg z-10">
               <div className="flex items-start gap-2">
-                <div className="flex-1 space-y-2 min-w-0">
-                  <h3 className="font-semibold text-sm md:text-base truncate">{selectedMedicamento.medicamento_nome}</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
+                <div className="flex-1 space-y-1.5 min-w-0">
+                  <h3 className="font-semibold text-xs truncate">{selectedMedicamento.medicamento_nome}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
                   
                   {selectedMedicamento.media_avaliacoes ? (
                     <div className="flex items-center gap-1">
                       {renderStars(selectedMedicamento.media_avaliacoes, 'sm')}
-                      <span className="text-xs md:text-sm font-semibold text-yellow-600">
+                      <span className="text-xs font-semibold text-yellow-600">
                         {selectedMedicamento.media_avaliacoes.toFixed(1)}
                       </span>
                     </div>
                   ) : (
-                    <p className="text-xs md:text-sm text-muted-foreground">Sem avaliações</p>
+                    <p className="text-xs text-muted-foreground">Sem avaliações</p>
                   )}
                   
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="grid grid-cols-2 gap-1 text-xs">
                     <div>
-                      <span className="text-muted-foreground text-xs md:text-sm">Distância:</span>
-                      <p className="font-semibold text-sm md:text-base">{routeInfo.distance.toFixed(2)} km</p>
+                      <span className="text-muted-foreground">Distância:</span>
+                      <p className="font-semibold">{routeInfo.distance.toFixed(2)} km</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground text-xs md:text-sm">Tempo:</span>
-                      <p className="font-semibold text-sm md:text-base">{Math.round(routeInfo.duration)} min</p>
+                      <span className="text-muted-foreground">Tempo:</span>
+                      <p className="font-semibold">{Math.round(routeInfo.duration)} min</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1">
                     <Button
                       size="sm"
                       variant={routeMode === 'walking' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'walking')}
-                      className="text-xs md:text-sm h-8 md:h-9"
+                      className="text-xs h-6"
                     >
                       🚶 A pé
                     </Button>
@@ -893,18 +893,18 @@ const Buscar = () => {
                       size="sm"
                       variant={routeMode === 'driving' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'driving')}
-                      className="text-xs md:text-sm h-8 md:h-9"
+                      className="text-xs h-6"
                     >
                       🚗 Viatura
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                  <div className="grid grid-cols-2 gap-1 pt-1 border-t">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setShowLeaveReview(true)}
-                      className="text-xs md:text-sm h-8 md:h-9"
+                      className="text-xs h-6"
                     >
                       Avaliar
                     </Button>
@@ -912,7 +912,7 @@ const Buscar = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => setShowViewReviews(true)}
-                      className="text-xs md:text-sm h-8 md:h-9"
+                      className="text-xs h-6"
                     >
                       Ver Avaliações
                     </Button>
@@ -922,7 +922,7 @@ const Buscar = () => {
                   size="sm"
                   variant="ghost"
                   onClick={clearRoute}
-                  className="h-5 w-5 md:h-6 md:w-6 p-0"
+                  className="h-4 w-4 p-0"
                 >
                   ✕
                 </Button>
@@ -933,7 +933,7 @@ const Buscar = () => {
           {loadingToken && (
             <div className="absolute inset-0 bg-muted/90 flex items-center justify-center">
               <Card className="p-6 text-center">
-                <p className="text-sm md:text-base">Carregando mapa...</p>
+                <p className="text-sm">Carregando mapa...</p>
               </Card>
             </div>
           )}
@@ -942,8 +942,8 @@ const Buscar = () => {
 
       {/* Footer */}
       <footer className="border-t bg-background">
-        <div className="px-3 md:px-4 py-3 md:py-4">
-          <p className="text-center text-xs md:text-sm text-muted-foreground">
+        <div className="px-3 py-3">
+          <p className="text-center text-xs text-muted-foreground">
             © {new Date().getFullYear()} ONDTem. Todos os direitos reservados. by{' '}
             <a 
               href="https://onixagence.com" 
