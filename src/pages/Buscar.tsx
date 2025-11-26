@@ -5,10 +5,12 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X, Clock } from 'lucide-react';
+import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X, Clock, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
+import { LeaveReviewModal } from '@/components/LeaveReviewModal';
+import { ViewReviewsModal } from '@/components/ViewReviewsModal';
 
 interface MedicamentoFarmacia {
   medicamento_id: string;
@@ -23,6 +25,8 @@ interface MedicamentoFarmacia {
   farmacia_latitude: number;
   farmacia_longitude: number;
   distancia_km: number;
+  media_avaliacoes?: number;
+  total_avaliacoes?: number;
 }
 
 interface Medicamento {
@@ -58,6 +62,9 @@ const Buscar = () => {
   const [routeMode, setRouteMode] = useState<'walking' | 'driving'>('walking');
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [showLeaveReview, setShowLeaveReview] = useState(false);
+  const [showViewReviews, setShowViewReviews] = useState(false);
+  const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
 
   useEffect(() => {
     requestGeolocation();
@@ -490,6 +497,49 @@ const Buscar = () => {
     });
   };
 
+  const fetchPharmacyRatings = async (farmaciaIds: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('avaliacoes')
+        .select('farmacia_id, avaliacao')
+        .in('farmacia_id', farmaciaIds);
+
+      if (error) throw error;
+
+      // Calculate average ratings per pharmacy
+      const ratingsMap = new Map<string, { media: number; total: number }>();
+      
+      (data || []).forEach((review) => {
+        const existing = ratingsMap.get(review.farmacia_id) || { media: 0, total: 0 };
+        const newTotal = existing.total + 1;
+        const newMedia = ((existing.media * existing.total) + review.avaliacao) / newTotal;
+        ratingsMap.set(review.farmacia_id, { media: newMedia, total: newTotal });
+      });
+
+      return ratingsMap;
+    } catch (error) {
+      console.error('Error fetching pharmacy ratings:', error);
+      return new Map();
+    }
+  };
+
+  const renderStars = (rating: number) => {
+    return (
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`h-3 w-3 ${
+              star <= Math.round(rating) 
+                ? 'fill-yellow-400 text-yellow-400' 
+                : 'text-muted-foreground'
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
+
   const searchPharmacies = async (searchTerm?: string) => {
     const termToSearch = searchTerm || medicamento;
     
@@ -560,10 +610,16 @@ const Buscar = () => {
         const realDistances = await Promise.all(distancePromises);
         const distanceMap = new Map(realDistances.map(d => [d.farmacia_id, d.distancia_km]));
 
-        // Update medications with real distances
+        // Fetch pharmacy ratings
+        const farmaciaIds = Array.from(uniquePharmacies.keys());
+        const ratingsMap = await fetchPharmacyRatings(farmaciaIds);
+
+        // Update medications with real distances and ratings
         const updatedData = data.map(item => ({
           ...item,
-          distancia_km: distanceMap.get(item.farmacia_id) || item.distancia_km
+          distancia_km: distanceMap.get(item.farmacia_id) || item.distancia_km,
+          media_avaliacoes: ratingsMap.get(item.farmacia_id)?.media,
+          total_avaliacoes: ratingsMap.get(item.farmacia_id)?.total,
         })).sort((a, b) => a.distancia_km - b.distancia_km); // Re-sort by real distance
 
         setMedicamentos(updatedData);
@@ -889,10 +945,20 @@ const Buscar = () => {
                 </div>
                 
                 <div className="pt-2 border-t border-border space-y-1">
-                  <p className="text-xs font-medium flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-primary" />
-                    {item.farmacia_nome}
-                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-medium flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-primary" />
+                      {item.farmacia_nome}
+                    </p>
+                    {item.media_avaliacoes && (
+                      <div className="flex items-center gap-1">
+                        {renderStars(item.media_avaliacoes)}
+                        <span className="text-xs text-muted-foreground">
+                          ({item.total_avaliacoes})
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   {item.medicamento_preco && (
                     <p className="text-sm font-semibold text-primary">
                       MT {item.medicamento_preco.toFixed(2)}
@@ -936,9 +1002,20 @@ const Buscar = () => {
           {routeInfo && selectedMedicamento && (
             <Card className="absolute top-4 left-1/2 transform -translate-x-1/2 p-4 shadow-lg z-10 max-w-sm w-[calc(100%-2rem)]">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-sm mb-1">{selectedMedicamento.medicamento_nome}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{selectedMedicamento.farmacia_nome}</p>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-sm mb-1">{selectedMedicamento.medicamento_nome}</h3>
+                    <p className="text-xs text-muted-foreground">{selectedMedicamento.farmacia_nome}</p>
+                    {selectedMedicamento.media_avaliacoes && (
+                      <div className="flex items-center gap-1 mt-1">
+                        {renderStars(selectedMedicamento.media_avaliacoes)}
+                        <span className="text-xs text-muted-foreground">
+                          ({selectedMedicamento.total_avaliacoes} avaliação{selectedMedicamento.total_avaliacoes !== 1 ? 'ões' : ''})
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
                   <div className="space-y-1 text-xs">
                     <p className="flex items-center gap-2">
                       <span className="font-medium">Distância:</span>
@@ -951,7 +1028,8 @@ const Buscar = () => {
                       </span>
                     </p>
                   </div>
-                  <div className="flex gap-2 mt-3">
+
+                  <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant={routeMode === 'walking' ? 'default' : 'outline'}
@@ -967,6 +1045,25 @@ const Buscar = () => {
                       className="text-xs h-7 flex-1"
                     >
                       🚗 Viatura
+                    </Button>
+                  </div>
+
+                  <div className="flex gap-2 pt-2 border-t border-border">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowLeaveReview(true)}
+                      className="text-xs h-8 flex-1"
+                    >
+                      Deixar Avaliação
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowViewReviews(true)}
+                      className="text-xs h-8 flex-1"
+                    >
+                      Ver Avaliações
                     </Button>
                   </div>
                 </div>
@@ -1018,6 +1115,30 @@ const Buscar = () => {
           </p>
         </div>
       </footer>
+
+      {/* Review Modals */}
+      {selectedMedicamento && (
+        <>
+          <LeaveReviewModal
+            open={showLeaveReview}
+            onOpenChange={setShowLeaveReview}
+            farmaciaId={selectedMedicamento.farmacia_id}
+            farmaciaNome={selectedMedicamento.farmacia_nome}
+            onReviewSubmitted={() => {
+              setReviewRefreshTrigger(prev => prev + 1);
+              // Refresh search results to update ratings
+              searchPharmacies();
+            }}
+          />
+          <ViewReviewsModal
+            open={showViewReviews}
+            onOpenChange={setShowViewReviews}
+            farmaciaId={selectedMedicamento.farmacia_id}
+            farmaciaNome={selectedMedicamento.farmacia_nome}
+            refreshTrigger={reviewRefreshTrigger}
+          />
+        </>
+      )}
     </div>
   );
 };

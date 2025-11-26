@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      avaliacoes: {
+        Row: {
+          avaliacao: number
+          cliente_email: string | null
+          cliente_nome: string
+          comentario: string | null
+          criado_em: string
+          farmacia_id: string
+          id: string
+        }
+        Insert: {
+          avaliacao: number
+          cliente_email?: string | null
+          cliente_nome: string
+          comentario?: string | null
+          criado_em?: string
+          farmacia_id: string
+          id?: string
+        }
+        Update: {
+          avaliacao?: number
+          cliente_email?: string | null
+          cliente_nome?: string
+          comentario?: string | null
+          criado_em?: string
+          farmacia_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_farmacia_id_fkey"
+            columns: ["farmacia_id"]
+            isOneToOne: false
+            referencedRelation: "farmacias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocked_users: {
         Row: {
           blocked_at: string
