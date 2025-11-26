@@ -9,18 +9,6 @@ import { Search, MapPin, Phone, ArrowLeft, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 
 interface Pharmacy {
   farmacia_id: string;
@@ -59,8 +47,7 @@ const Buscar = () => {
   const [raioKm, setRaioKm] = useState(5);
   const [allMedicamentos, setAllMedicamentos] = useState<Medicamento[]>([]);
   const [loadingMedicamentos, setLoadingMedicamentos] = useState(true);
-  const [suggestions, setSuggestions] = useState<Medicamento[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredMedicamentos, setFilteredMedicamentos] = useState<Medicamento[]>([]);
 
   useEffect(() => {
     requestGeolocation();
@@ -77,6 +64,7 @@ const Buscar = () => {
 
       if (error) throw error;
       setAllMedicamentos(data || []);
+      setFilteredMedicamentos(data || []);
     } catch (error) {
       console.error('Error fetching medications:', error);
     } finally {
@@ -84,17 +72,15 @@ const Buscar = () => {
     }
   };
 
-  // Filter suggestions based on input
+  // Filter medications based on input
   useEffect(() => {
     if (medicamento.trim().length > 0) {
       const filtered = allMedicamentos.filter(med =>
         med.nome.toLowerCase().includes(medicamento.toLowerCase())
-      ).slice(0, 5); // Limit to 5 suggestions
-      setSuggestions(filtered);
-      setShowSuggestions(filtered.length > 0);
+      );
+      setFilteredMedicamentos(filtered);
     } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
+      setFilteredMedicamentos(allMedicamentos);
     }
   }, [medicamento, allMedicamentos]);
 
@@ -424,63 +410,15 @@ const Buscar = () => {
               )}
             </div>
 
-            {/* Search Input with Autocomplete */}
+            {/* Search Input */}
             <div className="flex gap-2">
-              <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
-                <PopoverTrigger asChild>
-                  <div className="flex-1 relative">
-                    <Input
-                      placeholder="Ex: Paracetamol"
-                      value={medicamento}
-                      onChange={(e) => setMedicamento(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          searchPharmacies();
-                          setShowSuggestions(false);
-                        }
-                      }}
-                      onFocus={() => {
-                        if (suggestions.length > 0) {
-                          setShowSuggestions(true);
-                        }
-                      }}
-                      className="w-full"
-                    />
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent 
-                  className="w-[var(--radix-popover-trigger-width)] p-0" 
-                  align="start"
-                  onOpenAutoFocus={(e) => e.preventDefault()}
-                >
-                  <Command>
-                    <CommandList>
-                      <CommandEmpty>Nenhum medicamento encontrado</CommandEmpty>
-                      <CommandGroup>
-                        {suggestions.map((med) => (
-                          <CommandItem
-                            key={med.id}
-                            value={med.nome}
-                            onSelect={() => {
-                              setMedicamento(med.nome);
-                              setShowSuggestions(false);
-                            }}
-                          >
-                            <div className="flex flex-col">
-                              <span className="font-medium">{med.nome}</span>
-                              {med.categoria && (
-                                <span className="text-xs text-muted-foreground">
-                                  {med.categoria}
-                                </span>
-                              )}
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <Input
+                placeholder="Ex: Paracetamol"
+                value={medicamento}
+                onChange={(e) => setMedicamento(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && searchPharmacies()}
+                className="flex-1"
+              />
               <Button 
                 onClick={searchPharmacies}
                 disabled={searching || !userLocation}
@@ -545,15 +483,17 @@ const Buscar = () => {
               </Card>
             )}
 
-            {/* Initial State - Display All Medications */}
-            {!searching && pharmacies.length === 0 && !medicamento && (
+            {/* Medication Suggestions - Display filtered medications */}
+            {!searching && pharmacies.length === 0 && (
               <>
                 <div className="mb-3">
                   <h2 className="text-sm font-semibold text-muted-foreground">
-                    Medicamentos Disponíveis
+                    {medicamento ? 'Sugestões' : 'Medicamentos Disponíveis'}
                   </h2>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Clique em um medicamento para pesquisar farmácias
+                    {medicamento 
+                      ? 'Clique em um medicamento para pesquisar farmácias' 
+                      : 'Digite ou clique em um medicamento para pesquisar'}
                   </p>
                 </div>
                 
@@ -564,18 +504,23 @@ const Buscar = () => {
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">Carregando medicamentos...</p>
                   </Card>
-                ) : allMedicamentos.length === 0 ? (
+                ) : filteredMedicamentos.length === 0 ? (
                   <Card className="p-6 text-center">
                     <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto" />
-                    <p className="text-sm text-muted-foreground mt-2">Nenhum medicamento cadastrado</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {medicamento ? `Nenhum medicamento encontrado para "${medicamento}"` : 'Nenhum medicamento cadastrado'}
+                    </p>
                   </Card>
                 ) : (
                   <div className="space-y-2">
-                    {allMedicamentos.map((med) => (
+                    {filteredMedicamentos.map((med) => (
                       <Card
                         key={med.id}
                         className="p-3 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-transparent hover:border-l-primary"
-                        onClick={() => setMedicamento(med.nome)}
+                        onClick={() => {
+                          setMedicamento(med.nome);
+                          searchPharmacies();
+                        }}
                       >
                         <h3 className="font-medium text-sm">{med.nome}</h3>
                         {med.categoria && (
