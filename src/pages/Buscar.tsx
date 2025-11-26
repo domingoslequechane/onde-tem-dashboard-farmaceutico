@@ -884,25 +884,25 @@ const Buscar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
       {/* Header - More compact */}
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-3 md:px-4 py-2 md:py-2.5 flex justify-between items-center">
-          <div className="flex items-center gap-2 md:gap-3">
+        <div className="container mx-auto px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 flex justify-between items-center">
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/')}
-              className="h-7 w-7 md:h-9 md:w-9"
+              className="h-6 w-6 sm:h-7 sm:w-7 md:h-9 md:w-9 flex-shrink-0"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-3 sm:h-3.5 md:h-4 w-3 sm:w-3.5 md:w-4" />
             </Button>
-            <img src={logo} alt="ONDTem" className="h-5 md:h-7" />
+            <img src={logo} alt="ONDTem" className="h-4 sm:h-5 md:h-7" />
           </div>
           <Button 
             variant="ghost" 
             onClick={() => navigate('/entrar')}
-            className="text-xs md:text-sm h-8"
+            className="text-[10px] sm:text-xs md:text-sm h-6 sm:h-7 md:h-8 px-2 sm:px-3 flex-shrink-0"
             size="sm"
           >
             Entrar
@@ -911,18 +911,18 @@ const Buscar = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:flex-row">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Search Panel - More compact and narrower */}
-        <div className="w-full lg:w-[340px] border-r border-border bg-background flex flex-col overflow-hidden">
+        <div className="w-full md:w-[340px] border-r border-border bg-background flex flex-col overflow-hidden">
           {/* Search Header - Reduced padding */}
-          <div className="p-3 border-b border-border space-y-3">
+          <div className="p-2 sm:p-3 border-b border-border space-y-2 sm:space-y-3">
             <div>
-              <h1 className="text-lg font-bold">Encontre ONDTem!</h1>
+              <h1 className="text-base sm:text-lg font-bold">Encontre ONDTem!</h1>
             </div>
 
             {/* Search Input - Mobile: with radius dropdown, Desktop: separate */}
-            <div className="flex gap-2">
-              <div className="relative flex-1">
+            <div className="flex gap-1.5 sm:gap-2">
+              <div className="relative flex-1 min-w-0">
                 <Input
                   placeholder="Ex: Paracetamol"
                   value={medicamento}
@@ -948,16 +948,16 @@ const Buscar = () => {
                     // Delay to allow click on dropdown items
                     setTimeout(() => setIsInputFocused(false), 200);
                   }}
-                  className="pr-8 h-9 text-sm"
+                  className="pr-7 h-8 sm:h-9 text-xs sm:text-sm w-full"
                 />
                 {(medicamento || selectedMedicamento) && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={clearSearch}
-                    className="absolute right-0 top-0 h-full w-8 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full w-7 sm:w-8 hover:bg-transparent"
                   >
-                    <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                    <X className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-muted-foreground hover:text-foreground" />
                   </Button>
                 )}
                 
@@ -983,7 +983,7 @@ const Buscar = () => {
               
               {/* Radius Dropdown - Mobile only */}
               <Select value={raioKm.toString()} onValueChange={(value) => setRaioKm(Number(value))}>
-                <SelectTrigger className="w-[70px] h-9 text-xs lg:hidden">
+                <SelectTrigger className="w-14 sm:w-16 h-8 sm:h-9 text-[10px] sm:text-xs md:hidden shrink-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-50 bg-background">
@@ -999,14 +999,14 @@ const Buscar = () => {
                 onClick={() => searchPharmacies()}
                 disabled={searching || !userLocation}
                 size="icon"
-                className="flex-shrink-0 h-9 w-9"
+                className="flex-shrink-0 h-8 sm:h-9 w-8 sm:w-9"
               >
-                <Search className="h-4 w-4" />
+                <Search className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
               </Button>
             </div>
 
-            {/* Radius Selector - Desktop only (buttons) */}
-            <div className="hidden lg:flex items-center gap-2">
+            {/* Radius Selector - Tablet and Desktop (buttons) */}
+            <div className="hidden md:flex items-center gap-2">
               <span className="text-[11px] text-muted-foreground whitespace-nowrap">Raio:</span>
               <div className="flex gap-1 flex-1">
                 {[1, 2, 3, 4, 5].map((km) => (
@@ -1025,9 +1025,9 @@ const Buscar = () => {
           </div>
 
           {/* Results List - Reduced padding */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2">
             {medicamentos.length > 0 && (
-              <h2 className="text-xs font-semibold text-muted-foreground sticky top-0 bg-background pb-1.5">
+              <h2 className="text-[10px] sm:text-xs font-semibold text-muted-foreground sticky top-0 bg-background pb-1.5">
                 {medicamentos.length} Medicamento{medicamentos.length > 1 ? 's' : ''} encontrado{medicamentos.length > 1 ? 's' : ''}
               </h2>
             )}
@@ -1061,32 +1061,32 @@ const Buscar = () => {
 
             {/* Recent Searches Section - More compact */}
             {!searching && medicamentos.length === 0 && !medicamento && searchHistory.length > 0 && (
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                  <h2 className="text-xs font-semibold text-muted-foreground">Buscas Recentes</h2>
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Clock className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-muted-foreground" />
+                  <h2 className="text-[10px] sm:text-xs font-semibold text-muted-foreground">Buscas Recentes</h2>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   {searchHistory.map((search, index) => (
                     <Card 
                       key={`recent-${index}`} 
-                      className="p-2.5 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary"
+                      className="p-2 sm:p-2.5 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary"
                       onClick={() => {
                         setMedicamento(search);
                         setTimeout(() => searchPharmacies(search), 100);
                       }}
                     >
                       <div className="flex justify-between items-center gap-2">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{search}</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-xs sm:text-sm truncate">{search}</p>
+                          <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">
                             Toque para buscar novamente
                           </p>
                         </div>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 flex-shrink-0"
+                          className="h-6 sm:h-7 w-6 sm:w-7 flex-shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             const newHistory = searchHistory.filter((_, i) => i !== index);
@@ -1094,7 +1094,7 @@ const Buscar = () => {
                             localStorage.setItem('ondtem_search_history', JSON.stringify(newHistory));
                           }}
                         >
-                          <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                          <X className="h-2.5 sm:h-3.5 w-2.5 sm:w-3.5 text-muted-foreground hover:text-foreground" />
                         </Button>
                       </div>
                     </Card>
@@ -1107,7 +1107,7 @@ const Buscar = () => {
             {medicamentos.map((item, index) => (
               <Card 
                 key={`${item.medicamento_id}-${item.farmacia_id}-${index}`} 
-                className={`p-2.5 space-y-1.5 hover:shadow-md transition-all cursor-pointer border-l-4 ${
+                className={`p-2 sm:p-2.5 space-y-1.5 hover:shadow-md transition-all cursor-pointer border-l-4 ${
                   selectedMedicamento?.medicamento_id === item.medicamento_id && selectedMedicamento?.farmacia_id === item.farmacia_id
                     ? 'border-l-green-600 bg-green-50' 
                     : 'border-l-green-500 hover:border-l-green-600 bg-green-50/50 hover:bg-green-50'
@@ -1115,35 +1115,35 @@ const Buscar = () => {
                 onClick={() => showRouteToPharmacy(item, routeMode)}
               >
                 <div className="flex justify-between items-start gap-2">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-sm">{item.medicamento_nome}</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-xs sm:text-sm truncate">{item.medicamento_nome}</h3>
                     {item.medicamento_categoria && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                      <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">
                         {item.medicamento_categoria}
                       </p>
                     )}
                   </div>
                   <div className="flex flex-col items-end flex-shrink-0">
-                    <span className="text-sm font-semibold text-green-600">
+                    <span className="text-xs sm:text-sm font-semibold text-green-600 whitespace-nowrap">
                       {item.distancia_km.toFixed(1)} km
                     </span>
-                    <span className="text-[9px] text-muted-foreground">via rota</span>
+                    <span className="text-[8px] sm:text-[9px] text-muted-foreground whitespace-nowrap">via rota</span>
                   </div>
                 </div>
                 
                 <div className="pt-1.5 border-t border-border space-y-1.5">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-green-600 flex-shrink-0" />
-                    <p className="text-xs font-medium text-green-600 truncate">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <MapPin className="h-2.5 sm:h-3 w-2.5 sm:w-3 text-green-600 flex-shrink-0" />
+                    <p className="text-[10px] sm:text-xs font-medium text-green-600 truncate">
                       {item.farmacia_nome}
                     </p>
                   </div>
                   
                   {/* Price and Rating on same line */}
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       {item.medicamento_preco && (
-                        <p className="text-sm font-semibold text-green-600">
+                        <p className="text-xs sm:text-sm font-semibold text-green-600">
                           MT {item.medicamento_preco.toFixed(2)}
                         </p>
                       )}
@@ -1151,30 +1151,30 @@ const Buscar = () => {
                     
                     {/* Rating stars */}
                     {item.media_avaliacoes ? (
-                      <div className="flex items-center gap-0.5">
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
                         {renderStars(item.media_avaliacoes, 'sm')}
-                        <span className="text-xs font-semibold text-yellow-600 ml-0.5">
+                        <span className="text-[10px] sm:text-xs font-semibold text-yellow-600 ml-0.5">
                           {item.media_avaliacoes.toFixed(1)}
                         </span>
-                        <span className="text-[9px] text-muted-foreground">
+                        <span className="text-[8px] sm:text-[9px] text-muted-foreground whitespace-nowrap">
                           ({item.total_avaliacoes})
                         </span>
                       </div>
                     ) : (
-                      <span className="text-[11px] text-muted-foreground">Sem avaliações</span>
+                      <span className="text-[9px] sm:text-[11px] text-muted-foreground whitespace-nowrap">Sem avaliações</span>
                     )}
                   </div>
                 </div>
                 
-                <div className="flex flex-wrap gap-2 text-[11px] pt-1.5 border-t border-border">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] pt-1.5 border-t border-border">
                   {item.farmacia_telefone && (
                     <a 
                       href={`tel:${item.farmacia_telefone}`}
-                      className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                      className="flex items-center gap-0.5 sm:gap-1 text-muted-foreground hover:text-foreground transition-colors"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Phone className="h-3 w-3" />
-                      Ligar
+                      <Phone className="h-2.5 sm:h-3 w-2.5 sm:w-3 shrink-0" />
+                      <span>Ligar</span>
                     </a>
                   )}
                   {item.farmacia_whatsapp && (
@@ -1182,10 +1182,10 @@ const Buscar = () => {
                       href={`https://wa.me/${item.farmacia_whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
+                      className="flex items-center gap-0.5 sm:gap-1 text-green-600 hover:text-green-700 font-medium"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      WhatsApp
+                      <span>WhatsApp</span>
                     </a>
                   )}
                 </div>
@@ -1195,40 +1195,40 @@ const Buscar = () => {
         </div>
 
         {/* Map */}
-        <div className="flex-1 relative h-[400px] lg:h-auto">
+        <div className="flex-1 relative h-[400px] md:h-auto min-h-0">
           <div ref={mapContainer} className="absolute inset-0" />
           
-          {/* Route Info Overlay - More compact */}
+          {/* Route Info Overlay - More compact and responsive */}
           {routeInfo && selectedMedicamento && (
-            <Card className="absolute top-3 left-1/2 transform -translate-x-1/2 p-2 shadow-lg z-10 w-[calc(100%-1.5rem)] max-w-md">
-              <div className="flex items-start gap-1.5">
-                <div className="flex-1 space-y-1.5">
-                  <div>
-                    <h3 className="font-semibold text-xs mb-0.5">{selectedMedicamento.medicamento_nome}</h3>
-                    <p className="text-[11px] text-muted-foreground">{selectedMedicamento.farmacia_nome}</p>
+            <Card className="absolute top-2 sm:top-3 left-2 sm:left-1/2 sm:transform sm:-translate-x-1/2 p-1.5 sm:p-2 shadow-lg z-10 w-[calc(100%-1rem)] sm:w-[calc(100%-1.5rem)] max-w-md">
+              <div className="flex items-start gap-1 sm:gap-1.5">
+                <div className="flex-1 space-y-1 sm:space-y-1.5 min-w-0">
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-[10px] sm:text-xs mb-0.5 truncate">{selectedMedicamento.medicamento_nome}</h3>
+                    <p className="text-[9px] sm:text-[11px] text-muted-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
                     {selectedMedicamento.media_avaliacoes ? (
                       <div className="flex items-center gap-0.5 mt-0.5">
                         {renderStars(selectedMedicamento.media_avaliacoes, 'sm')}
-                        <span className="text-[11px] font-semibold text-yellow-600 ml-0.5">
+                        <span className="text-[9px] sm:text-[11px] font-semibold text-yellow-600 ml-0.5">
                           {selectedMedicamento.media_avaliacoes.toFixed(1)}
                         </span>
-                        <span className="text-[9px] text-muted-foreground">
+                        <span className="text-[8px] sm:text-[9px] text-muted-foreground">
                           ({selectedMedicamento.total_avaliacoes})
                         </span>
                       </div>
                     ) : (
-                      <p className="text-[11px] text-muted-foreground mt-0.5">Sem avaliações</p>
+                      <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5">Sem avaliações</p>
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px]">
-                    <div>
+                  <div className="grid grid-cols-2 gap-x-1.5 sm:gap-x-2 gap-y-0.5 text-[9px] sm:text-[11px]">
+                    <div className="min-w-0">
                       <span className="font-medium text-muted-foreground">Distância:</span>
-                      <p className="font-semibold">{routeInfo.distance.toFixed(2)} km</p>
+                      <p className="font-semibold truncate">{routeInfo.distance.toFixed(2)} km</p>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className="font-medium text-muted-foreground">Tempo:</span>
-                      <p className="font-semibold">
+                      <p className="font-semibold truncate">
                         {Math.round(routeInfo.duration)} min {routeInfo.mode === 'walking' ? '🚶' : '🚗'}
                       </p>
                     </div>
@@ -1239,7 +1239,7 @@ const Buscar = () => {
                       size="sm"
                       variant={routeMode === 'walking' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'walking')}
-                      className="text-[11px] h-6 px-2"
+                      className="text-[9px] sm:text-[11px] h-5 sm:h-6 px-1 sm:px-2"
                     >
                       🚶 A pé
                     </Button>
@@ -1247,7 +1247,7 @@ const Buscar = () => {
                       size="sm"
                       variant={routeMode === 'driving' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'driving')}
-                      className="text-[11px] h-6 px-2"
+                      className="text-[9px] sm:text-[11px] h-5 sm:h-6 px-1 sm:px-2"
                     >
                       🚗 Viatura
                     </Button>
@@ -1258,17 +1258,17 @@ const Buscar = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => setShowLeaveReview(true)}
-                      className="text-[11px] h-6 px-2"
+                      className="text-[9px] sm:text-[11px] h-5 sm:h-6 px-1 sm:px-2"
                     >
-                      Deixar Avaliação
+                      <span className="truncate">Deixar Avaliação</span>
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setShowViewReviews(true)}
-                      className="text-[11px] h-6 px-2"
+                      className="text-[9px] sm:text-[11px] h-5 sm:h-6 px-1 sm:px-2"
                     >
-                      Ver Avaliações
+                      <span className="truncate">Ver Avaliações</span>
                     </Button>
                   </div>
                 </div>
@@ -1276,7 +1276,7 @@ const Buscar = () => {
                   size="sm"
                   variant="ghost"
                   onClick={clearRoute}
-                  className="h-4 w-4 p-0 flex-shrink-0"
+                  className="h-3 sm:h-4 w-3 sm:w-4 p-0 flex-shrink-0"
                 >
                   ✕
                 </Button>
