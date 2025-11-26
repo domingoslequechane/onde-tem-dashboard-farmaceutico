@@ -528,7 +528,7 @@ const Buscar = () => {
     const hasHalfStar = rating % 1 >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
     
-    const starSize = size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4';
+    const starSize = size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
     
     return (
       <div className="flex items-center gap-0.5">
@@ -942,7 +942,7 @@ const Buscar = () => {
                 className={`p-3 space-y-2 hover:shadow-md transition-all cursor-pointer border-l-4 ${
                   selectedMedicamento?.medicamento_id === item.medicamento_id && selectedMedicamento?.farmacia_id === item.farmacia_id
                     ? 'border-l-primary bg-primary/5' 
-                    : 'border-l-primary/20 hover:border-l-primary'
+                    : 'border-l-green-500 hover:border-l-green-600'
                 }`}
                 onClick={() => showRouteToPharmacy(item, routeMode)}
               >
@@ -963,34 +963,39 @@ const Buscar = () => {
                   </div>
                 </div>
                 
-                <div className="pt-2 border-t border-border space-y-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-medium flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-primary" />
+                <div className="pt-2 border-t border-border space-y-2">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3 text-green-600" />
+                    <p className="text-xs font-medium text-green-600">
                       {item.farmacia_nome}
                     </p>
                   </div>
                   
-                  {/* Rating stars */}
-                  {item.media_avaliacoes ? (
-                    <div className="flex items-center gap-1.5">
-                      {renderStars(item.media_avaliacoes, 'md')}
-                      <span className="text-sm font-semibold text-yellow-600">
-                        {item.media_avaliacoes.toFixed(1)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        ({item.total_avaliacoes})
-                      </span>
+                  {/* Price and Rating on same line */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex-1">
+                      {item.medicamento_preco && (
+                        <p className="text-sm font-semibold text-primary">
+                          MT {item.medicamento_preco.toFixed(2)}
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Sem avaliações</p>
-                  )}
-                  
-                  {item.medicamento_preco && (
-                    <p className="text-sm font-semibold text-primary">
-                      MT {item.medicamento_preco.toFixed(2)}
-                    </p>
-                  )}
+                    
+                    {/* Rating stars */}
+                    {item.media_avaliacoes ? (
+                      <div className="flex items-center gap-1">
+                        {renderStars(item.media_avaliacoes, 'sm')}
+                        <span className="text-xs font-semibold text-yellow-600">
+                          {item.media_avaliacoes.toFixed(1)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          ({item.total_avaliacoes})
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Sem avaliações</span>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex flex-wrap gap-2 text-xs pt-2 border-t border-border">
@@ -1009,7 +1014,7 @@ const Buscar = () => {
                       href={`https://wa.me/${item.farmacia_whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-primary hover:underline"
+                      className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
                       onClick={(e) => e.stopPropagation()}
                     >
                       WhatsApp
