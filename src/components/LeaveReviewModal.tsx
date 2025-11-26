@@ -91,17 +91,17 @@ export const LeaveReviewModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md w-[calc(100%-2rem)] mx-4">
         <DialogHeader>
           <DialogTitle>Deixar Avaliação</DialogTitle>
           <DialogDescription>{farmaciaNome}</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           {/* Star Rating */}
           <div className="space-y-2">
             <Label>Classificação *</Label>
-            <div className="flex gap-1">
+            <div className="flex gap-1 sm:gap-2 justify-center sm:justify-start">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
@@ -109,10 +109,10 @@ export const LeaveReviewModal = ({
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
-                  className="transition-transform hover:scale-110"
+                  className="transition-transform hover:scale-110 active:scale-95"
                 >
                   <Star
-                    className={`h-8 w-8 ${
+                    className={`h-7 w-7 sm:h-8 sm:w-8 ${
                       star <= (hoverRating || rating)
                         ? 'fill-yellow-400 text-yellow-400'
                         : 'text-muted-foreground'
@@ -159,16 +159,17 @@ export const LeaveReviewModal = ({
             />
           </div>
 
-          <div className="flex gap-2 justify-end">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={submitting}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
               {submitting ? 'Enviando...' : 'Enviar Avaliação'}
             </Button>
           </div>
