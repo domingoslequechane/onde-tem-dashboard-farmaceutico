@@ -554,10 +554,12 @@ const Buscar = () => {
             
             if (routeData.routes && routeData.routes.length > 0) {
               const realDistance = routeData.routes[0].distance / 1000; // Convert to km
+              console.log(`Distance for ${pharmacy.farmacia_nome}: ${realDistance.toFixed(2)} km (was ${pharmacy.distancia_km.toFixed(2)} km)`);
               return { farmacia_id: pharmacy.farmacia_id, distancia_km: realDistance };
             }
             return { farmacia_id: pharmacy.farmacia_id, distancia_km: pharmacy.distancia_km };
-          } catch {
+          } catch (err) {
+            console.error(`Error calculating distance for ${pharmacy.farmacia_nome}:`, err);
             return { farmacia_id: pharmacy.farmacia_id, distancia_km: pharmacy.distancia_km };
           }
         });
