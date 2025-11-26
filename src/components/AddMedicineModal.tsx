@@ -41,7 +41,6 @@ const AddMedicineModal = ({
     nome: '',
     preco: 0,
     categoria: '',
-    quantidade: 0,
     disponivel: true
   });
 
@@ -51,7 +50,6 @@ const AddMedicineModal = ({
         nome: editingMedicine.nome,
         preco: editingMedicine.preco,
         categoria: editingMedicine.categoria,
-        quantidade: editingMedicine.quantidade,
         disponivel: editingMedicine.disponivel
       });
     } else {
@@ -59,7 +57,6 @@ const AddMedicineModal = ({
         nome: '',
         preco: 0,
         categoria: '',
-        quantidade: 0,
         disponivel: true
       });
     }
@@ -96,7 +93,6 @@ const AddMedicineModal = ({
           .from('estoque')
           .update({
             preco: formData.preco,
-            quantidade: formData.quantidade,
             disponivel: formData.disponivel
           })
           .eq('medicamento_id', editingMedicine.id)
@@ -128,7 +124,6 @@ const AddMedicineModal = ({
             medicamento_id: medData.id,
             farmacia_id: farmaciaId,
             preco: formData.preco,
-            quantidade: formData.quantidade,
             disponivel: formData.disponivel
           });
 
@@ -160,7 +155,6 @@ const AddMedicineModal = ({
         nome: '',
         preco: 0,
         categoria: '',
-        quantidade: 0,
         disponivel: true
       });
     }
@@ -188,25 +182,25 @@ const AddMedicineModal = ({
             />
           </div>
           
+          <div className="space-y-2">
+            <Label htmlFor="categoria">Categoria</Label>
+            <Select 
+              value={formData.categoria} 
+              onValueChange={(value) => setFormData({...formData, categoria: value})}
+              disabled={loading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="categoria">Categoria</Label>
-              <Select 
-                value={formData.categoria} 
-                onValueChange={(value) => setFormData({...formData, categoria: value})}
-                disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
             <div className="space-y-2">
               <Label htmlFor="preco">Preço (MT)</Label>
               <Input
@@ -217,21 +211,6 @@ const AddMedicineModal = ({
                 value={formData.preco}
                 onChange={(e) => setFormData({...formData, preco: Number(e.target.value)})}
                 placeholder="0.00"
-                disabled={loading}
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="quantidade">Quantidade</Label>
-              <Input
-                id="quantidade"
-                type="number"
-                min="0"
-                value={formData.quantidade}
-                onChange={(e) => setFormData({...formData, quantidade: Number(e.target.value)})}
-                placeholder="0"
                 disabled={loading}
               />
             </div>

@@ -99,12 +99,6 @@ const AdminFarmaciaModal = ({ isOpen, onClose, onSuccess, farmacia }: AdminFarma
             status_assinatura: formData.status_assinatura,
             ativa: formData.ativa,
             account_status: 'pendente',
-            // Valores padrão para campos obrigatórios
-            cidade: 'A definir',
-            estado: 'A definir',
-            endereco_completo: 'A definir',
-            latitude: 0,
-            longitude: 0,
           }])
           .select()
           .single();
