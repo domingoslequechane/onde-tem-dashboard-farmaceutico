@@ -65,7 +65,7 @@ const Landing = () => {
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
               Transforme o seu Stock em{' '}
               <span className="text-primary">Vendas Imediatas</span>{' '}
-              com a Inteligência de Demanda do WhatsApp
+              com a nossa Inteligência de Demanda!
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
               A ONDTem liga a sua farmácia a clientes que procuram ativamente o que você já tem, 
