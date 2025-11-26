@@ -438,9 +438,11 @@ const Buscar = () => {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: 'mapbox://styles/mapbox/streets-v12', // Modern street style
       center: [userLocation.lng, userLocation.lat],
-      zoom: 12, // Start with reasonable zoom level
+      zoom: 12,
+      pitch: 0, // Flat view
+      bearing: 0,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -1083,9 +1085,9 @@ const Buscar = () => {
           
           {/* Route Info Overlay */}
           {routeInfo && selectedMedicamento && (
-            <Card className="absolute top-4 left-1/2 transform -translate-x-1/2 p-3 shadow-lg z-10 w-[calc(100%-2rem)] max-w-md">
+            <Card className="absolute top-4 left-1/2 transform -translate-x-1/2 p-2.5 shadow-lg z-10 w-[calc(100%-2rem)] max-w-md">
               <div className="flex items-start gap-2">
-                <div className="flex-1 space-y-2.5">
+                <div className="flex-1 space-y-2">
                   <div>
                     <h3 className="font-semibold text-sm mb-0.5">{selectedMedicamento.medicamento_nome}</h3>
                     <p className="text-xs text-muted-foreground">{selectedMedicamento.farmacia_nome}</p>
@@ -1104,7 +1106,7 @@ const Buscar = () => {
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs">
                     <div>
                       <span className="font-medium text-muted-foreground">Distância:</span>
                       <p className="font-semibold">{routeInfo.distance.toFixed(2)} km</p>
@@ -1117,12 +1119,12 @@ const Buscar = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <Button
                       size="sm"
                       variant={routeMode === 'walking' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'walking')}
-                      className="text-xs h-8"
+                      className="text-xs h-7"
                     >
                       🚶 A pé
                     </Button>
@@ -1130,18 +1132,18 @@ const Buscar = () => {
                       size="sm"
                       variant={routeMode === 'driving' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'driving')}
-                      className="text-xs h-8"
+                      className="text-xs h-7"
                     >
                       🚗 Viatura
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+                  <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-border">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setShowLeaveReview(true)}
-                      className="text-xs h-8"
+                      className="text-xs h-7"
                     >
                       Deixar Avaliação
                     </Button>
@@ -1149,7 +1151,7 @@ const Buscar = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => setShowViewReviews(true)}
-                      className="text-xs h-8"
+                      className="text-xs h-7"
                     >
                       Ver Avaliações
                     </Button>
@@ -1159,7 +1161,7 @@ const Buscar = () => {
                   size="sm"
                   variant="ghost"
                   onClick={clearRoute}
-                  className="h-6 w-6 p-0 flex-shrink-0"
+                  className="h-5 w-5 p-0 flex-shrink-0"
                 >
                   ✕
                 </Button>
