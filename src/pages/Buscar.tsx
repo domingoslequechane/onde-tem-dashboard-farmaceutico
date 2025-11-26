@@ -823,23 +823,25 @@ const Buscar = () => {
                     <p className="text-xs font-medium text-green-600 truncate">{item.farmacia_nome}</p>
                   </div>
                   
-                  {item.medicamento_preco && (
-                    <p className="text-sm font-semibold text-green-600">MT {item.medicamento_preco.toFixed(2)}</p>
-                  )}
-                  
-                  {item.media_avaliacoes ? (
-                    <div className="flex items-center gap-1">
-                      {renderStars(item.media_avaliacoes, 'sm')}
-                      <span className="text-xs font-semibold text-yellow-600">
-                        {item.media_avaliacoes.toFixed(1)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        ({item.total_avaliacoes})
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Sem avaliações</span>
-                  )}
+                  <div className="flex items-center justify-between gap-2">
+                    {item.medicamento_preco && (
+                      <p className="text-sm font-semibold text-foreground">MT {item.medicamento_preco.toFixed(2)}</p>
+                    )}
+                    
+                    {item.media_avaliacoes ? (
+                      <div className="flex items-center gap-1">
+                        {renderStars(item.media_avaliacoes, 'sm')}
+                        <span className="text-xs font-semibold text-yellow-600">
+                          {item.media_avaliacoes.toFixed(1)}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          ({item.total_avaliacoes})
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Sem avaliações</span>
+                    )}
+                  </div>
                 </div>
               </Card>
             ))}
