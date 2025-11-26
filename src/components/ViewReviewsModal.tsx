@@ -97,7 +97,7 @@ export const ViewReviewsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] w-[calc(100%-2rem)] mx-4 overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] w-[calc(100%-2rem)] mx-auto overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-base sm:text-lg">Avaliações</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
