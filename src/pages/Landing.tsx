@@ -83,10 +83,10 @@ const Landing = () => {
               <Button 
                 size="lg" 
                 variant="outline"
-                onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => navigate('/buscar')}
                 className="text-sm md:text-base px-4 md:px-8 py-3 md:py-4 h-auto whitespace-normal"
               >
-                Ver Como Funciona
+                Buscar Medicamento
               </Button>
             </div>
           </div>
