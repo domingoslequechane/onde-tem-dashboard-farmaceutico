@@ -440,18 +440,6 @@ const Landing = () => {
                 </div>
               </div>
             </div>
-
-            {/* Bottom ROI Message */}
-            <div className="text-center p-8 bg-gradient-to-br from-primary via-primary/90 to-secondary rounded-2xl shadow-xl">
-              <p className="text-xl md:text-2xl font-bold text-white mb-3">
-                A ONDTem é um <span className="underline">INVESTIMENTO</span> que se paga sozinho
-              </p>
-              <p className="text-base md:text-lg text-white/90">
-                Com apenas algumas vendas recuperadas, você já cobriu o custo da assinatura.
-                <br className="hidden md:block" />
-                <span className="font-semibold">Todo o resto é lucro puro para sua farmácia.</span>
-              </p>
-            </div>
           </div>
         </div>
       </section>
