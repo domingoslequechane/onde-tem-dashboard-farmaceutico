@@ -18,6 +18,17 @@ export default {
 			}
 		},
 		extend: {
+			fontSize: {
+				// Mobile-first responsive text sizes
+				'xs': ['0.6875rem', { lineHeight: '1rem' }],      // 11px mobile
+				'sm': ['0.8125rem', { lineHeight: '1.25rem' }],   // 13px mobile
+				'base': ['0.9375rem', { lineHeight: '1.5rem' }],  // 15px mobile
+				'lg': ['1.0625rem', { lineHeight: '1.75rem' }],   // 17px mobile
+				'xl': ['1.1875rem', { lineHeight: '1.75rem' }],   // 19px mobile
+				'2xl': ['1.375rem', { lineHeight: '2rem' }],      // 22px mobile
+				'3xl': ['1.625rem', { lineHeight: '2.25rem' }],   // 26px mobile
+				'4xl': ['2rem', { lineHeight: '2.5rem' }],        // 32px mobile
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

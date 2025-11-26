@@ -616,7 +616,7 @@ const Buscar = () => {
           <Button 
             variant="ghost" 
             onClick={() => navigate('/entrar')}
-            className="text-xs h-7 px-3 flex-shrink-0"
+            className="text-sm h-8 px-3 flex-shrink-0"
             size="sm"
           >
             Entrar
@@ -630,7 +630,7 @@ const Buscar = () => {
         <div className="w-full md:w-80 border-r border-border bg-background flex flex-col overflow-hidden">
           {/* Search Header */}
           <div className="p-3 border-b border-border space-y-2">
-            <h1 className="text-base font-bold truncate">Encontre ONDTem!</h1>
+            <h1 className="text-lg sm:text-xl font-bold truncate">Encontre ONDTem!</h1>
 
             {/* Search Input */}
             <div className="flex gap-2 w-full min-w-0">
@@ -658,7 +658,7 @@ const Buscar = () => {
                   onBlur={() => {
                     setTimeout(() => setIsInputFocused(false), 200);
                   }}
-                  className="pr-8 h-9 text-sm"
+                  className="pr-8 h-10 text-base"
                 />
                 {(medicamento || selectedMedicamento) && (
                   <Button
@@ -684,7 +684,7 @@ const Buscar = () => {
                           setIsInputFocused(false);
                         }}
                       >
-                        <p className="text-sm font-medium truncate">{med.nome}</p>
+                        <p className="text-base font-medium truncate">{med.nome}</p>
                       </div>
                     ))}
                   </Card>
@@ -693,12 +693,12 @@ const Buscar = () => {
               
               {/* Radius Mobile */}
               <Select value={raioKm.toString()} onValueChange={(value) => setRaioKm(Number(value))}>
-                <SelectTrigger className="w-16 h-9 text-xs md:hidden">
+                <SelectTrigger className="w-16 h-10 text-sm md:hidden">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {[1, 2, 3, 4, 5].map((km) => (
-                    <SelectItem key={km} value={km.toString()} className="text-xs">
+                    <SelectItem key={km} value={km.toString()} className="text-sm">
                       {km}km
                     </SelectItem>
                   ))}
@@ -717,7 +717,7 @@ const Buscar = () => {
 
             {/* Radius Desktop */}
             <div className="hidden md:flex items-center gap-2">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">Raio:</span>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Raio:</span>
               <div className="flex gap-1 flex-1">
                 {[1, 2, 3, 4, 5].map((km) => (
                   <Button
@@ -737,7 +737,7 @@ const Buscar = () => {
           {/* Results */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {medicamentos.length > 0 && (
-              <h2 className="text-xs font-semibold text-muted-foreground sticky top-0 bg-background pb-1">
+              <h2 className="text-sm font-semibold text-muted-foreground sticky top-0 bg-background pb-1">
                 {medicamentos.length} Medicamento{medicamentos.length > 1 ? 's' : ''} encontrado{medicamentos.length > 1 ? 's' : ''}
               </h2>
             )}
@@ -747,7 +747,7 @@ const Buscar = () => {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
                   <Search className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="font-semibold text-sm">Buscando...</h3>
+                <h3 className="font-semibold text-base">Buscando...</h3>
               </Card>
             )}
             
@@ -756,8 +756,8 @@ const Buscar = () => {
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto">
                   <Search className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <h3 className="font-semibold text-sm">Nenhum medicamento encontrado</h3>
-                <p className="text-xs text-muted-foreground">
+                <h3 className="font-semibold text-base">Nenhum medicamento encontrado</h3>
+                <p className="text-sm text-muted-foreground">
                   Não encontramos "{medicamento}" em farmácias próximas.
                 </p>
               </Card>
@@ -767,7 +767,7 @@ const Buscar = () => {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                  <h2 className="text-xs font-semibold text-muted-foreground">Buscas Recentes</h2>
+                  <h2 className="text-sm font-semibold text-muted-foreground">Buscas Recentes</h2>
                 </div>
                 {searchHistory.map((search, index) => (
                   <Card 
@@ -779,7 +779,7 @@ const Buscar = () => {
                     }}
                   >
                     <div className="flex justify-between items-center gap-2">
-                      <p className="font-medium text-sm truncate flex-1">{search}</p>
+                      <p className="font-medium text-base truncate flex-1">{search}</p>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -807,12 +807,12 @@ const Buscar = () => {
               >
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm truncate">{item.medicamento_nome}</h3>
+                    <h3 className="font-semibold text-base truncate">{item.medicamento_nome}</h3>
                     {item.medicamento_categoria && (
-                      <p className="text-xs text-muted-foreground truncate">{item.medicamento_categoria}</p>
+                      <p className="text-sm text-muted-foreground truncate">{item.medicamento_categoria}</p>
                     )}
                   </div>
-                  <span className="text-sm font-semibold text-green-600 whitespace-nowrap">
+                  <span className="text-base font-semibold text-green-600 whitespace-nowrap">
                     {item.distancia_km.toFixed(1)} km
                   </span>
                 </div>
@@ -820,26 +820,26 @@ const Buscar = () => {
                 <div className="pt-1.5 border-t space-y-1">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-3 w-3 text-green-600 flex-shrink-0" />
-                    <p className="text-xs font-medium text-green-600 truncate">{item.farmacia_nome}</p>
+                    <p className="text-sm font-medium text-green-600 truncate">{item.farmacia_nome}</p>
                   </div>
                   
                   <div className="flex items-center justify-between gap-2">
                     {item.medicamento_preco && (
-                      <p className="text-sm font-semibold text-foreground">MT {item.medicamento_preco.toFixed(2)}</p>
+                      <p className="text-base font-semibold text-foreground">MT {item.medicamento_preco.toFixed(2)}</p>
                     )}
                     
                     {item.media_avaliacoes ? (
                       <div className="flex items-center gap-1">
                         {renderStars(item.media_avaliacoes, 'sm')}
-                        <span className="text-xs font-semibold text-yellow-600">
+                        <span className="text-sm font-semibold text-yellow-600">
                           {item.media_avaliacoes.toFixed(1)}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-sm text-muted-foreground">
                           ({item.total_avaliacoes})
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground">Sem avaliações</span>
+                      <span className="text-sm text-muted-foreground">Sem avaliações</span>
                     )}
                   </div>
                 </div>
@@ -857,21 +857,21 @@ const Buscar = () => {
             <Card className="absolute top-3 left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:w-96 p-3 shadow-lg z-10">
               <div className="flex items-start gap-3">
                 <div className="flex-1 space-y-2 min-w-0">
-                  <h3 className="font-semibold text-xs truncate">{selectedMedicamento.medicamento_nome}</h3>
-                  <p className="text-xs text-muted-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
+                  <h3 className="font-semibold text-sm truncate">{selectedMedicamento.medicamento_nome}</h3>
+                  <p className="text-sm text-muted-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
                   
                   {selectedMedicamento.media_avaliacoes ? (
                     <div className="flex items-center gap-1">
                       {renderStars(selectedMedicamento.media_avaliacoes, 'sm')}
-                      <span className="text-xs font-semibold text-yellow-600">
+                      <span className="text-sm font-semibold text-yellow-600">
                         {selectedMedicamento.media_avaliacoes.toFixed(1)}
                       </span>
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground">Sem avaliações</p>
+                    <p className="text-sm text-muted-foreground">Sem avaliações</p>
                   )}
                   
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <span className="text-muted-foreground">Distância:</span>
                       <p className="font-semibold">{routeInfo.distance.toFixed(2)} km</p>
@@ -887,7 +887,7 @@ const Buscar = () => {
                       size="sm"
                       variant={routeMode === 'walking' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'walking')}
-                      className="text-xs h-7"
+                      className="text-sm h-8"
                     >
                       🚶 A pé
                     </Button>
@@ -895,7 +895,7 @@ const Buscar = () => {
                       size="sm"
                       variant={routeMode === 'driving' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'driving')}
-                      className="text-xs h-7"
+                      className="text-sm h-8"
                     >
                       🚗 Viatura
                     </Button>
@@ -906,7 +906,7 @@ const Buscar = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => setShowLeaveReview(true)}
-                      className="text-xs h-7"
+                      className="text-sm h-8"
                     >
                       Avaliar
                     </Button>
@@ -914,7 +914,7 @@ const Buscar = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => setShowViewReviews(true)}
-                      className="text-xs h-7"
+                      className="text-sm h-8"
                     >
                       Ver Avaliações
                     </Button>
@@ -935,7 +935,7 @@ const Buscar = () => {
           {loadingToken && (
             <div className="absolute inset-0 bg-muted/90 flex items-center justify-center">
               <Card className="p-6 text-center">
-                <p className="text-sm">Carregando mapa...</p>
+                <p className="text-base">Carregando mapa...</p>
               </Card>
             </div>
           )}
@@ -945,7 +945,7 @@ const Buscar = () => {
       {/* Footer */}
       <footer className="border-t bg-background">
         <div className="px-3 py-3">
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-sm text-muted-foreground">
             © {new Date().getFullYear()} ONDTem. Todos os direitos reservados. by{' '}
             <a 
               href="https://onixagence.com" 

@@ -233,8 +233,8 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                           <Edit className="h-3 w-3" />
                         </Button>
                       </div>
-                      <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
-                        <span className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-medium">
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                        <span className="px-1.5 py-0.5 bg-muted rounded text-xs font-medium">
                           {medicine.categoria}
                         </span>
                         <span className="font-semibold text-foreground">
@@ -246,7 +246,7 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                     <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
                       <Badge 
                         variant={medicine.disponivel && medicine.quantidade > 0 ? "default" : "destructive"}
-                        className={`text-[10px] px-1.5 py-0 ${medicine.disponivel && medicine.quantidade > 0 ? "bg-secondary" : ""}`}
+                        className={`text-xs px-1.5 py-0 ${medicine.disponivel && medicine.quantidade > 0 ? "bg-secondary" : ""}`}
                       >
                         {medicine.disponivel && medicine.quantidade > 0 ? 'Disponível' : 'Indisponível'}
                       </Badge>
