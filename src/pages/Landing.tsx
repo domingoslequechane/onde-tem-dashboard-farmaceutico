@@ -34,7 +34,7 @@ const Landing = () => {
             <Button 
               variant="ghost" 
               onClick={() => navigate('/entrar')}
-              className="hidden sm:flex text-xs md:text-sm lg:text-base px-2 md:px-4"
+              className="text-xs md:text-sm lg:text-base px-2 md:px-4"
               size="sm"
             >
               Entrar
