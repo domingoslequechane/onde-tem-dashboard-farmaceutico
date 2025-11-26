@@ -302,107 +302,155 @@ const Landing = () => {
       </section>
 
       {/* Investment Section */}
-      <section className="py-16 md:py-24 bg-background">
+      <section className="py-16 md:py-24 bg-gradient-to-br from-muted/30 to-background">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="text-center space-y-6 mb-16">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground">
                 A ONDTem é um CUSTO ou um <span className="text-primary">INVESTIMENTO</span>?
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                A ONDTem não é um custo, mas sim um investimento estratégico com retorno imediato.
+                Veja o impacto real da ONDTem no crescimento da sua farmácia
               </p>
             </div>
 
-            {/* Pyramid Structure */}
-            <div className="relative space-y-0">
-              {/* Top - Icon */}
-              <div className="flex justify-center mb-8">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-                  <TrendingUp className="h-10 w-10 text-white" />
+            {/* Comparison Grid */}
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
+              {/* Left Side - Without ONDTem */}
+              <div className="space-y-6">
+                <div className="text-center p-4 bg-destructive/10 rounded-xl border-2 border-destructive/30">
+                  <h3 className="text-xl md:text-2xl font-bold text-destructive">Sem a ONDTem</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Perdas Constantes</p>
+                </div>
+
+                <Card className="p-6 border-destructive/20 bg-background space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 mt-1">
+                      <span className="text-destructive font-bold">✗</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Clientes Perdidos</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Dezenas de clientes procuram produtos que você tem, mas não conseguem encontrar
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 mt-1">
+                      <span className="text-destructive font-bold">✗</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Stock Encalhado</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Capital parado em produtos que demoram a vender, prejudicando seu fluxo de caixa
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 mt-1">
+                      <span className="text-destructive font-bold">✗</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Decisões no Escuro</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Compras baseadas em intuição, sem saber o que o mercado realmente procura
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 mt-1">
+                      <span className="text-destructive font-bold">✗</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Crescimento Limitado</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Dependência total da localização física e do boca a boca
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <div className="text-center p-4 bg-destructive/5 rounded-lg">
+                  <p className="text-sm font-semibold text-destructive">Prejuízo Contínuo e Invisível</p>
                 </div>
               </div>
 
-              {/* Pyramid Levels */}
-              <div className="space-y-4">
-                {/* Level 1 - Top (Smallest) */}
-                <div className="flex items-center gap-4 md:gap-8">
-                  <div className="flex-1 flex justify-end items-center gap-3">
-                    <div className="text-right">
-                      <h3 className="text-base md:text-lg font-bold text-foreground">Uma única venda perdida</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground">Receita que nunca volta</p>
-                    </div>
-                    <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
-                      <ShoppingCart className="h-5 w-5 text-destructive" />
-                    </div>
-                  </div>
-                  <div className="w-32 md:w-48 h-16 bg-gradient-to-r from-destructive/80 to-destructive rounded-lg flex items-center justify-center">
-                    <span className="text-sm md:text-base font-bold text-white">Venda Perdida</span>
-                  </div>
-                  <div className="flex-1"></div>
+              {/* Right Side - With ONDTem */}
+              <div className="space-y-6">
+                <div className="text-center p-4 bg-gradient-to-r from-primary to-secondary rounded-xl border-2 border-primary/30 shadow-lg">
+                  <h3 className="text-xl md:text-2xl font-bold text-white">Com a ONDTem</h3>
+                  <p className="text-sm text-white/90 mt-1">Crescimento Acelerado</p>
                 </div>
 
-                {/* Level 2 */}
-                <div className="flex items-center gap-4 md:gap-8">
-                  <div className="flex-1"></div>
-                  <div className="w-48 md:w-64 h-16 bg-gradient-to-r from-primary/80 to-primary rounded-lg flex items-center justify-center">
-                    <span className="text-sm md:text-base font-bold text-white">Capital Imobilizado</span>
-                  </div>
-                  <div className="flex-1 flex justify-start items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <BarChart3 className="h-5 w-5 text-primary" />
+                <Card className="p-6 border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-1">
+                      <CheckCircle2 className="h-5 w-5 text-white" />
                     </div>
-                    <div className="text-left">
-                      <h3 className="text-base md:text-lg font-bold text-foreground">Stock parado</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground">Dinheiro sem trabalhar</p>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Vendas Garantidas</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Clientes encontram seus produtos no momento exato que precisam e vão direto à sua farmácia
+                      </p>
                     </div>
                   </div>
-                </div>
 
-                {/* Level 3 */}
-                <div className="flex items-center gap-4 md:gap-8">
-                  <div className="flex-1 flex justify-end items-center gap-3">
-                    <div className="text-right">
-                      <h3 className="text-base md:text-lg font-bold text-foreground">Decisões sem dados</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground">Compras sem estratégia</p>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-1">
+                      <CheckCircle2 className="h-5 w-5 text-white" />
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="h-5 w-5 text-orange-600" />
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Stock Otimizado</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Produtos giram rápido, liberando capital para investir no que realmente vende
+                      </p>
                     </div>
                   </div>
-                  <div className="w-64 md:w-80 h-16 bg-gradient-to-r from-orange-500/80 to-orange-500 rounded-lg flex items-center justify-center">
-                    <span className="text-sm md:text-base font-bold text-white">Informação de Mercado</span>
-                  </div>
-                  <div className="flex-1"></div>
-                </div>
 
-                {/* Level 4 - Bottom (Largest) */}
-                <div className="flex items-center gap-4 md:gap-8">
-                  <div className="flex-1"></div>
-                  <div className="w-80 md:w-96 h-16 bg-gradient-to-r from-secondary/80 to-secondary rounded-lg flex items-center justify-center">
-                    <span className="text-sm md:text-base font-bold text-white">Crescimento Sustentável</span>
-                  </div>
-                  <div className="flex-1 flex justify-start items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
-                      <TrendingUp className="h-5 w-5 text-secondary" />
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-1">
+                      <CheckCircle2 className="h-5 w-5 text-white" />
                     </div>
-                    <div className="text-left">
-                      <h3 className="text-base md:text-lg font-bold text-foreground">Resultado contínuo</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground">Lucro permanente</p>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Inteligência de Mercado</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Dados exclusivos sobre o que os clientes procuram e onde procuram
+                      </p>
                     </div>
                   </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-1">
+                      <CheckCircle2 className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Visibilidade Digital</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Presença online instantânea sem precisar de site ou marketing complexo
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <div className="text-center p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border border-primary/20">
+                  <p className="text-sm font-semibold text-primary">Retorno Imediato e Crescimento Sustentável</p>
                 </div>
               </div>
+            </div>
 
-              {/* Bottom Message */}
-              <div className="mt-12 text-center p-6 md:p-8 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl border border-primary/20">
-                <p className="text-lg md:text-xl font-bold text-foreground mb-2">
-                  O custo da assinatura é insignificante comparado ao valor que você recupera.
-                </p>
-                <p className="text-sm md:text-base text-muted-foreground">
-                  A ONDTem é um <span className="font-bold text-primary">INVESTIMENTO</span> que se paga sozinho.
-                </p>
-              </div>
+            {/* Bottom ROI Message */}
+            <div className="text-center p-8 bg-gradient-to-br from-primary via-primary/90 to-secondary rounded-2xl shadow-xl">
+              <p className="text-xl md:text-2xl font-bold text-white mb-3">
+                A ONDTem é um <span className="underline">INVESTIMENTO</span> que se paga sozinho
+              </p>
+              <p className="text-base md:text-lg text-white/90">
+                Com apenas algumas vendas recuperadas, você já cobriu o custo da assinatura.
+                <br className="hidden md:block" />
+                <span className="font-semibold">Todo o resto é lucro puro para sua farmácia.</span>
+              </p>
             </div>
           </div>
         </div>
