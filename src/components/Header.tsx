@@ -33,23 +33,25 @@ const Header = ({ user, onLogout, isVerified = false }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm">
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="flex h-14 sm:h-16 items-center justify-between">
-          {/* Logo & Mobile Badge */}
-          <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex h-14 sm:h-16 items-center justify-between relative">
+          {/* Logo */}
+          <div className="flex items-center">
             <img 
               src={ondeTemLogo} 
               alt="ONDTem" 
               className="h-8 sm:h-10 md:h-12 w-auto object-contain" 
             />
-            {isVerified && !isAdminPage && (
-              <div className="md:hidden inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-500 text-white rounded-full text-xs font-medium shadow-md">
-                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span>Verificada</span>
-              </div>
-            )}
           </div>
+
+          {/* Mobile Badge - Centered */}
+          {isVerified && !isAdminPage && (
+            <div className="md:hidden absolute left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-500 text-white rounded-full text-xs font-medium shadow-md whitespace-nowrap">
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>Verificada</span>
+            </div>
+          )}
           
           {/* Desktop User Info & Actions */}
           <div className="hidden md:flex items-center gap-3">
