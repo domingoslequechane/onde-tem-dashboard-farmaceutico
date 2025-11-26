@@ -143,6 +143,12 @@ const Buscar = () => {
       .setPopup(new mapboxgl.Popup().setHTML('<p class="font-semibold">Sua Localização</p>'))
       .addTo(map.current);
 
+    // Add test marker at specified coordinates
+    new mapboxgl.Marker({ color: '#10b981' })
+      .setLngLat([3.8649219, -19.8305576])
+      .setPopup(new mapboxgl.Popup().setHTML('<p class="font-semibold">Farmácia Teste</p><p class="text-xs">Lat: -19.8305576, Lng: 3.8649219</p>'))
+      .addTo(map.current);
+
     // Wait for map to load before adding radius circle
     map.current.on('load', () => {
       addRadiusCircle();
