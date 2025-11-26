@@ -9,6 +9,18 @@ import { Search, MapPin, Phone, ArrowLeft, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface Pharmacy {
   farmacia_id: string;
@@ -47,6 +59,8 @@ const Buscar = () => {
   const [raioKm, setRaioKm] = useState(5);
   const [allMedicamentos, setAllMedicamentos] = useState<Medicamento[]>([]);
   const [loadingMedicamentos, setLoadingMedicamentos] = useState(true);
+  const [suggestions, setSuggestions] = useState<Medicamento[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     requestGeolocation();
@@ -69,6 +83,20 @@ const Buscar = () => {
       setLoadingMedicamentos(false);
     }
   };
+
+  // Filter suggestions based on input
+  useEffect(() => {
+    if (medicamento.trim().length > 0) {
+      const filtered = allMedicamentos.filter(med =>
+        med.nome.toLowerCase().includes(medicamento.toLowerCase())
+      ).slice(0, 5); // Limit to 5 suggestions
+      setSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [medicamento, allMedicamentos]);
 
   const fetchMapboxToken = async () => {
     try {
@@ -396,15 +424,63 @@ const Buscar = () => {
               )}
             </div>
 
-            {/* Search Input */}
+            {/* Search Input with Autocomplete */}
             <div className="flex gap-2">
-              <Input
-                placeholder="Ex: Paracetamol"
-                value={medicamento}
-                onChange={(e) => setMedicamento(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && searchPharmacies()}
-                className="flex-1"
-              />
+              <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
+                <PopoverTrigger asChild>
+                  <div className="flex-1 relative">
+                    <Input
+                      placeholder="Ex: Paracetamol"
+                      value={medicamento}
+                      onChange={(e) => setMedicamento(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          searchPharmacies();
+                          setShowSuggestions(false);
+                        }
+                      }}
+                      onFocus={() => {
+                        if (suggestions.length > 0) {
+                          setShowSuggestions(true);
+                        }
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent 
+                  className="w-[var(--radix-popover-trigger-width)] p-0" 
+                  align="start"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                >
+                  <Command>
+                    <CommandList>
+                      <CommandEmpty>Nenhum medicamento encontrado</CommandEmpty>
+                      <CommandGroup>
+                        {suggestions.map((med) => (
+                          <CommandItem
+                            key={med.id}
+                            value={med.nome}
+                            onSelect={() => {
+                              setMedicamento(med.nome);
+                              setShowSuggestions(false);
+                            }}
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-medium">{med.nome}</span>
+                              {med.categoria && (
+                                <span className="text-xs text-muted-foreground">
+                                  {med.categoria}
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <Button 
                 onClick={searchPharmacies}
                 disabled={searching || !userLocation}
