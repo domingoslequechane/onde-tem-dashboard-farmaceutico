@@ -854,9 +854,9 @@ const Buscar = () => {
           
           {/* Route Info */}
           {routeInfo && selectedMedicamento && (
-            <Card className="absolute top-3 left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:w-96 p-2 shadow-lg z-10">
-              <div className="flex items-start gap-2">
-                <div className="flex-1 space-y-1.5 min-w-0">
+            <Card className="absolute top-3 left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:w-96 p-3 shadow-lg z-10">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 space-y-2 min-w-0">
                   <h3 className="font-semibold text-xs truncate">{selectedMedicamento.medicamento_nome}</h3>
                   <p className="text-xs text-muted-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
                   
@@ -871,7 +871,7 @@ const Buscar = () => {
                     <p className="text-xs text-muted-foreground">Sem avaliações</p>
                   )}
                   
-                  <div className="grid grid-cols-2 gap-1 text-xs">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="text-muted-foreground">Distância:</span>
                       <p className="font-semibold">{routeInfo.distance.toFixed(2)} km</p>
@@ -882,12 +882,12 @@ const Buscar = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       size="sm"
                       variant={routeMode === 'walking' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'walking')}
-                      className="text-xs h-6"
+                      className="text-xs h-7"
                     >
                       🚶 A pé
                     </Button>
@@ -895,18 +895,18 @@ const Buscar = () => {
                       size="sm"
                       variant={routeMode === 'driving' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'driving')}
-                      className="text-xs h-6"
+                      className="text-xs h-7"
                     >
                       🚗 Viatura
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-1 pt-1 border-t">
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setShowLeaveReview(true)}
-                      className="text-xs h-6"
+                      className="text-xs h-7"
                     >
                       Avaliar
                     </Button>
@@ -914,7 +914,7 @@ const Buscar = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => setShowViewReviews(true)}
-                      className="text-xs h-6"
+                      className="text-xs h-7"
                     >
                       Ver Avaliações
                     </Button>
@@ -924,7 +924,7 @@ const Buscar = () => {
                   size="sm"
                   variant="ghost"
                   onClick={clearRoute}
-                  className="h-4 w-4 p-0"
+                  className="h-5 w-5 p-0"
                 >
                   ✕
                 </Button>
