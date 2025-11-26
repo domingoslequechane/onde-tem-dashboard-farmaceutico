@@ -207,7 +207,7 @@ const Landing = () => {
                     <h3 className="text-xl md:text-2xl font-bold text-foreground">
                       3. Inteligência de Mercado
                     </h3>
-                    <p className="text-base md:text-lg font-semibold text-accent-foreground">
+                    <p className="text-base md:text-lg font-semibold text-secondary">
                       Decisões de Stock Estratégicas e Lucrativas
                     </p>
                     <p className="text-sm md:text-base text-muted-foreground">
