@@ -380,7 +380,7 @@ const Landing = () => {
 
               {/* Right Side - With ONDTem */}
               <div className="space-y-6">
-                <div className="text-center p-4 bg-gradient-to-r from-primary to-secondary rounded-xl border-2 border-primary/30 shadow-lg">
+                <div className="text-center p-4 bg-primary rounded-xl border-2 border-primary/30 shadow-lg">
                   <h3 className="text-xl md:text-2xl font-bold text-white">Com a ONDTem</h3>
                   <p className="text-sm text-white/90 mt-1">Crescimento Acelerado</p>
                 </div>
