@@ -110,14 +110,11 @@ const Buscar = () => {
   const saveToSearchHistory = (searchTerm: string) => {
     try {
       const history = [...searchHistory];
-      // Remove if already exists
       const index = history.indexOf(searchTerm);
       if (index > -1) {
         history.splice(index, 1);
       }
-      // Add to beginning
       history.unshift(searchTerm);
-      // Keep only last 10 searches
       const newHistory = history.slice(0, 10);
       setSearchHistory(newHistory);
       localStorage.setItem('ondtem_search_history', JSON.stringify(newHistory));
@@ -143,14 +140,12 @@ const Buscar = () => {
     }
   };
 
-  // Filter medications based on input - show only unique names
   useEffect(() => {
     if (medicamento.trim().length > 0) {
       const filtered = allMedicamentos.filter(med =>
         med.nome.toLowerCase().includes(medicamento.toLowerCase())
       );
       
-      // Get unique medication names
       const uniqueNames = new Map<string, Medicamento>();
       filtered.forEach(med => {
         if (!uniqueNames.has(med.nome.toLowerCase())) {
@@ -160,7 +155,6 @@ const Buscar = () => {
       
       setFilteredMedicamentos(Array.from(uniqueNames.values()));
     } else {
-      // Show unique names when no search
       const uniqueNames = new Map<string, Medicamento>();
       allMedicamentos.forEach(med => {
         if (!uniqueNames.has(med.nome.toLowerCase())) {
@@ -175,7 +169,6 @@ const Buscar = () => {
     if (!map.current || !userLocation) return;
 
     try {
-      // Build Mapbox Directions API URL - always use real route distance
       const url = `https://api.mapbox.com/directions/v5/mapbox/${mode}/${userLocation.lng},${userLocation.lat};${item.farmacia_longitude},${item.farmacia_latitude}?geometries=geojson&access_token=${mapboxToken}`;
       
       const response = await fetch(url);
@@ -183,9 +176,8 @@ const Buscar = () => {
 
       if (data.routes && data.routes.length > 0) {
         const route = data.routes[0];
-        const realDistance = route.distance / 1000; // Real route distance in km
+        const realDistance = route.distance / 1000;
         
-        // Remove existing route layer if it exists
         if (map.current.getLayer('route')) {
           map.current.removeLayer('route');
         }
@@ -193,7 +185,6 @@ const Buscar = () => {
           map.current.removeSource('route');
         }
 
-        // Add route to map
         map.current.addSource('route', {
           type: 'geojson',
           data: {
@@ -218,7 +209,6 @@ const Buscar = () => {
           },
         });
 
-        // Fit map to show the entire route
         const coordinates = route.geometry.coordinates;
         const bounds = coordinates.reduce(
           (bounds: mapboxgl.LngLatBounds, coord: [number, number]) => {
@@ -228,10 +218,9 @@ const Buscar = () => {
         );
         map.current.fitBounds(bounds, { padding: 80 });
 
-        // Set route info - use real route distance for both displays
         setRouteInfo({
           distance: realDistance,
-          duration: route.duration / 60, // Convert to minutes
+          duration: route.duration / 60,
           mode: mode,
         });
         setSelectedMedicamento({ ...item, distancia_km: realDistance });
@@ -266,11 +255,9 @@ const Buscar = () => {
     setMedicamentos([]);
     clearRoute();
     
-    // Clear pharmacy markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
     
-    // Reset filtered medications to show all
     setFilteredMedicamentos(allMedicamentos);
   };
 
@@ -293,75 +280,6 @@ const Buscar = () => {
     }
   };
 
-  const fetchNearbyPharmacies = async (lat: number, lng: number) => {
-    try {
-      const { data, error } = await supabase
-        .from('farmacias')
-        .select('*')
-        .eq('ativa', true);
-
-      if (error) throw error;
-
-      // Calculate distance for each pharmacy in real-time
-      const farmaciasComDistancia = (data || [])
-        .map((farmacia) => {
-          const R = 6371; // Earth radius in km
-          const dLat = (farmacia.latitude - lat) * Math.PI / 180;
-          const dLon = (farmacia.longitude - lng) * Math.PI / 180;
-          const a = 
-            Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat * Math.PI / 180) * Math.cos(farmacia.latitude * Math.PI / 180) *
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-          const distancia_km = R * c;
-
-          return {
-            ...farmacia,
-            distancia_km
-          };
-        })
-        .filter(f => f.distancia_km <= raioKm)
-        .sort((a, b) => a.distancia_km - b.distancia_km);
-
-      // Add pharmacy markers to map
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current = [];
-
-      farmaciasComDistancia.forEach((farmacia) => {
-        if (farmacia.latitude && farmacia.longitude && map.current) {
-          const marker = new mapboxgl.Marker({ color: '#10b981' })
-            .setLngLat([farmacia.longitude, farmacia.latitude])
-            .setPopup(
-              new mapboxgl.Popup().setHTML(`
-                <div class="p-2">
-                  <p class="font-semibold text-sm">${farmacia.nome}</p>
-                  <p class="text-xs text-gray-600 mt-1">${farmacia.distancia_km.toFixed(2)} km</p>
-                  <p class="text-xs text-gray-600">${farmacia.endereco_completo}</p>
-                </div>
-              `)
-            )
-            .addTo(map.current);
-          
-          markersRef.current.push(marker);
-        }
-      });
-
-      // Fit map to show all markers
-      if (markersRef.current.length > 0 && map.current) {
-        const bounds = new mapboxgl.LngLatBounds();
-        bounds.extend([lng, lat]);
-        farmaciasComDistancia.forEach((farmacia) => {
-          if (farmacia.latitude && farmacia.longitude) {
-            bounds.extend([farmacia.longitude, farmacia.latitude]);
-          }
-        });
-        map.current.fitBounds(bounds, { padding: 50 });
-      }
-    } catch (error) {
-      console.error('Error fetching nearby pharmacies:', error);
-    }
-  };
-
   const fetchAllPharmacies = async () => {
     try {
       const { data, error } = await supabase
@@ -371,11 +289,9 @@ const Buscar = () => {
 
       if (error) throw error;
 
-      // Clear existing markers
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
 
-      // Add all pharmacy markers to map
       (data || []).forEach((farmacia) => {
         if (farmacia.latitude && farmacia.longitude && map.current) {
           const marker = new mapboxgl.Marker({ color: '#10b981' })
@@ -387,85 +303,9 @@ const Buscar = () => {
                 maxWidth: '320px',
                 className: 'pharmacy-popup'
               }).setHTML(`
-                <style>
-                  .pharmacy-popup .mapboxgl-popup-content {
-                    padding: 0;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                  }
-                  .pharmacy-popup-close {
-                    position: absolute;
-                    top: 12px;
-                    right: 12px;
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 6px;
-                    background: #f1f5f9;
-                    border: none;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.2s;
-                    z-index: 10;
-                  }
-                  .pharmacy-popup-close:hover {
-                    background: #e2e8f0;
-                  }
-                  .pharmacy-popup-close svg {
-                    width: 14px;
-                    height: 14px;
-                    stroke: #64748b;
-                    stroke-width: 2.5;
-                  }
-                </style>
-                <div style="padding: 16px; padding-right: 44px; font-family: system-ui, -apple-system, sans-serif; position: relative;">
-                  <button class="pharmacy-popup-close" onclick="this.closest('.mapboxgl-popup').remove()">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                  <h3 style="margin: 0 0 12px 0; font-weight: 600; font-size: 15px; color: #0f172a; line-height: 1.3; padding-right: 8px;">
-                    ${farmacia.nome}
-                  </h3>
-                  <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
-                    ${farmacia.endereco_completo ? `
-                      <div style="display: flex; align-items: start; gap: 10px;">
-                        <svg style="width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                          <circle cx="12" cy="10" r="3"/>
-                        </svg>
-                        <span style="color: #64748b; line-height: 1.5;">${farmacia.endereco_completo}</span>
-                      </div>
-                    ` : ''}
-                    ${farmacia.horario_abertura && farmacia.horario_fechamento ? `
-                      <div style="display: flex; align-items: center; gap: 10px;">
-                        <svg style="width: 18px; height: 18px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <circle cx="12" cy="12" r="10"/>
-                          <polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                        <span style="color: #64748b;">${farmacia.horario_abertura} - ${farmacia.horario_fechamento}</span>
-                      </div>
-                    ` : ''}
-                    ${farmacia.telefone ? `
-                      <div style="display: flex; align-items: center; gap: 10px;">
-                        <svg style="width: 18px; height: 18px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                        </svg>
-                        <a href="tel:${farmacia.telefone}" style="color: #10b981; text-decoration: none; font-weight: 500; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">${farmacia.telefone}</a>
-                      </div>
-                    ` : ''}
-                    ${farmacia.whatsapp ? `
-                      <div style="display: flex; align-items: center; gap: 10px;">
-                        <svg style="width: 18px; height: 18px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="m3 21 1.65-3.8a9 9 0 1 1 3.4 2.9z"/>
-                          <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/>
-                        </svg>
-                        <a href="https://wa.me/${farmacia.whatsapp.replace(/\D/g, '')}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 500; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">${farmacia.whatsapp}</a>
-                      </div>
-                    ` : ''}
-                  </div>
+                <div style="padding: 12px; font-family: system-ui, -apple-system, sans-serif;">
+                  <h3 style="margin: 0 0 8px 0; font-weight: 600; font-size: 14px;">${farmacia.nome}</h3>
+                  <p style="margin: 0; font-size: 12px; color: #64748b;">${farmacia.endereco_completo}</p>
                 </div>
               `)
             )
@@ -475,24 +315,17 @@ const Buscar = () => {
         }
       });
 
-      // Fit map to show user location and nearby pharmacies within radius
       if (markersRef.current.length > 0 && map.current && userLocation) {
         const bounds = new mapboxgl.LngLatBounds();
-        
-        // Include user location
         bounds.extend([userLocation.lng, userLocation.lat]);
-        
-        // Include pharmacies
         (data || []).forEach((farmacia) => {
           if (farmacia.latitude && farmacia.longitude) {
             bounds.extend([farmacia.longitude, farmacia.latitude]);
           }
         });
-        
-        // Fit bounds with generous padding to show context
         map.current.fitBounds(bounds, { 
           padding: { top: 100, bottom: 100, left: 100, right: 100 },
-          maxZoom: 14 // Don't zoom in too much
+          maxZoom: 14
         });
       }
     } catch (error) {
@@ -527,7 +360,7 @@ const Buscar = () => {
         setLocationPermission('denied');
         toast({
           title: 'Permissão negada',
-          description: 'Por favor, permita acesso à sua localização para encontrar farmácias próximas',
+          description: 'Por favor, permita acesso à sua localização',
           variant: 'destructive',
         });
         console.error('Geolocation error:', error);
@@ -542,7 +375,7 @@ const Buscar = () => {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11', // Clean, minimal style similar to Google Maps
+      style: 'mapbox://styles/mapbox/light-v11',
       center: [userLocation.lng, userLocation.lat],
       zoom: 12,
       pitch: 0,
@@ -551,37 +384,19 @@ const Buscar = () => {
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    // Add user location marker (blue marker for user)
     new mapboxgl.Marker({ color: '#3b82f6' })
       .setLngLat([userLocation.lng, userLocation.lat])
       .setPopup(
         new mapboxgl.Popup({ 
           closeButton: false,
           maxWidth: '200px',
-          className: 'user-location-popup'
-        }).setHTML(`
-          <style>
-            .user-location-popup .mapboxgl-popup-content {
-              padding: 12px 16px;
-              border-radius: 10px;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            }
-          </style>
-          <div style="display: flex; align-items: center; gap: 8px; font-family: system-ui, -apple-system, sans-serif;">
-            <svg style="width: 18px; height: 18px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-              <circle cx="12" cy="10" r="3"/>
-            </svg>
-            <p style="margin: 0; font-weight: 600; font-size: 14px; color: #0f172a;">Sua Localização</p>
-          </div>
-        `)
+        }).setHTML(`<div style="padding: 10px; font-weight: 600; font-size: 13px;">Sua Localização</div>`)
       )
       .addTo(map.current);
 
-    // Wait for map to load before adding radius circle and pharmacies
     map.current.on('load', () => {
       addRadiusCircle();
-      fetchAllPharmacies(); // Show all pharmacies on initial load
+      fetchAllPharmacies();
     });
 
     return () => {
@@ -589,16 +404,12 @@ const Buscar = () => {
     };
   }, [mapboxToken, userLocation]);
 
-
-  // Update radius circle when raioKm changes
   useEffect(() => {
     if (map.current && map.current.isStyleLoaded()) {
       addRadiusCircle();
     }
     
-    // Only refetch nearby pharmacies if there's an active search, otherwise show all
     if (userLocation && medicamentos.length > 0) {
-      // Re-run search to update results with new radius
       searchPharmacies();
     }
   }, [raioKm]);
@@ -606,7 +417,6 @@ const Buscar = () => {
   const addRadiusCircle = () => {
     if (!map.current || !userLocation) return;
 
-    // Remove existing radius circle if it exists
     if (map.current.getLayer('radius-circle-outline')) {
       map.current.removeLayer('radius-circle-outline');
     }
@@ -617,7 +427,6 @@ const Buscar = () => {
       map.current.removeSource('radius');
     }
 
-    // Create circle using turf-like calculation
     const center = [userLocation.lng, userLocation.lat];
     const radiusInMeters = raioKm * 1000;
     const points = 64;
@@ -627,7 +436,6 @@ const Buscar = () => {
       const angle = (i * 360) / points;
       const radians = (angle * Math.PI) / 180;
       
-      // Calculate point on circle (approximate, works for small distances)
       const dx = radiusInMeters * Math.cos(radians);
       const dy = radiusInMeters * Math.sin(radians);
       
@@ -637,10 +445,8 @@ const Buscar = () => {
       coords.push([lng, lat]);
     }
     
-    // Close the circle
     coords.push(coords[0]);
 
-    // Add the circle as a source and layer
     map.current.addSource('radius', {
       type: 'geojson',
       data: {
@@ -684,7 +490,6 @@ const Buscar = () => {
 
       if (error) throw error;
 
-      // Calculate average ratings per pharmacy
       const ratingsMap = new Map<string, { media: number; total: number }>();
       
       (data || []).forEach((review) => {
@@ -701,173 +506,82 @@ const Buscar = () => {
     }
   };
 
-  const renderStars = (rating: number, size: 'sm' | 'md' = 'sm') => {
+  const renderStars = (rating: number, size: 'sm' | 'md' = 'md') => {
+    const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-    
-    const starSize = size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
-    
-    return (
-      <div className="flex items-center gap-0.5">
-        {/* Full stars */}
-        {[...Array(fullStars)].map((_, i) => (
-          <Star
-            key={`full-${i}`}
-            className={`${starSize} fill-yellow-400 text-yellow-400`}
-          />
-        ))}
-        {/* Half star */}
-        {hasHalfStar && (
-          <div className="relative">
-            <Star className={`${starSize} text-yellow-400`} />
-            <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
-              <Star className={`${starSize} fill-yellow-400 text-yellow-400`} />
-            </div>
-          </div>
-        )}
-        {/* Empty stars */}
-        {[...Array(emptyStars)].map((_, i) => (
-          <Star
-            key={`empty-${i}`}
-            className={`${starSize} text-yellow-400`}
-          />
-        ))}
-      </div>
-    );
+    const iconSize = size === 'sm' ? 'h-2.5 w-2.5' : 'h-3 w-3';
+
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<Star key={i} className={`${iconSize} fill-yellow-400 text-yellow-400`} />);
+    }
+    if (hasHalfStar) {
+      stars.push(<Star key="half" className={`${iconSize} fill-yellow-400/50 text-yellow-400`} />);
+    }
+    const emptyStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(<Star key={`empty-${i}`} className={`${iconSize} text-gray-300`} />);
+    }
+    return stars;
   };
 
   const searchPharmacies = async (searchTerm?: string) => {
-    const termToSearch = searchTerm || medicamento;
-    
-    if (!termToSearch.trim()) {
-      toast({
-        title: 'Atenção',
-        description: 'Por favor, digite o nome do medicamento',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!userLocation) {
-      toast({
-        title: 'Localização necessária',
-        description: 'Por favor, permita acesso à sua localização',
-        variant: 'destructive',
-      });
-      requestGeolocation();
-      return;
-    }
+    const term = searchTerm || medicamento;
+    if (!term || !userLocation) return;
 
     setSearching(true);
-    
-    // Save to search history - use the full term
-    saveToSearchHistory(termToSearch.trim());
+    clearRoute();
 
     try {
-      const { data, error } = await supabase.rpc('buscar_farmacias_proximas', {
-        p_latitude: userLocation.lat,
-        p_longitude: userLocation.lng,
-        p_medicamento: termToSearch,
-        p_raio_km: raioKm,
-      }) as { data: MedicamentoFarmacia[] | null; error: any };
+      const { data, error } = await supabase
+        .rpc('buscar_farmacias_proximas', {
+          p_latitude: userLocation.lat,
+          p_longitude: userLocation.lng,
+          p_medicamento: term,
+          p_raio_km: raioKm
+        });
 
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Calculate real route distances for unique pharmacies
-        const uniquePharmacies = new Map<string, MedicamentoFarmacia>();
-        data.forEach((item) => {
-          if (!uniquePharmacies.has(item.farmacia_id)) {
-            uniquePharmacies.set(item.farmacia_id, item);
-          }
-        });
-
-        // Fetch real route distances for each pharmacy - ALWAYS use route distance
-        const distancePromises = Array.from(uniquePharmacies.values()).map(async (pharmacy) => {
-          try {
-            const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${userLocation.lng},${userLocation.lat};${pharmacy.farmacia_longitude},${pharmacy.farmacia_latitude}?access_token=${mapboxToken}`;
-            const response = await fetch(url);
-            const routeData = await response.json();
-            
-            if (routeData.routes && routeData.routes.length > 0) {
-              const realDistance = routeData.routes[0].distance / 1000; // Real route distance in km
-              console.log(`Real route distance for ${pharmacy.farmacia_nome}: ${realDistance.toFixed(2)} km (straight-line was ${pharmacy.distancia_km.toFixed(2)} km)`);
-              return { farmacia_id: pharmacy.farmacia_id, distancia_km: realDistance };
-            }
-            // If no route found, keep Haversine as fallback
-            console.warn(`No route found for ${pharmacy.farmacia_nome}, using Haversine: ${pharmacy.distancia_km.toFixed(2)} km`);
-            return { farmacia_id: pharmacy.farmacia_id, distancia_km: pharmacy.distancia_km };
-          } catch (err) {
-            console.error(`Error calculating route distance for ${pharmacy.farmacia_nome}:`, err);
-            return { farmacia_id: pharmacy.farmacia_id, distancia_km: pharmacy.distancia_km };
-          }
-        });
-
-        const realDistances = await Promise.all(distancePromises);
-        const distanceMap = new Map(realDistances.map(d => [d.farmacia_id, d.distancia_km]));
-
-        // Fetch pharmacy ratings
-        const farmaciaIds = Array.from(uniquePharmacies.keys());
+        saveToSearchHistory(term);
+        
+        const farmaciaIds = [...new Set(data.map((item: any) => item.farmacia_id))];
         const ratingsMap = await fetchPharmacyRatings(farmaciaIds);
 
-        // Update medications with real distances and ratings
-        const updatedData = data.map(item => ({
-          ...item,
-          distancia_km: distanceMap.get(item.farmacia_id) || item.distancia_km,
-          media_avaliacoes: ratingsMap.get(item.farmacia_id)?.media,
-          total_avaliacoes: ratingsMap.get(item.farmacia_id)?.total,
-        })).sort((a, b) => a.distancia_km - b.distancia_km); // Re-sort by real distance
+        const medicamentosComAvaliacoes = data.map((item: any) => {
+          const ratings = ratingsMap.get(item.farmacia_id);
+          return {
+            ...item,
+            media_avaliacoes: ratings?.media || 0,
+            total_avaliacoes: ratings?.total || 0,
+          };
+        });
 
-        setMedicamentos(updatedData);
+        setMedicamentos(medicamentosComAvaliacoes);
 
-        // Clear existing pharmacy markers
         markersRef.current.forEach(marker => marker.remove());
         markersRef.current = [];
 
-        // Group by pharmacy again with updated distances
-        const updatedUniquePharmacies = new Map<string, MedicamentoFarmacia>();
-        updatedData.forEach((item) => {
-          if (!updatedUniquePharmacies.has(item.farmacia_id)) {
-            updatedUniquePharmacies.set(item.farmacia_id, item);
-          }
-        });
-
-        // Add pharmacy markers to map
-        updatedUniquePharmacies.forEach((item) => {
+        medicamentosComAvaliacoes.forEach((item: MedicamentoFarmacia) => {
           if (item.farmacia_latitude && item.farmacia_longitude && map.current) {
             const marker = new mapboxgl.Marker({ color: '#10b981' })
               .setLngLat([item.farmacia_longitude, item.farmacia_latitude])
-              .setPopup(
-                new mapboxgl.Popup().setHTML(`
-                  <div class="p-2">
-                    <p class="font-semibold text-sm">${item.farmacia_nome}</p>
-                    <p class="text-xs text-gray-600 mt-1">${item.distancia_km.toFixed(2)} km (via rota)</p>
-                  </div>
-                `)
-              )
               .addTo(map.current);
-            
             markersRef.current.push(marker);
           }
         });
 
-        // Fit map to show all markers
-        if (markersRef.current.length > 0 && map.current) {
+        if (map.current && medicamentosComAvaliacoes.length > 0) {
           const bounds = new mapboxgl.LngLatBounds();
           bounds.extend([userLocation.lng, userLocation.lat]);
-          updatedUniquePharmacies.forEach((item) => {
+          medicamentosComAvaliacoes.forEach((item: MedicamentoFarmacia) => {
             if (item.farmacia_latitude && item.farmacia_longitude) {
               bounds.extend([item.farmacia_longitude, item.farmacia_latitude]);
             }
           });
           map.current.fitBounds(bounds, { padding: 50 });
         }
-
-        toast({
-          title: 'Busca concluída',
-          description: `Encontramos ${updatedData.length} medicamento${updatedData.length > 1 ? 's' : ''}`,
-        });
       } else {
         setMedicamentos([]);
       }
@@ -884,25 +598,25 @@ const Buscar = () => {
   };
 
   return (
-    <div className="min-h-screen max-w-full bg-background flex flex-col overflow-x-hidden">
-      {/* Header - More compact */}
-      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full">
-        <div className="w-full max-w-full px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 flex justify-between items-center gap-2">
-          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden w-full">
+      {/* Header */}
+      <header className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-50 w-full">
+        <div className="px-3 py-2 flex justify-between items-center gap-2 max-w-full min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/')}
-              className="h-6 w-6 sm:h-7 sm:w-7 md:h-9 md:w-9 flex-shrink-0"
+              className="h-8 w-8 flex-shrink-0"
             >
-              <ArrowLeft className="h-3 sm:h-3.5 md:h-4 w-3 sm:w-3.5 md:w-4" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <img src={logo} alt="ONDTem" className="h-4 sm:h-5 md:h-7 flex-shrink-0" />
+            <img src={logo} alt="ONDTem" className="h-6 flex-shrink-0" />
           </div>
           <Button 
             variant="ghost" 
             onClick={() => navigate('/entrar')}
-            className="text-[10px] sm:text-xs md:text-sm h-6 sm:h-7 md:h-8 px-2 sm:px-3 flex-shrink-0 whitespace-nowrap"
+            className="text-xs h-7 px-3 flex-shrink-0"
             size="sm"
           >
             Entrar
@@ -911,17 +625,15 @@ const Buscar = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden w-full max-w-full">
-        {/* Search Panel - More compact and narrower */}
-        <div className="w-full md:w-[340px] border-r border-border bg-background flex flex-col overflow-hidden max-w-full">
-          {/* Search Header - Reduced padding */}
-          <div className="p-2 sm:p-3 border-b border-border space-y-2 sm:space-y-3 w-full max-w-full">
-            <div className="w-full max-w-full">
-              <h1 className="text-base sm:text-lg font-bold truncate">Encontre ONDTem!</h1>
-            </div>
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden w-full">
+        {/* Search Panel */}
+        <div className="w-full md:w-80 border-r border-border bg-background flex flex-col overflow-hidden">
+          {/* Search Header */}
+          <div className="p-3 border-b border-border space-y-2">
+            <h1 className="text-base font-bold truncate">Encontre ONDTem!</h1>
 
-            {/* Search Input - Mobile: with radius dropdown, Desktop: separate */}
-            <div className="flex gap-1.5 sm:gap-2 w-full max-w-full">
+            {/* Search Input */}
+            <div className="flex gap-2 w-full min-w-0">
               <div className="relative flex-1 min-w-0">
                 <Input
                   placeholder="Ex: Paracetamol"
@@ -930,7 +642,6 @@ const Buscar = () => {
                   onKeyDown={(e) => e.key === 'Enter' && searchPharmacies()}
                   onFocus={() => {
                     setIsInputFocused(true);
-                    // Show unique medication names on focus
                     const filtered = medicamento ? 
                       allMedicamentos.filter(med => med.nome.toLowerCase().includes(medicamento.toLowerCase())) : 
                       allMedicamentos;
@@ -945,25 +656,24 @@ const Buscar = () => {
                     setFilteredMedicamentos(Array.from(uniqueNames.values()).slice(0, 5));
                   }}
                   onBlur={() => {
-                    // Delay to allow click on dropdown items
                     setTimeout(() => setIsInputFocused(false), 200);
                   }}
-                  className="pr-7 h-8 sm:h-9 text-xs sm:text-sm w-full"
+                  className="pr-8 h-9 text-sm"
                 />
                 {(medicamento || selectedMedicamento) && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={clearSearch}
-                    className="absolute right-0 top-0 h-full w-7 sm:w-8 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full w-8"
                   >
-                    <X className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-muted-foreground hover:text-foreground" />
+                    <X className="h-4 w-4" />
                   </Button>
                 )}
                 
-                {/* Autocomplete Dropdown */}
+                {/* Autocomplete */}
                 {isInputFocused && medicamento && filteredMedicamentos.length > 0 && !searching && (
-                  <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-[200px] overflow-y-auto shadow-lg bg-background">
+                  <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-48 overflow-y-auto">
                     {filteredMedicamentos.slice(0, 5).map((med, index) => (
                       <div
                         key={`${med.nome}-${index}`}
@@ -974,19 +684,19 @@ const Buscar = () => {
                           setIsInputFocused(false);
                         }}
                       >
-                        <p className="text-sm font-medium">{med.nome}</p>
+                        <p className="text-sm font-medium truncate">{med.nome}</p>
                       </div>
                     ))}
                   </Card>
                 )}
               </div>
               
-              {/* Radius Dropdown - Mobile only */}
+              {/* Radius Mobile */}
               <Select value={raioKm.toString()} onValueChange={(value) => setRaioKm(Number(value))}>
-                <SelectTrigger className="w-14 sm:w-16 h-8 sm:h-9 text-[10px] sm:text-xs md:hidden shrink-0">
+                <SelectTrigger className="w-16 h-9 text-xs md:hidden">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="z-50 bg-background">
+                <SelectContent>
                   {[1, 2, 3, 4, 5].map((km) => (
                     <SelectItem key={km} value={km.toString()} className="text-xs">
                       {km}km
@@ -999,15 +709,15 @@ const Buscar = () => {
                 onClick={() => searchPharmacies()}
                 disabled={searching || !userLocation}
                 size="icon"
-                className="flex-shrink-0 h-8 sm:h-9 w-8 sm:w-9"
+                className="flex-shrink-0 h-9 w-9"
               >
-                <Search className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
+                <Search className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* Radius Selector - Tablet and Desktop (buttons) */}
+            {/* Radius Desktop */}
             <div className="hidden md:flex items-center gap-2">
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap">Raio:</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Raio:</span>
               <div className="flex gap-1 flex-1">
                 {[1, 2, 3, 4, 5].map((km) => (
                   <Button
@@ -1024,169 +734,111 @@ const Buscar = () => {
             </div>
           </div>
 
-          {/* Results List - Reduced padding */}
-          <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 w-full max-w-full">
+          {/* Results */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {medicamentos.length > 0 && (
-              <h2 className="text-[10px] sm:text-xs font-semibold text-muted-foreground sticky top-0 bg-background pb-1.5 truncate">
+              <h2 className="text-xs font-semibold text-muted-foreground sticky top-0 bg-background pb-1">
                 {medicamentos.length} Medicamento{medicamentos.length > 1 ? 's' : ''} encontrado{medicamentos.length > 1 ? 's' : ''}
               </h2>
             )}
             
-            {/* Loading State */}
             {searching && (
-              <Card className="p-2 sm:p-4 text-center space-y-2 w-full max-w-full">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
-                  <Search className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <Card className="p-4 text-center space-y-2">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
+                  <Search className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="font-semibold text-xs sm:text-sm">Buscando medicamentos...</h3>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">
-                  Procurando as melhores opções próximas a você
-                </p>
+                <h3 className="font-semibold text-sm">Buscando...</h3>
               </Card>
             )}
             
-            {/* Empty State */}
             {!searching && medicamentos.length === 0 && medicamento && (
-              <Card className="p-2 sm:p-4 text-center space-y-2 w-full max-w-full">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center mx-auto">
-                  <Search className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+              <Card className="p-4 text-center space-y-2">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto">
+                  <Search className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <h3 className="font-semibold text-xs sm:text-sm">Nenhum medicamento encontrado</h3>
-                <p className="text-[10px] sm:text-xs text-muted-foreground break-words">
-                  Não encontramos "{medicamento}" em farmácias próximas em um raio de {raioKm}km.
-                  {raioKm < 5 && ' Tente aumentar o raio de busca acima.'}
+                <h3 className="font-semibold text-sm">Nenhum medicamento encontrado</h3>
+                <p className="text-xs text-muted-foreground">
+                  Não encontramos "{medicamento}" em farmácias próximas.
                 </p>
               </Card>
             )}
 
-            {/* Recent Searches Section - More compact */}
             {!searching && medicamentos.length === 0 && !medicamento && searchHistory.length > 0 && (
-              <div className="space-y-2 w-full max-w-full">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Clock className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-muted-foreground flex-shrink-0" />
-                  <h2 className="text-[10px] sm:text-xs font-semibold text-muted-foreground">Buscas Recentes</h2>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h2 className="text-xs font-semibold text-muted-foreground">Buscas Recentes</h2>
                 </div>
-                <div className="space-y-1.5 sm:space-y-2 w-full max-w-full">
-                  {searchHistory.map((search, index) => (
-                    <Card 
-                      key={`recent-${index}`} 
-                      className="p-2 sm:p-2.5 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary w-full max-w-full"
-                      onClick={() => {
-                        setMedicamento(search);
-                        setTimeout(() => searchPharmacies(search), 100);
-                      }}
-                    >
-                      <div className="flex justify-between items-center gap-2 w-full max-w-full">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-xs sm:text-sm truncate">{search}</p>
-                          <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">
-                            Toque para buscar novamente
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 sm:h-7 w-6 sm:w-7 flex-shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const newHistory = searchHistory.filter((_, i) => i !== index);
-                            setSearchHistory(newHistory);
-                            localStorage.setItem('ondtem_search_history', JSON.stringify(newHistory));
-                          }}
-                        >
-                          <X className="h-2.5 sm:h-3.5 w-2.5 sm:w-3.5 text-muted-foreground hover:text-foreground" />
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
+                {searchHistory.map((search, index) => (
+                  <Card 
+                    key={index} 
+                    className="p-2 hover:shadow-md transition-all cursor-pointer"
+                    onClick={() => {
+                      setMedicamento(search);
+                      setTimeout(() => searchPharmacies(search), 100);
+                    }}
+                  >
+                    <div className="flex justify-between items-center gap-2">
+                      <p className="font-medium text-sm truncate flex-1">{search}</p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newHistory = searchHistory.filter((_, i) => i !== index);
+                          setSearchHistory(newHistory);
+                          localStorage.setItem('ondtem_search_history', JSON.stringify(newHistory));
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
               </div>
             )}
 
-            {/* Medications List - More compact */}
             {medicamentos.map((item, index) => (
               <Card 
-                key={`${item.medicamento_id}-${item.farmacia_id}-${index}`} 
-                className={`p-2 sm:p-2.5 space-y-1.5 hover:shadow-md transition-all cursor-pointer border-l-4 w-full max-w-full ${
-                  selectedMedicamento?.medicamento_id === item.medicamento_id && selectedMedicamento?.farmacia_id === item.farmacia_id
-                    ? 'border-l-green-600 bg-green-50' 
-                    : 'border-l-green-500 hover:border-l-green-600 bg-green-50/50 hover:bg-green-50'
-                }`}
+                key={index} 
+                className="p-2 space-y-1.5 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-green-500"
                 onClick={() => showRouteToPharmacy(item, routeMode)}
               >
-                <div className="flex justify-between items-start gap-2 w-full max-w-full">
+                <div className="flex justify-between items-start gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-xs sm:text-sm truncate">{item.medicamento_nome}</h3>
+                    <h3 className="font-semibold text-sm truncate">{item.medicamento_nome}</h3>
                     {item.medicamento_categoria && (
-                      <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">
-                        {item.medicamento_categoria}
-                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{item.medicamento_categoria}</p>
                     )}
                   </div>
-                  <div className="flex flex-col items-end flex-shrink-0">
-                    <span className="text-xs sm:text-sm font-semibold text-green-600 whitespace-nowrap">
-                      {item.distancia_km.toFixed(1)} km
-                    </span>
-                    <span className="text-[8px] sm:text-[9px] text-muted-foreground whitespace-nowrap">via rota</span>
-                  </div>
+                  <span className="text-sm font-semibold text-green-600 whitespace-nowrap">
+                    {item.distancia_km.toFixed(1)} km
+                  </span>
                 </div>
                 
-                <div className="pt-1.5 border-t border-border space-y-1.5 w-full max-w-full">
-                  <div className="flex items-center gap-1 min-w-0">
-                    <MapPin className="h-2.5 sm:h-3 w-2.5 sm:w-3 text-green-600 flex-shrink-0" />
-                    <p className="text-[10px] sm:text-xs font-medium text-green-600 truncate flex-1">
-                      {item.farmacia_nome}
-                    </p>
+                <div className="pt-1.5 border-t space-y-1">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3 text-green-600 flex-shrink-0" />
+                    <p className="text-xs font-medium text-green-600 truncate">{item.farmacia_nome}</p>
                   </div>
                   
-                  {/* Price and Rating on same line */}
-                  <div className="flex items-center justify-between gap-2 w-full max-w-full">
-                    <div className="flex-1 min-w-0">
-                      {item.medicamento_preco && (
-                        <p className="text-xs sm:text-sm font-semibold text-green-600 truncate">
-                          MT {item.medicamento_preco.toFixed(2)}
-                        </p>
-                      )}
-                    </div>
-                    
-                    {/* Rating stars */}
-                    {item.media_avaliacoes ? (
-                      <div className="flex items-center gap-0.5 flex-shrink-0">
-                        {renderStars(item.media_avaliacoes, 'sm')}
-                        <span className="text-[10px] sm:text-xs font-semibold text-yellow-600 ml-0.5 whitespace-nowrap">
-                          {item.media_avaliacoes.toFixed(1)}
-                        </span>
-                        <span className="text-[8px] sm:text-[9px] text-muted-foreground whitespace-nowrap">
-                          ({item.total_avaliacoes})
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-[9px] sm:text-[11px] text-muted-foreground whitespace-nowrap">Sem avaliações</span>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] pt-1.5 border-t border-border w-full max-w-full">
-                  {item.farmacia_telefone && (
-                    <a 
-                      href={`tel:${item.farmacia_telefone}`}
-                      className="flex items-center gap-0.5 sm:gap-1 text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Phone className="h-2.5 sm:h-3 w-2.5 sm:w-3 shrink-0" />
-                      <span className="truncate">Ligar</span>
-                    </a>
+                  {item.medicamento_preco && (
+                    <p className="text-sm font-semibold text-green-600">MT {item.medicamento_preco.toFixed(2)}</p>
                   )}
-                  {item.farmacia_whatsapp && (
-                    <a 
-                      href={`https://wa.me/${item.farmacia_whatsapp.replace(/\D/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-0.5 sm:gap-1 text-green-600 hover:text-green-700 font-medium"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className="truncate">WhatsApp</span>
-                    </a>
+                  
+                  {item.media_avaliacoes ? (
+                    <div className="flex items-center gap-1">
+                      {renderStars(item.media_avaliacoes, 'sm')}
+                      <span className="text-xs font-semibold text-yellow-600">
+                        {item.media_avaliacoes.toFixed(1)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ({item.total_avaliacoes})
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Sem avaliações</span>
                   )}
                 </div>
               </Card>
@@ -1195,42 +847,36 @@ const Buscar = () => {
         </div>
 
         {/* Map */}
-        <div className="flex-1 relative h-[400px] md:h-auto min-h-0 w-full max-w-full overflow-hidden">
-          <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+        <div className="flex-1 relative h-96 md:h-auto overflow-hidden">
+          <div ref={mapContainer} className="absolute inset-0" />
           
-          {/* Route Info Overlay - More compact and responsive */}
+          {/* Route Info */}
           {routeInfo && selectedMedicamento && (
-            <Card className="absolute top-2 sm:top-3 left-2 sm:left-1/2 sm:transform sm:-translate-x-1/2 p-1.5 sm:p-2 shadow-lg z-10 w-[calc(100%-1rem)] sm:w-[calc(100%-1.5rem)] max-w-md">
-              <div className="flex items-start gap-1 sm:gap-1.5 w-full max-w-full">
-                <div className="flex-1 space-y-1 sm:space-y-1.5 min-w-0 max-w-full">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-[10px] sm:text-xs mb-0.5 truncate">{selectedMedicamento.medicamento_nome}</h3>
-                    <p className="text-[9px] sm:text-[11px] text-muted-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
-                    {selectedMedicamento.media_avaliacoes ? (
-                      <div className="flex items-center gap-0.5 mt-0.5">
-                        {renderStars(selectedMedicamento.media_avaliacoes, 'sm')}
-                        <span className="text-[9px] sm:text-[11px] font-semibold text-yellow-600 ml-0.5">
-                          {selectedMedicamento.media_avaliacoes.toFixed(1)}
-                        </span>
-                        <span className="text-[8px] sm:text-[9px] text-muted-foreground">
-                          ({selectedMedicamento.total_avaliacoes})
-                        </span>
-                      </div>
-                    ) : (
-                      <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5">Sem avaliações</p>
-                    )}
-                  </div>
+            <Card className="absolute top-3 left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:w-96 p-2 shadow-lg z-10">
+              <div className="flex items-start gap-2">
+                <div className="flex-1 space-y-1.5 min-w-0">
+                  <h3 className="font-semibold text-xs truncate">{selectedMedicamento.medicamento_nome}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
                   
-                  <div className="grid grid-cols-2 gap-x-1.5 sm:gap-x-2 gap-y-0.5 text-[9px] sm:text-[11px]">
-                    <div className="min-w-0">
-                      <span className="font-medium text-muted-foreground">Distância:</span>
-                      <p className="font-semibold truncate">{routeInfo.distance.toFixed(2)} km</p>
+                  {selectedMedicamento.media_avaliacoes ? (
+                    <div className="flex items-center gap-1">
+                      {renderStars(selectedMedicamento.media_avaliacoes, 'sm')}
+                      <span className="text-xs font-semibold text-yellow-600">
+                        {selectedMedicamento.media_avaliacoes.toFixed(1)}
+                      </span>
                     </div>
-                    <div className="min-w-0">
-                      <span className="font-medium text-muted-foreground">Tempo:</span>
-                      <p className="font-semibold truncate">
-                        {Math.round(routeInfo.duration)} min {routeInfo.mode === 'walking' ? '🚶' : '🚗'}
-                      </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Sem avaliações</p>
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-1 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Distância:</span>
+                      <p className="font-semibold">{routeInfo.distance.toFixed(2)} km</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Tempo:</span>
+                      <p className="font-semibold">{Math.round(routeInfo.duration)} min</p>
                     </div>
                   </div>
 
@@ -1239,7 +885,7 @@ const Buscar = () => {
                       size="sm"
                       variant={routeMode === 'walking' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'walking')}
-                      className="text-[9px] sm:text-[11px] h-5 sm:h-6 px-1 sm:px-2"
+                      className="text-xs h-6"
                     >
                       🚶 A pé
                     </Button>
@@ -1247,28 +893,28 @@ const Buscar = () => {
                       size="sm"
                       variant={routeMode === 'driving' ? 'default' : 'outline'}
                       onClick={() => showRouteToPharmacy(selectedMedicamento, 'driving')}
-                      className="text-[9px] sm:text-[11px] h-5 sm:h-6 px-1 sm:px-2"
+                      className="text-xs h-6"
                     >
                       🚗 Viatura
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-1 pt-1 border-t border-border">
+                  <div className="grid grid-cols-2 gap-1 pt-1 border-t">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setShowLeaveReview(true)}
-                      className="text-[9px] sm:text-[11px] h-5 sm:h-6 px-1 sm:px-2"
+                      className="text-xs h-6"
                     >
-                      <span className="truncate">Deixar Avaliação</span>
+                      Avaliar
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setShowViewReviews(true)}
-                      className="text-[9px] sm:text-[11px] h-5 sm:h-6 px-1 sm:px-2"
+                      className="text-xs h-6"
                     >
-                      <span className="truncate">Ver Avaliações</span>
+                      Ver Avaliações
                     </Button>
                   </div>
                 </div>
@@ -1276,28 +922,18 @@ const Buscar = () => {
                   size="sm"
                   variant="ghost"
                   onClick={clearRoute}
-                  className="h-3 sm:h-4 w-3 sm:w-4 p-0 flex-shrink-0"
+                  className="h-4 w-4 p-0"
                 >
                   ✕
                 </Button>
               </div>
             </Card>
           )}
+
           {loadingToken && (
-            <div className="absolute inset-0 bg-muted/90 flex items-center justify-center p-4">
-              <Card className="p-6 max-w-md text-center space-y-2">
-                <p className="text-sm text-muted-foreground">Carregando mapa...</p>
-              </Card>
-            </div>
-          )}
-          {!loadingToken && !mapboxToken && (
-            <div className="absolute inset-0 bg-muted/90 flex items-center justify-center p-4">
-              <Card className="p-6 max-w-md text-center space-y-2">
-                <AlertCircle className="h-8 w-8 text-destructive mx-auto" />
-                <h3 className="font-semibold">Erro ao Carregar Mapa</h3>
-                <p className="text-sm text-muted-foreground">
-                  Não foi possível carregar a configuração do mapa. Por favor, tente novamente mais tarde.
-                </p>
+            <div className="absolute inset-0 bg-muted/90 flex items-center justify-center">
+              <Card className="p-6 text-center">
+                <p className="text-sm">Carregando mapa...</p>
               </Card>
             </div>
           )}
@@ -1305,9 +941,9 @@ const Buscar = () => {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-background mt-auto w-full max-w-full">
-        <div className="w-full max-w-full px-2 sm:px-4 py-3 sm:py-4">
-          <p className="text-center text-[10px] sm:text-xs md:text-sm text-muted-foreground break-words">
+      <footer className="border-t bg-background">
+        <div className="px-3 py-3">
+          <p className="text-center text-xs text-muted-foreground">
             © {new Date().getFullYear()} ONDTem. Todos os direitos reservados. by{' '}
             <a 
               href="https://onixagence.com" 
@@ -1321,7 +957,7 @@ const Buscar = () => {
         </div>
       </footer>
 
-      {/* Review Modals */}
+      {/* Modals */}
       {selectedMedicamento && (
         <>
           <LeaveReviewModal
@@ -1331,7 +967,6 @@ const Buscar = () => {
             farmaciaNome={selectedMedicamento.farmacia_nome}
             onReviewSubmitted={() => {
               setReviewRefreshTrigger(prev => prev + 1);
-              // Refresh search results to update ratings
               searchPharmacies();
             }}
           />
@@ -1345,30 +980,28 @@ const Buscar = () => {
         </>
       )}
 
-      {/* Location Permission Dialog */}
       <AlertDialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
         <AlertDialogContent className="w-[calc(100%-2rem)] mx-4 max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <MapPin className="h-4 sm:h-5 w-4 sm:w-5 text-primary flex-shrink-0" />
-              <span>Ativar Geolocalização</span>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              Ativar Geolocalização
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2 sm:space-y-3 pt-2">
-              <p className="text-xs sm:text-sm">
-                Para encontrar farmácias próximas a você, precisamos acessar sua localização.
+            <AlertDialogDescription className="space-y-2">
+              <p className="text-sm">
+                Para encontrar farmácias próximas, precisamos acessar sua localização.
               </p>
-              <p className="text-xs sm:text-sm">
-                Por favor, ative a geolocalização nas configurações do seu navegador e recarregue a página.
+              <p className="text-sm">
+                Ative a geolocalização nas configurações do navegador e recarregue.
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+          <AlertDialogFooter>
             <AlertDialogAction 
               onClick={() => {
                 setShowLocationDialog(false);
                 requestGeolocation();
               }}
-              className="w-full sm:w-auto"
             >
               Tentar Novamente
             </AlertDialogAction>
