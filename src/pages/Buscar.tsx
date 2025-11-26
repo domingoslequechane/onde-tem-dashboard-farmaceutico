@@ -143,10 +143,94 @@ const Buscar = () => {
       .setPopup(new mapboxgl.Popup().setHTML('<p class="font-semibold">Sua Localização</p>'))
       .addTo(map.current);
 
+    // Wait for map to load before adding radius circle
+    map.current.on('load', () => {
+      addRadiusCircle();
+    });
+
     return () => {
       map.current?.remove();
     };
   }, [mapboxToken, userLocation]);
+
+  // Update radius circle when raioKm changes
+  useEffect(() => {
+    if (map.current && map.current.isStyleLoaded()) {
+      addRadiusCircle();
+    }
+  }, [raioKm, userLocation]);
+
+  const addRadiusCircle = () => {
+    if (!map.current || !userLocation) return;
+
+    // Remove existing radius circle if it exists
+    if (map.current.getLayer('radius-circle-outline')) {
+      map.current.removeLayer('radius-circle-outline');
+    }
+    if (map.current.getLayer('radius-circle')) {
+      map.current.removeLayer('radius-circle');
+    }
+    if (map.current.getSource('radius')) {
+      map.current.removeSource('radius');
+    }
+
+    // Create circle using turf-like calculation
+    const center = [userLocation.lng, userLocation.lat];
+    const radiusInMeters = raioKm * 1000;
+    const points = 64;
+    const coords = [];
+
+    for (let i = 0; i < points; i++) {
+      const angle = (i * 360) / points;
+      const radians = (angle * Math.PI) / 180;
+      
+      // Calculate point on circle (approximate, works for small distances)
+      const dx = radiusInMeters * Math.cos(radians);
+      const dy = radiusInMeters * Math.sin(radians);
+      
+      const lat = userLocation.lat + (dy / 111320);
+      const lng = userLocation.lng + (dx / (111320 * Math.cos(userLocation.lat * Math.PI / 180)));
+      
+      coords.push([lng, lat]);
+    }
+    
+    // Close the circle
+    coords.push(coords[0]);
+
+    // Add the circle as a source and layer
+    map.current.addSource('radius', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [coords],
+        },
+        properties: {},
+      },
+    });
+
+    map.current.addLayer({
+      id: 'radius-circle',
+      type: 'fill',
+      source: 'radius',
+      paint: {
+        'fill-color': '#3b82f6',
+        'fill-opacity': 0.1,
+      },
+    });
+
+    map.current.addLayer({
+      id: 'radius-circle-outline',
+      type: 'line',
+      source: 'radius',
+      paint: {
+        'line-color': '#3b82f6',
+        'line-width': 2,
+        'line-opacity': 0.5,
+      },
+    });
+  };
 
   const searchPharmacies = async () => {
     if (!medicamento.trim()) {
