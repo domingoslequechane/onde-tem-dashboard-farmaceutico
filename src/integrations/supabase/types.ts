@@ -245,6 +245,7 @@ export type Database = {
           horario_funcionamento: string | null
           id: string
           latitude: number
+          link_google_maps: string | null
           longitude: number
           nome: string
           plano: string | null
@@ -270,6 +271,7 @@ export type Database = {
           horario_funcionamento?: string | null
           id?: string
           latitude: number
+          link_google_maps?: string | null
           longitude: number
           nome: string
           plano?: string | null
@@ -295,6 +297,7 @@ export type Database = {
           horario_funcionamento?: string | null
           id?: string
           latitude?: number
+          link_google_maps?: string | null
           longitude?: number
           nome?: string
           plano?: string | null
