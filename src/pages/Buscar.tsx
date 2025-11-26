@@ -159,7 +159,7 @@ const Buscar = () => {
         p_latitude: userLocation.lat,
         p_longitude: userLocation.lng,
         p_medicamento: medicamento,
-        p_raio_km: 10,
+        p_raio_km: 10.0, // Explicitly decimal to match first function signature
       }) as { data: Pharmacy[] | null; error: any };
 
       if (error) throw error;
