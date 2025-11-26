@@ -19,6 +19,7 @@ import FarmaciaDemanda from "./pages/farmacia/Demanda";
 import FarmaciaConfiguracoes from "./pages/farmacia/Configuracoes";
 import FarmaciaSuporte from "./pages/farmacia/Suporte";
 import AdminEstatisticas from "./pages/admin/Estatisticas";
+import Contacto from "./pages/Contacto";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/contacto" element={<Contacto />} />
           <Route path="/entrar" element={<Auth />} />
           <Route path="/auth" element={<Auth />} />
           
