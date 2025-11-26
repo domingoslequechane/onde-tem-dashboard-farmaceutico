@@ -143,11 +143,8 @@ const Buscar = () => {
       .setPopup(new mapboxgl.Popup().setHTML('<p class="font-semibold">Sua Localização</p>'))
       .addTo(map.current);
 
-    // Add test marker at specified coordinates
-    new mapboxgl.Marker({ color: '#10b981' })
-      .setLngLat([3.8649219, -19.8305576])
-      .setPopup(new mapboxgl.Popup().setHTML('<p class="font-semibold">Farmácia Teste</p><p class="text-xs">Lat: -19.8305576, Lng: 3.8649219</p>'))
-      .addTo(map.current);
+    // Load and display all active pharmacies
+    loadAllActivePharmacies();
 
     // Wait for map to load before adding radius circle
     map.current.on('load', () => {
@@ -158,6 +155,37 @@ const Buscar = () => {
       map.current?.remove();
     };
   }, [mapboxToken, userLocation]);
+
+  const loadAllActivePharmacies = async () => {
+    if (!map.current) return;
+
+    try {
+      const { data: pharmacies, error } = await supabase
+        .from('farmacias')
+        .select('id, nome, latitude, longitude, endereco_completo, telefone, whatsapp')
+        .eq('ativa', true);
+
+      if (error) throw error;
+
+      pharmacies?.forEach((pharmacy) => {
+        new mapboxgl.Marker({ color: '#10b981' })
+          .setLngLat([pharmacy.longitude, pharmacy.latitude])
+          .setPopup(
+            new mapboxgl.Popup().setHTML(`
+              <div class="p-2">
+                <p class="font-semibold">${pharmacy.nome}</p>
+                <p class="text-xs mt-1">${pharmacy.endereco_completo}</p>
+                ${pharmacy.telefone ? `<p class="text-xs mt-1">Tel: ${pharmacy.telefone}</p>` : ''}
+                ${pharmacy.whatsapp ? `<p class="text-xs mt-1">WhatsApp: ${pharmacy.whatsapp}</p>` : ''}
+              </div>
+            `)
+          )
+          .addTo(map.current!);
+      });
+    } catch (error) {
+      console.error('Error loading pharmacies:', error);
+    }
+  };
 
   // Update radius circle when raioKm changes
   useEffect(() => {
