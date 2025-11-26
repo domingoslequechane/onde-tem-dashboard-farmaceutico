@@ -10,18 +10,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
 
-interface Pharmacy {
+interface MedicamentoFarmacia {
+  medicamento_id: string;
+  medicamento_nome: string;
+  medicamento_categoria: string | null;
+  medicamento_preco: number;
   farmacia_id: string;
   farmacia_nome: string;
   farmacia_endereco: string;
   farmacia_telefone: string;
   farmacia_whatsapp: string;
-  medicamento_nome: string;
-  medicamento_preco: number;
-  medicamento_disponivel: boolean;
-  distancia_km: number;
   farmacia_latitude: number;
   farmacia_longitude: number;
+  distancia_km: number;
 }
 
 interface Medicamento {
@@ -40,7 +41,7 @@ const Buscar = () => {
   const [mapboxToken, setMapboxToken] = useState('');
   const [medicamento, setMedicamento] = useState('');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  const [medicamentos, setMedicamentos] = useState<MedicamentoFarmacia[]>([]);
   const [searching, setSearching] = useState(false);
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [loadingToken, setLoadingToken] = useState(true);
@@ -48,7 +49,7 @@ const Buscar = () => {
   const [allMedicamentos, setAllMedicamentos] = useState<Medicamento[]>([]);
   const [loadingMedicamentos, setLoadingMedicamentos] = useState(true);
   const [filteredMedicamentos, setFilteredMedicamentos] = useState<Medicamento[]>([]);
-  const [selectedPharmacy, setSelectedPharmacy] = useState<Pharmacy | null>(null);
+  const [selectedMedicamento, setSelectedMedicamento] = useState<MedicamentoFarmacia | null>(null);
   const [routeInfo, setRouteInfo] = useState<{
     distance: number;
     duration: number;
@@ -91,12 +92,12 @@ const Buscar = () => {
     }
   }, [medicamento, allMedicamentos]);
 
-  const showRouteToPharmacy = async (pharmacy: Pharmacy, mode: 'walking' | 'driving' = 'walking') => {
+  const showRouteToPharmacy = async (item: MedicamentoFarmacia, mode: 'walking' | 'driving' = 'walking') => {
     if (!map.current || !userLocation) return;
 
     try {
       // Build Mapbox Directions API URL
-      const url = `https://api.mapbox.com/directions/v5/mapbox/${mode}/${userLocation.lng},${userLocation.lat};${pharmacy.farmacia_longitude},${pharmacy.farmacia_latitude}?geometries=geojson&access_token=${mapboxToken}`;
+      const url = `https://api.mapbox.com/directions/v5/mapbox/${mode}/${userLocation.lng},${userLocation.lat};${item.farmacia_longitude},${item.farmacia_latitude}?geometries=geojson&access_token=${mapboxToken}`;
       
       const response = await fetch(url);
       const data = await response.json();
@@ -153,7 +154,7 @@ const Buscar = () => {
           duration: route.duration / 60, // Convert to minutes
           mode: mode,
         });
-        setSelectedPharmacy(pharmacy);
+        setSelectedMedicamento(item);
         setRouteMode(mode);
       }
     } catch (error) {
@@ -176,13 +177,13 @@ const Buscar = () => {
       map.current.removeSource('route');
     }
     
-    setSelectedPharmacy(null);
+    setSelectedMedicamento(null);
     setRouteInfo(null);
   };
 
   const clearSearch = () => {
     setMedicamento('');
-    setPharmacies([]);
+    setMedicamentos([]);
     clearRoute();
     
     // Clear pharmacy markers
@@ -396,29 +397,36 @@ const Buscar = () => {
         p_latitude: userLocation.lat,
         p_longitude: userLocation.lng,
         p_medicamento: medicamento,
-        p_raio_km: raioKm, // Use selected radius
-      }) as { data: Pharmacy[] | null; error: any };
+        p_raio_km: raioKm,
+      }) as { data: MedicamentoFarmacia[] | null; error: any };
 
       if (error) throw error;
 
-      setPharmacies(data || []);
+      setMedicamentos(data || []);
 
       if (data && data.length > 0) {
         // Clear existing pharmacy markers
         markersRef.current.forEach(marker => marker.remove());
         markersRef.current = [];
 
-        // Add pharmacy markers to map if coordinates are available
-        data.forEach((pharmacy) => {
-          if (pharmacy.farmacia_latitude && pharmacy.farmacia_longitude && map.current) {
+        // Group by pharmacy to avoid duplicate markers
+        const uniquePharmacies = new Map<string, MedicamentoFarmacia>();
+        data.forEach((item) => {
+          if (!uniquePharmacies.has(item.farmacia_id)) {
+            uniquePharmacies.set(item.farmacia_id, item);
+          }
+        });
+
+        // Add pharmacy markers to map
+        uniquePharmacies.forEach((item) => {
+          if (item.farmacia_latitude && item.farmacia_longitude && map.current) {
             const marker = new mapboxgl.Marker({ color: '#10b981' })
-              .setLngLat([pharmacy.farmacia_longitude, pharmacy.farmacia_latitude])
+              .setLngLat([item.farmacia_longitude, item.farmacia_latitude])
               .setPopup(
                 new mapboxgl.Popup().setHTML(`
                   <div class="p-2">
-                    <p class="font-semibold text-sm">${pharmacy.farmacia_nome}</p>
-                    <p class="text-xs text-gray-600 mt-1">${pharmacy.distancia_km.toFixed(2)} km</p>
-                    <p class="text-xs text-gray-600">MT ${pharmacy.medicamento_preco?.toFixed(2) || 'N/A'}</p>
+                    <p class="font-semibold text-sm">${item.farmacia_nome}</p>
+                    <p class="text-xs text-gray-600 mt-1">${item.distancia_km.toFixed(2)} km</p>
                   </div>
                 `)
               )
@@ -428,13 +436,13 @@ const Buscar = () => {
           }
         });
 
-        // Fit map to show all markers if we have coordinates
+        // Fit map to show all markers
         if (markersRef.current.length > 0 && map.current) {
           const bounds = new mapboxgl.LngLatBounds();
           bounds.extend([userLocation.lng, userLocation.lat]);
-          data.forEach((pharmacy) => {
-            if (pharmacy.farmacia_latitude && pharmacy.farmacia_longitude) {
-              bounds.extend([pharmacy.farmacia_longitude, pharmacy.farmacia_latitude]);
+          uniquePharmacies.forEach((item) => {
+            if (item.farmacia_latitude && item.farmacia_longitude) {
+              bounds.extend([item.farmacia_longitude, item.farmacia_latitude]);
             }
           });
           map.current.fitBounds(bounds, { padding: 50 });
@@ -442,7 +450,7 @@ const Buscar = () => {
 
         toast({
           title: 'Busca concluída',
-          description: `Encontramos ${data.length} farmácia${data.length > 1 ? 's' : ''}`,
+          description: `Encontramos ${data.length} medicamento${data.length > 1 ? 's' : ''}`,
         });
       }
     } catch (error) {
@@ -527,9 +535,14 @@ const Buscar = () => {
                   value={medicamento}
                   onChange={(e) => setMedicamento(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && searchPharmacies()}
+                  onFocus={() => setFilteredMedicamentos(
+                    medicamento ? 
+                    allMedicamentos.filter(med => med.nome.toLowerCase().includes(medicamento.toLowerCase())).slice(0, 5) : 
+                    allMedicamentos.slice(0, 5)
+                  )}
                   className="pr-8"
                 />
-                {(medicamento || selectedPharmacy) && (
+                {(medicamento || selectedMedicamento) && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -538,6 +551,27 @@ const Buscar = () => {
                   >
                     <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                   </Button>
+                )}
+                
+                {/* Autocomplete Dropdown */}
+                {medicamento && filteredMedicamentos.length > 0 && medicamentos.length === 0 && !searching && (
+                  <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-[200px] overflow-y-auto shadow-lg">
+                    {filteredMedicamentos.slice(0, 5).map((med) => (
+                      <div
+                        key={med.id}
+                        className="p-2 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                        onClick={() => {
+                          setMedicamento(med.nome);
+                          searchPharmacies();
+                        }}
+                      >
+                        <p className="text-sm font-medium">{med.nome}</p>
+                        {med.categoria && (
+                          <p className="text-xs text-muted-foreground">{med.categoria}</p>
+                        )}
+                      </div>
+                    ))}
+                  </Card>
                 )}
               </div>
               <Button 
@@ -571,9 +605,9 @@ const Buscar = () => {
 
           {/* Results List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {pharmacies.length > 0 && (
+            {medicamentos.length > 0 && (
               <h2 className="text-sm font-semibold text-muted-foreground sticky top-0 bg-background pb-2">
-                {pharmacies.length} Resultado{pharmacies.length > 1 ? 's' : ''}
+                {medicamentos.length} Medicamento{medicamentos.length > 1 ? 's' : ''} encontrado{medicamentos.length > 1 ? 's' : ''}
               </h2>
             )}
             
@@ -583,7 +617,7 @@ const Buscar = () => {
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
                   <Search className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold">Buscando farmácias...</h3>
+                <h3 className="font-semibold">Buscando medicamentos...</h3>
                 <p className="text-sm text-muted-foreground">
                   Procurando as melhores opções próximas a você
                 </p>
@@ -591,99 +625,60 @@ const Buscar = () => {
             )}
             
             {/* Empty State */}
-            {!searching && pharmacies.length === 0 && medicamento && (
+            {!searching && medicamentos.length === 0 && medicamento && (
               <Card className="p-6 text-center space-y-2">
                 <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto">
                   <Search className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <h3 className="font-semibold">Nenhuma farmácia encontrada</h3>
+                <h3 className="font-semibold">Nenhum medicamento encontrado</h3>
                 <p className="text-sm text-muted-foreground">
-                  Não encontramos farmácias com "{medicamento}" em um raio de {raioKm}km.
-                  {raioKm < 50 && ' Tente aumentar o raio de busca acima.'}
+                  Não encontramos "{medicamento}" em farmácias próximas em um raio de {raioKm}km.
+                  {raioKm < 5 && ' Tente aumentar o raio de busca acima.'}
                 </p>
               </Card>
             )}
 
-            {/* Medication Suggestions - Display filtered medications */}
-            {!searching && pharmacies.length === 0 && (
-              <>
-                <div className="mb-3">
-                  <h2 className="text-sm font-semibold text-muted-foreground">
-                    {medicamento ? 'Sugestões' : 'Medicamentos Disponíveis'}
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {medicamento 
-                      ? 'Clique em um medicamento para pesquisar farmácias' 
-                      : 'Digite ou clique em um medicamento para pesquisar'}
-                  </p>
-                </div>
-                
-                {loadingMedicamentos ? (
-                  <Card className="p-6 text-center">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
-                      <Search className="h-4 w-4 text-primary" />
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">Carregando medicamentos...</p>
-                  </Card>
-                ) : filteredMedicamentos.length === 0 ? (
-                  <Card className="p-6 text-center">
-                    <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto" />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {medicamento ? `Nenhum medicamento encontrado para "${medicamento}"` : 'Nenhum medicamento cadastrado'}
-                    </p>
-                  </Card>
-                ) : (
-                  <div className="space-y-2">
-                    {filteredMedicamentos.map((med) => (
-                      <Card
-                        key={med.id}
-                        className="p-3 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-transparent hover:border-l-primary"
-                        onClick={() => {
-                          setMedicamento(med.nome);
-                          searchPharmacies();
-                        }}
-                      >
-                        <h3 className="font-medium text-sm">{med.nome}</h3>
-                        {med.categoria && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {med.categoria}
-                          </p>
-                        )}
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-            {pharmacies.map((pharmacy, index) => (
+            {/* Medications List - Ordered by proximity */}
+            {medicamentos.map((item, index) => (
               <Card 
-                key={`${pharmacy.farmacia_id}-${index}`} 
+                key={`${item.medicamento_id}-${item.farmacia_id}-${index}`} 
                 className={`p-3 space-y-2 hover:shadow-md transition-all cursor-pointer border-l-4 ${
-                  selectedPharmacy?.farmacia_id === pharmacy.farmacia_id 
+                  selectedMedicamento?.medicamento_id === item.medicamento_id && selectedMedicamento?.farmacia_id === item.farmacia_id
                     ? 'border-l-primary bg-primary/5' 
                     : 'border-l-primary/20 hover:border-l-primary'
                 }`}
-                onClick={() => showRouteToPharmacy(pharmacy, routeMode)}
+                onClick={() => showRouteToPharmacy(item, routeMode)}
               >
                 <div className="flex justify-between items-start gap-2">
-                  <h3 className="font-semibold text-sm">{pharmacy.farmacia_nome}</h3>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-base">{item.medicamento_nome}</h3>
+                    {item.medicamento_categoria && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {item.medicamento_categoria}
+                      </p>
+                    )}
+                  </div>
                   <span className="text-xs font-medium text-primary flex-shrink-0 bg-primary/10 px-2 py-1 rounded-full">
-                    {pharmacy.distancia_km.toFixed(1)} km
+                    {item.distancia_km.toFixed(1)} km
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground flex items-start gap-1">
-                  <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                  {pharmacy.farmacia_endereco}
-                </p>
-                {pharmacy.medicamento_preco && (
-                  <p className="text-sm font-semibold text-primary">
-                    MT {pharmacy.medicamento_preco.toFixed(2)}
+                
+                <div className="pt-2 border-t border-border space-y-1">
+                  <p className="text-xs font-medium flex items-center gap-1">
+                    <MapPin className="h-3 w-3 text-primary" />
+                    {item.farmacia_nome}
                   </p>
-                )}
-                <div className="flex flex-wrap gap-2 text-xs pt-1 border-t border-border">
-                  {pharmacy.farmacia_telefone && (
+                  {item.medicamento_preco && (
+                    <p className="text-sm font-semibold text-primary">
+                      MT {item.medicamento_preco.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="flex flex-wrap gap-2 text-xs pt-2 border-t border-border">
+                  {item.farmacia_telefone && (
                     <a 
-                      href={`tel:${pharmacy.farmacia_telefone}`}
+                      href={`tel:${item.farmacia_telefone}`}
                       className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -691,9 +686,9 @@ const Buscar = () => {
                       Ligar
                     </a>
                   )}
-                  {pharmacy.farmacia_whatsapp && (
+                  {item.farmacia_whatsapp && (
                     <a 
-                      href={`https://wa.me/${pharmacy.farmacia_whatsapp.replace(/\D/g, '')}`}
+                      href={`https://wa.me/${item.farmacia_whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-primary hover:underline"
@@ -713,11 +708,12 @@ const Buscar = () => {
           <div ref={mapContainer} className="absolute inset-0" />
           
           {/* Route Info Overlay */}
-          {routeInfo && selectedPharmacy && (
+          {routeInfo && selectedMedicamento && (
             <Card className="absolute top-4 left-1/2 transform -translate-x-1/2 p-4 shadow-lg z-10 max-w-sm w-[calc(100%-2rem)]">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-sm mb-2">{selectedPharmacy.farmacia_nome}</h3>
+                  <h3 className="font-semibold text-sm mb-1">{selectedMedicamento.medicamento_nome}</h3>
+                  <p className="text-xs text-muted-foreground mb-2">{selectedMedicamento.farmacia_nome}</p>
                   <div className="space-y-1 text-xs">
                     <p className="flex items-center gap-2">
                       <span className="font-medium">Distância:</span>
@@ -734,7 +730,7 @@ const Buscar = () => {
                     <Button
                       size="sm"
                       variant={routeMode === 'walking' ? 'default' : 'outline'}
-                      onClick={() => showRouteToPharmacy(selectedPharmacy, 'walking')}
+                      onClick={() => showRouteToPharmacy(selectedMedicamento, 'walking')}
                       className="text-xs h-7 flex-1"
                     >
                       🚶 A pé
@@ -742,7 +738,7 @@ const Buscar = () => {
                     <Button
                       size="sm"
                       variant={routeMode === 'driving' ? 'default' : 'outline'}
-                      onClick={() => showRouteToPharmacy(selectedPharmacy, 'driving')}
+                      onClick={() => showRouteToPharmacy(selectedMedicamento, 'driving')}
                       className="text-xs h-7 flex-1"
                     >
                       🚗 Viatura
