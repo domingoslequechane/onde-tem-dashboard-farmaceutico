@@ -45,20 +45,11 @@ const Buscar = () => {
   }, []);
 
   const fetchMapboxToken = async () => {
-    console.log('Fetching Mapbox token...');
     try {
       const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-      console.log('Mapbox token response:', { data, error });
-      if (error) {
-        console.error('Error from edge function:', error);
-        throw error;
-      }
+      if (error) throw error;
       if (data?.token) {
-        console.log('Token received, setting state');
         setMapboxToken(data.token);
-      } else {
-        console.error('No token in response:', data);
-        throw new Error('Token not found in response');
       }
     } catch (error) {
       console.error('Error fetching Mapbox token:', error);
@@ -68,7 +59,6 @@ const Buscar = () => {
         variant: 'destructive',
       });
     } finally {
-      console.log('Setting loadingToken to false');
       setLoadingToken(false);
     }
   };
@@ -114,7 +104,7 @@ const Buscar = () => {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: 'mapbox://styles/mapbox/light-v11',
       center: [userLocation.lng, userLocation.lat],
       zoom: 13,
     });
@@ -205,12 +195,7 @@ const Buscar = () => {
 
         toast({
           title: 'Busca concluída',
-          description: `Encontramos ${data.length} farmácia${data.length > 1 ? 's' : ''} com ${medicamento}`,
-        });
-      } else {
-        toast({
-          title: 'Nenhum resultado',
-          description: 'Não encontramos farmácias com este medicamento próximas à sua localização',
+          description: `Encontramos ${data.length} farmácia${data.length > 1 ? 's' : ''}`,
         });
       }
     } catch (error) {
@@ -254,22 +239,21 @@ const Buscar = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Search Panel */}
-        <div className="w-full lg:w-96 border-r border-border bg-background p-4 md:p-6 space-y-4 overflow-y-auto">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold mb-2">Buscar Medicamento</h1>
-            <p className="text-sm text-muted-foreground">
-              Encontre farmácias próximas com o medicamento que você precisa
-            </p>
-          </div>
+        {/* Search Panel - Google Maps style */}
+        <div className="w-full lg:w-[400px] border-r border-border bg-background flex flex-col overflow-hidden">
+          {/* Search Header */}
+          <div className="p-4 border-b border-border space-y-4">
+            <div>
+              <h1 className="text-xl font-bold mb-1">Buscar Medicamento</h1>
+              <p className="text-sm text-muted-foreground">
+                Encontre farmácias próximas
+              </p>
+            </div>
 
-          {/* Mapbox Token Input (temporary) - removed */}
-
-          {/* Location Status */}
-          <Card className="p-3 bg-muted/30">
-            <div className="flex items-center gap-2">
+            {/* Location Status */}
+            <div className="flex items-center gap-2 text-sm">
               <MapPin className={`h-4 w-4 ${locationPermission === 'granted' ? 'text-primary' : 'text-muted-foreground'}`} />
-              <span className="text-sm">
+              <span>
                 {locationPermission === 'granted' 
                   ? 'Localização ativa' 
                   : locationPermission === 'denied' 
@@ -283,17 +267,15 @@ const Buscar = () => {
                   onClick={requestGeolocation}
                   className="ml-auto text-xs h-auto p-0"
                 >
-                  Tentar novamente
+                  Ativar
                 </Button>
               )}
             </div>
-          </Card>
 
-          {/* Search Input */}
-          <div className="space-y-2">
+            {/* Search Input */}
             <div className="flex gap-2">
               <Input
-                placeholder="Digite o nome do medicamento"
+                placeholder="Ex: Paracetamol"
                 value={medicamento}
                 onChange={(e) => setMedicamento(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && searchPharmacies()}
@@ -303,6 +285,7 @@ const Buscar = () => {
                 onClick={searchPharmacies}
                 disabled={searching || !userLocation}
                 size="icon"
+                className="flex-shrink-0"
               >
                 <Search className="h-4 w-4" />
               </Button>
@@ -310,18 +293,56 @@ const Buscar = () => {
           </div>
 
           {/* Results List */}
-          <div className="space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {pharmacies.length > 0 && (
-              <h2 className="text-sm font-semibold text-muted-foreground">
-                {pharmacies.length} Resultado{pharmacies.length > 1 ? 's' : ''} Encontrado{pharmacies.length > 1 ? 's' : ''}
+              <h2 className="text-sm font-semibold text-muted-foreground sticky top-0 bg-background pb-2">
+                {pharmacies.length} Resultado{pharmacies.length > 1 ? 's' : ''}
               </h2>
             )}
+            
+            {/* Loading State */}
+            {searching && (
+              <Card className="p-6 text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
+                  <Search className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold">Buscando farmácias...</h3>
+                <p className="text-sm text-muted-foreground">
+                  Procurando as melhores opções próximas a você
+                </p>
+              </Card>
+            )}
+            
+            {/* Empty State */}
+            {!searching && pharmacies.length === 0 && medicamento && (
+              <Card className="p-6 text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto">
+                  <Search className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold">Nenhuma farmácia encontrada</h3>
+                <p className="text-sm text-muted-foreground">
+                  Não encontramos farmácias com "{medicamento}" próximas à sua localização.
+                  Tente buscar outro medicamento ou aumente a área de busca.
+                </p>
+              </Card>
+            )}
+
+            {/* Initial State */}
+            {!searching && pharmacies.length === 0 && !medicamento && (
+              <Card className="p-6 text-center space-y-2 bg-muted/30">
+                <MapPin className="h-8 w-8 text-primary mx-auto" />
+                <h3 className="font-semibold">Pronto para buscar</h3>
+                <p className="text-sm text-muted-foreground">
+                  Digite o nome do medicamento que você precisa e encontre as farmácias mais próximas.
+                </p>
+              </Card>
+            )}
             {pharmacies.map((pharmacy, index) => (
-              <Card key={`${pharmacy.farmacia_id}-${index}`} className="p-4 space-y-2 hover:shadow-md transition-shadow">
+              <Card key={`${pharmacy.farmacia_id}-${index}`} className="p-3 space-y-2 hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary">
                 <div className="flex justify-between items-start gap-2">
-                  <h3 className="font-semibold text-sm md:text-base">{pharmacy.farmacia_nome}</h3>
-                  <span className="text-xs font-medium text-primary flex-shrink-0">
-                    {pharmacy.distancia_km.toFixed(2)} km
+                  <h3 className="font-semibold text-sm">{pharmacy.farmacia_nome}</h3>
+                  <span className="text-xs font-medium text-primary flex-shrink-0 bg-primary/10 px-2 py-1 rounded-full">
+                    {pharmacy.distancia_km.toFixed(1)} km
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground flex items-start gap-1">
@@ -333,14 +354,15 @@ const Buscar = () => {
                     MT {pharmacy.medicamento_preco.toFixed(2)}
                   </p>
                 )}
-                <div className="flex flex-wrap gap-2 text-xs">
+                <div className="flex flex-wrap gap-2 text-xs pt-1 border-t border-border">
                   {pharmacy.farmacia_telefone && (
                     <a 
                       href={`tel:${pharmacy.farmacia_telefone}`}
-                      className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                      className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Phone className="h-3 w-3" />
-                      {pharmacy.farmacia_telefone}
+                      Ligar
                     </a>
                   )}
                   {pharmacy.farmacia_whatsapp && (
@@ -349,6 +371,7 @@ const Buscar = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       WhatsApp
                     </a>
