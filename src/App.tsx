@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import AdminLogin from "./pages/AdminLogin";
 import Admin from "./pages/Admin";
@@ -30,7 +31,9 @@ const App = () => (
       <Sonner position="top-center" duration={5000} />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/inicio" element={<Index />} />
+          <Route path="/entrar" element={<Auth />} />
           <Route path="/auth" element={<Auth />} />
           
           {/* Rotas da Farmácia */}
@@ -39,18 +42,25 @@ const App = () => (
           <Route path="/farmacia/demanda" element={<FarmaciaDemanda />} />
           <Route path="/farmacia/configuracoes" element={<FarmaciaConfiguracoes />} />
           <Route path="/farmacia/suporte" element={<FarmaciaSuporte />} />
+          <Route path="/farmacia/recuperar-senha" element={<FarmaciaResetPassword />} />
           <Route path="/farmacia/reset-password" element={<FarmaciaResetPassword />} />
+          <Route path="/farmacia/definir-senha" element={<FarmaciaSetPassword />} />
           <Route path="/farmacia/set-password" element={<FarmaciaSetPassword />} />
+          <Route path="/farmacia/configuracoes" element={<FarmaciaSettings />} />
           <Route path="/farmacia/settings" element={<FarmaciaSettings />} />
           
           {/* Rotas do Admin */}
+          <Route path="/admin/entrar" element={<AdminLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/estatisticas" element={<AdminEstatisticas />} />
           <Route path="/admin/farmacias" element={<Admin />} />
           <Route path="/admin/administradores" element={<Admin />} />
+          <Route path="/admin/configuracoes" element={<AdminSettings />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/recuperar-senha" element={<AdminResetPassword />} />
           <Route path="/admin/reset-password" element={<AdminResetPassword />} />
+          <Route path="/admin/definir-senha" element={<AdminSetPassword />} />
           <Route path="/admin/set-password" element={<AdminSetPassword />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

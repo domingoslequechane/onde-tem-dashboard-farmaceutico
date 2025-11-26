@@ -252,9 +252,9 @@ const AdminLogin = () => {
                 <button 
                   type="button"
                   className="text-muted-foreground hover:text-foreground text-base md:text-sm underline-offset-4 hover:underline transition-colors block w-full md:w-auto"
-                  onClick={() => navigate('/auth')}
+                  onClick={() => navigate('/entrar')}
                 >
-                  Voltar para login de farmácia
+                  Acesso para Farmácias
                 </button>
               </div>
             </form>
