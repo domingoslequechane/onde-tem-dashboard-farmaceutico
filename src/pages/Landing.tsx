@@ -302,10 +302,10 @@ const Landing = () => {
       </section>
 
       {/* Investment Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <section className="py-16 md:py-24 bg-muted/20">
         <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center space-y-6 mb-12">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center space-y-4 mb-16">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground">
                 A ONDTem é um CUSTO ou um INVESTIMENTO?
               </h2>
@@ -315,48 +315,79 @@ const Landing = () => {
               </p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card className="p-6 md:p-8 bg-background border-destructive/20 hover:border-destructive/40 transition-colors">
-                <div className="space-y-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-                    <TrendingUp className="h-8 w-8 text-destructive" />
+            {/* Horizontal Timeline Structure */}
+            <div className="relative">
+              {/* Connection Line - Hidden on mobile, visible on desktop */}
+              <div className="hidden md:block absolute top-24 left-0 right-0 h-1 bg-gradient-to-r from-destructive via-primary to-secondary"></div>
+              
+              <div className="grid md:grid-cols-3 gap-8 md:gap-4 relative">
+                {/* Item 1 */}
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-br from-destructive to-destructive/80 flex items-center justify-center shadow-lg">
+                    <TrendingUp className="h-10 w-10 text-white" />
                   </div>
-                  <h3 className="text-lg md:text-xl font-bold text-foreground">
-                    Uma única venda perdida
-                  </h3>
-                  <p className="text-sm md:text-base text-muted-foreground">
-                    Cada cliente que não encontra o que procura é receita perdida
-                  </p>
+                  <div className="bg-background border-2 border-destructive/30 rounded-xl p-6 space-y-3 hover:border-destructive/60 transition-all hover:shadow-lg">
+                    <h3 className="text-xl font-bold text-foreground">
+                      Venda Perdida
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Cada cliente que não encontra o que procura representa receita perdida para sempre
+                    </p>
+                    <div className="pt-2">
+                      <span className="text-2xl font-bold text-destructive">≈ 500 MT+</span>
+                      <p className="text-xs text-muted-foreground mt-1">por venda perdida</p>
+                    </div>
+                  </div>
                 </div>
-              </Card>
 
-              <Card className="p-6 md:p-8 bg-background border-primary/20 hover:border-primary/40 transition-colors">
-                <div className="space-y-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                    <ShoppingCart className="h-8 w-8 text-primary" />
+                {/* Item 2 */}
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
+                    <ShoppingCart className="h-10 w-10 text-white" />
                   </div>
-                  <h3 className="text-lg md:text-xl font-bold text-foreground">
-                    Capital imobilizado em stock
-                  </h3>
-                  <p className="text-sm md:text-base text-muted-foreground">
-                    Produtos parados representam dinheiro sem trabalhar
-                  </p>
+                  <div className="bg-background border-2 border-primary/30 rounded-xl p-6 space-y-3 hover:border-primary/60 transition-all hover:shadow-lg">
+                    <h3 className="text-xl font-bold text-foreground">
+                      Stock Parado
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Capital imobilizado que não gera retorno nem fluxo de caixa
+                    </p>
+                    <div className="pt-2">
+                      <span className="text-2xl font-bold text-primary">≈ 10,000 MT+</span>
+                      <p className="text-xs text-muted-foreground mt-1">capital imobilizado</p>
+                    </div>
+                  </div>
                 </div>
-              </Card>
 
-              <Card className="p-6 md:p-8 bg-background border-secondary/20 hover:border-secondary/40 transition-colors">
-                <div className="space-y-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto">
-                    <BarChart3 className="h-8 w-8 text-secondary" />
+                {/* Item 3 */}
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center shadow-lg">
+                    <BarChart3 className="h-10 w-10 text-white" />
                   </div>
-                  <h3 className="text-lg md:text-xl font-bold text-foreground">
-                    Informação valiosa do mercado
-                  </h3>
-                  <p className="text-sm md:text-base text-muted-foreground">
-                    Dados estratégicos que orientam decisões lucrativas
-                  </p>
+                  <div className="bg-background border-2 border-secondary/30 rounded-xl p-6 space-y-3 hover:border-secondary/60 transition-all hover:shadow-lg">
+                    <h3 className="text-xl font-bold text-foreground">
+                      Decisões Cegas
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Comprar sem saber o que o mercado procura gera desperdício e prejuízo
+                    </p>
+                    <div className="pt-2">
+                      <span className="text-2xl font-bold text-secondary">Inestimável</span>
+                      <p className="text-xs text-muted-foreground mt-1">dados estratégicos</p>
+                    </div>
+                  </div>
                 </div>
-              </Card>
+              </div>
+
+              {/* Bottom CTA */}
+              <div className="text-center mt-12 p-8 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 rounded-2xl border border-primary/20">
+                <p className="text-lg md:text-xl font-semibold text-foreground mb-4">
+                  A ONDTem paga-se com apenas <span className="text-primary">uma única venda</span> que você teria perdido.
+                </p>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  O resto é puro lucro e crescimento para a sua farmácia.
+                </p>
+              </div>
             </div>
           </div>
         </div>
