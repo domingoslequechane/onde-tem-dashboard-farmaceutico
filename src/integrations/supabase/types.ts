@@ -239,7 +239,6 @@ export type Database = {
           criado_em: string | null
           data_vencimento: string | null
           email: string | null
-          endereco_completo: string
           estado: string
           horario_abertura: string | null
           horario_fechamento: string | null
@@ -265,7 +264,6 @@ export type Database = {
           criado_em?: string | null
           data_vencimento?: string | null
           email?: string | null
-          endereco_completo: string
           estado: string
           horario_abertura?: string | null
           horario_fechamento?: string | null
@@ -291,7 +289,6 @@ export type Database = {
           criado_em?: string | null
           data_vencimento?: string | null
           email?: string | null
-          endereco_completo?: string
           estado?: string
           horario_abertura?: string | null
           horario_fechamento?: string | null
