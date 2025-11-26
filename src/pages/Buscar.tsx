@@ -153,6 +153,16 @@ const Buscar = () => {
 
       if (data.routes && data.routes.length > 0) {
         const route = data.routes[0];
+        const realDistance = route.distance / 1000; // Convert to km
+        
+        // Update the item with real route distance
+        const updatedMedicamentos = medicamentos.map(med => {
+          if (med.medicamento_id === item.medicamento_id && med.farmacia_id === item.farmacia_id) {
+            return { ...med, distancia_km: realDistance };
+          }
+          return med;
+        });
+        setMedicamentos(updatedMedicamentos);
         
         // Remove existing route layer if it exists
         if (map.current.getLayer('route')) {
@@ -197,13 +207,13 @@ const Buscar = () => {
         );
         map.current.fitBounds(bounds, { padding: 80 });
 
-        // Set route info
+        // Set route info with updated item
         setRouteInfo({
-          distance: route.distance / 1000, // Convert to km
+          distance: realDistance,
           duration: route.duration / 60, // Convert to minutes
           mode: mode,
         });
-        setSelectedMedicamento(item);
+        setSelectedMedicamento({ ...item, distancia_km: realDistance });
         setRouteMode(mode);
       }
     } catch (error) {
