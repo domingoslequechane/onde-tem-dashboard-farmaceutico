@@ -523,17 +523,36 @@ const Buscar = () => {
     }
   };
 
-  const renderStars = (rating: number) => {
+  const renderStars = (rating: number, size: 'sm' | 'md' = 'sm') => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    const starSize = size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4';
+    
     return (
-      <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map((star) => (
+      <div className="flex items-center gap-0.5">
+        {/* Full stars */}
+        {[...Array(fullStars)].map((_, i) => (
           <Star
-            key={star}
-            className={`h-3 w-3 ${
-              star <= Math.round(rating) 
-                ? 'fill-yellow-400 text-yellow-400' 
-                : 'text-muted-foreground'
-            }`}
+            key={`full-${i}`}
+            className={`${starSize} fill-yellow-400 text-yellow-400`}
+          />
+        ))}
+        {/* Half star */}
+        {hasHalfStar && (
+          <div className="relative">
+            <Star className={`${starSize} text-yellow-400`} />
+            <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
+              <Star className={`${starSize} fill-yellow-400 text-yellow-400`} />
+            </div>
+          </div>
+        )}
+        {/* Empty stars */}
+        {[...Array(emptyStars)].map((_, i) => (
+          <Star
+            key={`empty-${i}`}
+            className={`${starSize} text-yellow-400`}
           />
         ))}
       </div>
@@ -950,15 +969,23 @@ const Buscar = () => {
                       <MapPin className="h-3 w-3 text-primary" />
                       {item.farmacia_nome}
                     </p>
-                    {item.media_avaliacoes && (
-                      <div className="flex items-center gap-1">
-                        {renderStars(item.media_avaliacoes)}
-                        <span className="text-xs text-muted-foreground">
-                          ({item.total_avaliacoes})
-                        </span>
-                      </div>
-                    )}
                   </div>
+                  
+                  {/* Rating stars */}
+                  {item.media_avaliacoes ? (
+                    <div className="flex items-center gap-1.5">
+                      {renderStars(item.media_avaliacoes, 'md')}
+                      <span className="text-sm font-semibold text-yellow-600">
+                        {item.media_avaliacoes.toFixed(1)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ({item.total_avaliacoes})
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Sem avaliações</p>
+                  )}
+                  
                   {item.medicamento_preco && (
                     <p className="text-sm font-semibold text-primary">
                       MT {item.medicamento_preco.toFixed(2)}
@@ -1006,13 +1033,18 @@ const Buscar = () => {
                   <div>
                     <h3 className="font-semibold text-sm mb-1">{selectedMedicamento.medicamento_nome}</h3>
                     <p className="text-xs text-muted-foreground">{selectedMedicamento.farmacia_nome}</p>
-                    {selectedMedicamento.media_avaliacoes && (
-                      <div className="flex items-center gap-1 mt-1">
-                        {renderStars(selectedMedicamento.media_avaliacoes)}
+                    {selectedMedicamento.media_avaliacoes ? (
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        {renderStars(selectedMedicamento.media_avaliacoes, 'md')}
+                        <span className="text-sm font-semibold text-yellow-600">
+                          {selectedMedicamento.media_avaliacoes.toFixed(1)}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           ({selectedMedicamento.total_avaliacoes} avaliação{selectedMedicamento.total_avaliacoes !== 1 ? 'ões' : ''})
                         </span>
                       </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-1">Sem avaliações</p>
                     )}
                   </div>
                   
