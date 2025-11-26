@@ -318,7 +318,7 @@ const Landing = () => {
             <div className="grid md:grid-cols-2 gap-8 mb-12">
               {/* Left Side - Without ONDTem */}
               <div className="space-y-6">
-                <div className="text-center p-4 bg-destructive/10 rounded-xl border-2 border-destructive">
+                <div className="text-center p-4 bg-destructive/10 rounded-xl border-2 border-destructive/30">
                   <h3 className="text-xl md:text-2xl font-bold text-destructive">Sem a ONDTem</h3>
                   <p className="text-sm text-muted-foreground mt-1">Perdas Constantes</p>
                 </div>
