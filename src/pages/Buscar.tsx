@@ -371,15 +371,25 @@ const Buscar = () => {
         }
       });
 
-      // Fit map to show all markers
-      if (markersRef.current.length > 0 && map.current) {
+      // Fit map to show user location and nearby pharmacies within radius
+      if (markersRef.current.length > 0 && map.current && userLocation) {
         const bounds = new mapboxgl.LngLatBounds();
+        
+        // Include user location
+        bounds.extend([userLocation.lng, userLocation.lat]);
+        
+        // Include pharmacies
         (data || []).forEach((farmacia) => {
           if (farmacia.latitude && farmacia.longitude) {
             bounds.extend([farmacia.longitude, farmacia.latitude]);
           }
         });
-        map.current.fitBounds(bounds, { padding: 80 });
+        
+        // Fit bounds with generous padding to show context
+        map.current.fitBounds(bounds, { 
+          padding: { top: 100, bottom: 100, left: 100, right: 100 },
+          maxZoom: 14 // Don't zoom in too much
+        });
       }
     } catch (error) {
       console.error('Error fetching all pharmacies:', error);
@@ -430,12 +440,12 @@ const Buscar = () => {
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
       center: [userLocation.lng, userLocation.lat],
-      zoom: 13,
+      zoom: 12, // Start with reasonable zoom level
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    // Add user location marker
+    // Add user location marker (blue marker for user)
     new mapboxgl.Marker({ color: '#3b82f6' })
       .setLngLat([userLocation.lng, userLocation.lat])
       .setPopup(new mapboxgl.Popup().setHTML('<p class="font-semibold">Sua Localização</p>'))
