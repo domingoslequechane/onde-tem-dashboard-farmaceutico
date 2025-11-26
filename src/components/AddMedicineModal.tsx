@@ -12,7 +12,6 @@ interface Medicine {
   nome: string;
   preco: number;
   categoria: string;
-  quantidade: number;
   disponivel: boolean;
 }
 
