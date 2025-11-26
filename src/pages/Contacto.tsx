@@ -84,7 +84,7 @@ const Contacto = () => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
-      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <img src={logo} alt="ONDTem" className="h-8 md:h-10" />
           <Button 
@@ -99,7 +99,7 @@ const Contacto = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-12 md:py-16 bg-gradient-to-br from-primary/5 to-secondary/5">
+      <section className="py-12 md:py-16 bg-gradient-to-br from-primary/5 to-secondary/5 mt-[72px]">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center space-y-4">
             <h1 className="text-3xl md:text-5xl font-bold text-foreground">
