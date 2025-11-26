@@ -323,7 +323,7 @@ const Landing = () => {
                   <p className="text-sm text-muted-foreground mt-1">Perdas Constantes</p>
                 </div>
 
-                <Card className="p-6 border-destructive/20 bg-background space-y-4">
+                <Card className="p-6 border-2 border-destructive/20 bg-background space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 mt-1">
                       <span className="text-destructive font-bold">✗</span>
@@ -373,7 +373,7 @@ const Landing = () => {
                   </div>
                 </Card>
 
-                <div className="text-center p-4 bg-destructive/5 rounded-lg">
+                <div className="text-center p-4 bg-destructive/5 rounded-lg border-2 border-destructive/20">
                   <p className="text-sm font-semibold text-destructive">Prejuízo Contínuo e Invisível</p>
                 </div>
               </div>
@@ -385,7 +385,7 @@ const Landing = () => {
                   <p className="text-sm text-white/90 mt-1">Crescimento Acelerado</p>
                 </div>
 
-                <Card className="p-6 border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5 space-y-4">
+                <Card className="p-6 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5 space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-1">
                       <CheckCircle2 className="h-5 w-5 text-white" />
@@ -435,7 +435,7 @@ const Landing = () => {
                   </div>
                 </Card>
 
-                <div className="text-center p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border border-primary/20">
+                <div className="text-center p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border-2 border-primary/20">
                   <p className="text-sm font-semibold text-primary">Retorno Imediato e Crescimento Sustentável</p>
                 </div>
               </div>
