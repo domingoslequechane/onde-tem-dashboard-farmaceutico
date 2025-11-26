@@ -48,6 +48,13 @@ const Buscar = () => {
   const [allMedicamentos, setAllMedicamentos] = useState<Medicamento[]>([]);
   const [loadingMedicamentos, setLoadingMedicamentos] = useState(true);
   const [filteredMedicamentos, setFilteredMedicamentos] = useState<Medicamento[]>([]);
+  const [selectedPharmacy, setSelectedPharmacy] = useState<Pharmacy | null>(null);
+  const [routeInfo, setRouteInfo] = useState<{
+    distance: number;
+    duration: number;
+    mode: 'walking' | 'driving';
+  } | null>(null);
+  const [routeMode, setRouteMode] = useState<'walking' | 'driving'>('walking');
 
   useEffect(() => {
     requestGeolocation();
@@ -83,6 +90,95 @@ const Buscar = () => {
       setFilteredMedicamentos(allMedicamentos);
     }
   }, [medicamento, allMedicamentos]);
+
+  const showRouteToPharmacy = async (pharmacy: Pharmacy, mode: 'walking' | 'driving' = 'walking') => {
+    if (!map.current || !userLocation) return;
+
+    try {
+      // Build Mapbox Directions API URL
+      const url = `https://api.mapbox.com/directions/v5/mapbox/${mode}/${userLocation.lng},${userLocation.lat};${pharmacy.farmacia_longitude},${pharmacy.farmacia_latitude}?geometries=geojson&access_token=${mapboxToken}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        
+        // Remove existing route layer if it exists
+        if (map.current.getLayer('route')) {
+          map.current.removeLayer('route');
+        }
+        if (map.current.getSource('route')) {
+          map.current.removeSource('route');
+        }
+
+        // Add route to map
+        map.current.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: route.geometry,
+          },
+        });
+
+        map.current.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': mode === 'walking' ? '#3b82f6' : '#10b981',
+            'line-width': 4,
+            'line-opacity': 0.8,
+          },
+        });
+
+        // Fit map to show the entire route
+        const coordinates = route.geometry.coordinates;
+        const bounds = coordinates.reduce(
+          (bounds: mapboxgl.LngLatBounds, coord: [number, number]) => {
+            return bounds.extend(coord as [number, number]);
+          },
+          new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
+        );
+        map.current.fitBounds(bounds, { padding: 80 });
+
+        // Set route info
+        setRouteInfo({
+          distance: route.distance / 1000, // Convert to km
+          duration: route.duration / 60, // Convert to minutes
+          mode: mode,
+        });
+        setSelectedPharmacy(pharmacy);
+        setRouteMode(mode);
+      }
+    } catch (error) {
+      console.error('Error fetching route:', error);
+      toast({
+        title: 'Erro ao calcular rota',
+        description: 'Não foi possível calcular a rota para esta farmácia',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const clearRoute = () => {
+    if (!map.current) return;
+    
+    if (map.current.getLayer('route')) {
+      map.current.removeLayer('route');
+    }
+    if (map.current.getSource('route')) {
+      map.current.removeSource('route');
+    }
+    
+    setSelectedPharmacy(null);
+    setRouteInfo(null);
+  };
 
   const fetchMapboxToken = async () => {
     try {
@@ -535,7 +631,15 @@ const Buscar = () => {
               </>
             )}
             {pharmacies.map((pharmacy, index) => (
-              <Card key={`${pharmacy.farmacia_id}-${index}`} className="p-3 space-y-2 hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary">
+              <Card 
+                key={`${pharmacy.farmacia_id}-${index}`} 
+                className={`p-3 space-y-2 hover:shadow-md transition-all cursor-pointer border-l-4 ${
+                  selectedPharmacy?.farmacia_id === pharmacy.farmacia_id 
+                    ? 'border-l-primary bg-primary/5' 
+                    : 'border-l-primary/20 hover:border-l-primary'
+                }`}
+                onClick={() => showRouteToPharmacy(pharmacy, routeMode)}
+              >
                 <div className="flex justify-between items-start gap-2">
                   <h3 className="font-semibold text-sm">{pharmacy.farmacia_nome}</h3>
                   <span className="text-xs font-medium text-primary flex-shrink-0 bg-primary/10 px-2 py-1 rounded-full">
@@ -582,6 +686,55 @@ const Buscar = () => {
         {/* Map */}
         <div className="flex-1 relative h-[400px] lg:h-auto">
           <div ref={mapContainer} className="absolute inset-0" />
+          
+          {/* Route Info Overlay */}
+          {routeInfo && selectedPharmacy && (
+            <Card className="absolute top-4 left-1/2 transform -translate-x-1/2 p-4 shadow-lg z-10 max-w-sm w-[calc(100%-2rem)]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sm mb-2">{selectedPharmacy.farmacia_nome}</h3>
+                  <div className="space-y-1 text-xs">
+                    <p className="flex items-center gap-2">
+                      <span className="font-medium">Distância:</span>
+                      <span>{routeInfo.distance.toFixed(2)} km</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="font-medium">Tempo estimado:</span>
+                      <span>
+                        {Math.round(routeInfo.duration)} min {routeInfo.mode === 'walking' ? '(a pé)' : '(de viatura)'}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      size="sm"
+                      variant={routeMode === 'walking' ? 'default' : 'outline'}
+                      onClick={() => showRouteToPharmacy(selectedPharmacy, 'walking')}
+                      className="text-xs h-7 flex-1"
+                    >
+                      🚶 A pé
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={routeMode === 'driving' ? 'default' : 'outline'}
+                      onClick={() => showRouteToPharmacy(selectedPharmacy, 'driving')}
+                      className="text-xs h-7 flex-1"
+                    >
+                      🚗 Viatura
+                    </Button>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearRoute}
+                  className="h-6 w-6 p-0"
+                >
+                  ✕
+                </Button>
+              </div>
+            </Card>
+          )}
           {loadingToken && (
             <div className="absolute inset-0 bg-muted/90 flex items-center justify-center p-4">
               <Card className="p-6 max-w-md text-center space-y-2">
