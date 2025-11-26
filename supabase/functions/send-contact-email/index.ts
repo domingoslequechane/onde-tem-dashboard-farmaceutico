@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
           
           <p style="line-height: 1.6; color: #4b5563;">
             Atenciosamente,<br/>
-            <strong>Equipa ONDTem</strong>
+            <strong>Equipa ONDTem by Onix Agence</strong>
           </p>
           
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
