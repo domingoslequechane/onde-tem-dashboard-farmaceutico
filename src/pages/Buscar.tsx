@@ -44,7 +44,7 @@ const Buscar = () => {
   const [searching, setSearching] = useState(false);
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [loadingToken, setLoadingToken] = useState(true);
-  const [raioKm, setRaioKm] = useState(10);
+  const [raioKm, setRaioKm] = useState(5);
   const [allMedicamentos, setAllMedicamentos] = useState<Medicamento[]>([]);
   const [loadingMedicamentos, setLoadingMedicamentos] = useState(true);
 
@@ -411,7 +411,7 @@ const Buscar = () => {
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground whitespace-nowrap">Raio de busca:</span>
               <div className="flex gap-1 flex-1">
-                {[5, 10, 20, 50].map((km) => (
+                {[1, 2, 3, 4, 5].map((km) => (
                   <Button
                     key={km}
                     variant={raioKm === km ? "default" : "outline"}
