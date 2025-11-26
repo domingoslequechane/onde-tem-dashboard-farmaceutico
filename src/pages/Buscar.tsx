@@ -57,6 +57,7 @@ const Buscar = () => {
   } | null>(null);
   const [routeMode, setRouteMode] = useState<'walking' | 'driving'>('walking');
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
     requestGeolocation();
@@ -659,6 +660,7 @@ const Buscar = () => {
                   onChange={(e) => setMedicamento(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && searchPharmacies()}
                   onFocus={() => {
+                    setIsInputFocused(true);
                     // Show unique medication names on focus
                     const filtered = medicamento ? 
                       allMedicamentos.filter(med => med.nome.toLowerCase().includes(medicamento.toLowerCase())) : 
@@ -672,6 +674,10 @@ const Buscar = () => {
                     });
                     
                     setFilteredMedicamentos(Array.from(uniqueNames.values()).slice(0, 5));
+                  }}
+                  onBlur={() => {
+                    // Delay to allow click on dropdown items
+                    setTimeout(() => setIsInputFocused(false), 200);
                   }}
                   className="pr-8"
                 />
@@ -687,7 +693,7 @@ const Buscar = () => {
                 )}
                 
                 {/* Autocomplete Dropdown */}
-                {medicamento && filteredMedicamentos.length > 0 && medicamentos.length === 0 && !searching && (
+                {isInputFocused && medicamento && filteredMedicamentos.length > 0 && !searching && (
                   <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-[200px] overflow-y-auto shadow-lg bg-background">
                     {filteredMedicamentos.slice(0, 5).map((med, index) => (
                       <div
@@ -696,6 +702,7 @@ const Buscar = () => {
                         onClick={() => {
                           setMedicamento(med.nome);
                           searchPharmacies(med.nome);
+                          setIsInputFocused(false);
                         }}
                       >
                         <p className="text-sm font-medium">{med.nome}</p>
