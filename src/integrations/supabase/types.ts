@@ -559,49 +559,27 @@ export type Database = {
         Args: { block_reason?: string; target_user_id: string }
         Returns: undefined
       }
-      buscar_farmacias_proximas:
-        | {
-            Args: {
-              p_latitude: number
-              p_longitude: number
-              p_medicamento: string
-              p_raio_km?: number
-            }
-            Returns: {
-              distancia_km: number
-              farmacia_endereco: string
-              farmacia_id: string
-              farmacia_latitude: number
-              farmacia_longitude: number
-              farmacia_nome: string
-              farmacia_telefone: string
-              farmacia_whatsapp: string
-              medicamento_disponivel: boolean
-              medicamento_nome: string
-              medicamento_preco: number
-            }[]
-          }
-        | {
-            Args: {
-              p_latitude: number
-              p_longitude: number
-              p_medicamento: string
-              p_raio_km?: number
-            }
-            Returns: {
-              bairro: string
-              distancia_km: number
-              endereco_completo: string
-              farmacia_id: string
-              farmacia_nome: string
-              medicamento_nome: string
-              ponto_referencia: string
-              preco: number
-              quantidade: number
-              telefone: string
-              whatsapp: string
-            }[]
-          }
+      buscar_farmacias_proximas: {
+        Args: {
+          p_latitude: number
+          p_longitude: number
+          p_medicamento: string
+          p_raio_km?: number
+        }
+        Returns: {
+          bairro: string
+          distancia_km: number
+          endereco_completo: string
+          farmacia_id: string
+          farmacia_nome: string
+          medicamento_nome: string
+          ponto_referencia: string
+          preco: number
+          quantidade: number
+          telefone: string
+          whatsapp: string
+        }[]
+      }
       delete_admin: { Args: { target_user_id: string }; Returns: undefined }
       delete_expired_codes: { Args: never; Returns: undefined }
       disablelongtransactions: { Args: never; Returns: string }
