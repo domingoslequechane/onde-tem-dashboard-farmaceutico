@@ -29,9 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Received contact form submission:', { name, email, subject });
 
     // Determine recipient based on subject
-    const recipientEmail = subject === 'informacao' 
-      ? 'comercial@onixagence.com' 
-      : 'adesao-ondtem@onixagence.com';
+    const recipientEmail = 'comercial@ondtem.com';
 
     const subjectText = subject === 'informacao' ? 'Informação' : 'Adesão';
 
