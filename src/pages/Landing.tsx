@@ -302,94 +302,107 @@ const Landing = () => {
       </section>
 
       {/* Investment Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 to-secondary/5">
+      <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <div className="text-center space-y-6 mb-16">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground">
                 A ONDTem é um CUSTO ou um <span className="text-primary">INVESTIMENTO</span>?
               </h2>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-                A ONDTem não é um custo, mas sim um <span className="font-bold text-primary">investimento estratégico</span> com retorno imediato.
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                A ONDTem não é um custo, mas sim um investimento estratégico com retorno imediato.
               </p>
             </div>
 
-            {/* Comparison Layout */}
-            <div className="grid md:grid-cols-2 gap-8 mb-12">
-              {/* Left Side - Cost */}
+            {/* Pyramid Structure */}
+            <div className="relative space-y-0">
+              {/* Top - Icon */}
+              <div className="flex justify-center mb-8">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
+                  <TrendingUp className="h-10 w-10 text-white" />
+                </div>
+              </div>
+
+              {/* Pyramid Levels */}
               <div className="space-y-4">
-                <div className="bg-muted/50 rounded-2xl p-8 border-2 border-dashed border-muted-foreground/20">
-                  <h3 className="text-xl md:text-2xl font-bold text-muted-foreground mb-6 text-center">
-                    Custo da Assinatura
-                  </h3>
-                  <div className="text-center py-8">
-                    <p className="text-5xl md:text-6xl font-bold text-muted-foreground">
-                      XXX MT
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">por mês</p>
+                {/* Level 1 - Top (Smallest) */}
+                <div className="flex items-center gap-4 md:gap-8">
+                  <div className="flex-1 flex justify-end items-center gap-3">
+                    <div className="text-right">
+                      <h3 className="text-base md:text-lg font-bold text-foreground">Uma única venda perdida</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">Receita que nunca volta</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+                      <ShoppingCart className="h-5 w-5 text-destructive" />
+                    </div>
+                  </div>
+                  <div className="w-32 md:w-48 h-16 bg-gradient-to-r from-destructive/80 to-destructive rounded-lg flex items-center justify-center">
+                    <span className="text-sm md:text-base font-bold text-white">Venda Perdida</span>
+                  </div>
+                  <div className="flex-1"></div>
+                </div>
+
+                {/* Level 2 */}
+                <div className="flex items-center gap-4 md:gap-8">
+                  <div className="flex-1"></div>
+                  <div className="w-48 md:w-64 h-16 bg-gradient-to-r from-primary/80 to-primary rounded-lg flex items-center justify-center">
+                    <span className="text-sm md:text-base font-bold text-white">Capital Imobilizado</span>
+                  </div>
+                  <div className="flex-1 flex justify-start items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <BarChart3 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-base md:text-lg font-bold text-foreground">Stock parado</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">Dinheiro sem trabalhar</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Level 3 */}
+                <div className="flex items-center gap-4 md:gap-8">
+                  <div className="flex-1 flex justify-end items-center gap-3">
+                    <div className="text-right">
+                      <h3 className="text-base md:text-lg font-bold text-foreground">Decisões sem dados</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">Compras sem estratégia</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="h-5 w-5 text-orange-600" />
+                    </div>
+                  </div>
+                  <div className="w-64 md:w-80 h-16 bg-gradient-to-r from-orange-500/80 to-orange-500 rounded-lg flex items-center justify-center">
+                    <span className="text-sm md:text-base font-bold text-white">Informação de Mercado</span>
+                  </div>
+                  <div className="flex-1"></div>
+                </div>
+
+                {/* Level 4 - Bottom (Largest) */}
+                <div className="flex items-center gap-4 md:gap-8">
+                  <div className="flex-1"></div>
+                  <div className="w-80 md:w-96 h-16 bg-gradient-to-r from-secondary/80 to-secondary rounded-lg flex items-center justify-center">
+                    <span className="text-sm md:text-base font-bold text-white">Crescimento Sustentável</span>
+                  </div>
+                  <div className="flex-1 flex justify-start items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                      <TrendingUp className="h-5 w-5 text-secondary" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-base md:text-lg font-bold text-foreground">Resultado contínuo</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">Lucro permanente</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right Side - Investment Value */}
-              <div className="space-y-4">
-                <div className="bg-gradient-to-br from-primary via-primary/90 to-secondary rounded-2xl p-8 border-2 border-primary shadow-xl">
-                  <h3 className="text-xl md:text-2xl font-bold text-white mb-6 text-center">
-                    Valor do Investimento
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-white">
-                      <CheckCircle2 className="h-6 w-6 shrink-0" />
-                      <p className="text-sm md:text-base">1 venda recuperada = <span className="font-bold">500+ MT</span></p>
-                    </div>
-                    <div className="flex items-center gap-3 text-white">
-                      <CheckCircle2 className="h-6 w-6 shrink-0" />
-                      <p className="text-sm md:text-base">Stock otimizado = <span className="font-bold">10,000+ MT</span> liberados</p>
-                    </div>
-                    <div className="flex items-center gap-3 text-white">
-                      <CheckCircle2 className="h-6 w-6 shrink-0" />
-                      <p className="text-sm md:text-base">Dados de mercado = <span className="font-bold">Crescimento contínuo</span></p>
-                    </div>
-                  </div>
-                </div>
+              {/* Bottom Message */}
+              <div className="mt-12 text-center p-6 md:p-8 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl border border-primary/20">
+                <p className="text-lg md:text-xl font-bold text-foreground mb-2">
+                  O custo da assinatura é insignificante comparado ao valor que você recupera.
+                </p>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  A ONDTem é um <span className="font-bold text-primary">INVESTIMENTO</span> que se paga sozinho.
+                </p>
               </div>
-            </div>
-
-            {/* Bottom Cards */}
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-background border-2 border-destructive/30 rounded-xl p-6 text-center space-y-3 hover:border-destructive transition-colors">
-                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-2">
-                  <TrendingUp className="h-6 w-6 text-destructive" />
-                </div>
-                <h4 className="font-bold text-foreground">Uma Venda Perdida</h4>
-                <p className="text-2xl font-bold text-destructive">500+ MT</p>
-              </div>
-
-              <div className="bg-background border-2 border-primary/30 rounded-xl p-6 text-center space-y-3 hover:border-primary transition-colors">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
-                  <ShoppingCart className="h-6 w-6 text-primary" />
-                </div>
-                <h4 className="font-bold text-foreground">Capital Imobilizado</h4>
-                <p className="text-2xl font-bold text-primary">10,000+ MT</p>
-              </div>
-
-              <div className="bg-background border-2 border-secondary/30 rounded-xl p-6 text-center space-y-3 hover:border-secondary transition-colors">
-                <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-2">
-                  <BarChart3 className="h-6 w-6 text-secondary" />
-                </div>
-                <h4 className="font-bold text-foreground">Decisões Estratégicas</h4>
-                <p className="text-2xl font-bold text-secondary">Inestimável</p>
-              </div>
-            </div>
-
-            {/* Final Statement */}
-            <div className="mt-12 text-center p-8 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl">
-              <p className="text-xl md:text-2xl font-bold text-foreground">
-                O <span className="text-primary">INVESTIMENTO</span> paga-se com apenas 1 venda recuperada.
-              </p>
-              <p className="text-base md:text-lg text-muted-foreground mt-3">
-                Todo o resto é lucro puro para a sua farmácia.
-              </p>
             </div>
           </div>
         </div>
