@@ -38,6 +38,7 @@ const Buscar = () => {
   const [searching, setSearching] = useState(false);
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [loadingToken, setLoadingToken] = useState(true);
+  const [raioKm, setRaioKm] = useState(10);
 
   useEffect(() => {
     requestGeolocation();
@@ -149,7 +150,7 @@ const Buscar = () => {
         p_latitude: userLocation.lat,
         p_longitude: userLocation.lng,
         p_medicamento: medicamento,
-        p_raio_km: 10.0, // Explicitly decimal to match first function signature
+        p_raio_km: raioKm, // Use selected radius
       }) as { data: Pharmacy[] | null; error: any };
 
       if (error) throw error;
@@ -290,6 +291,24 @@ const Buscar = () => {
                 <Search className="h-4 w-4" />
               </Button>
             </div>
+
+            {/* Radius Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Raio de busca:</span>
+              <div className="flex gap-1 flex-1">
+                {[5, 10, 20, 50].map((km) => (
+                  <Button
+                    key={km}
+                    variant={raioKm === km ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setRaioKm(km)}
+                    className="flex-1 text-xs h-8"
+                  >
+                    {km}km
+                  </Button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Results List */}
@@ -321,8 +340,8 @@ const Buscar = () => {
                 </div>
                 <h3 className="font-semibold">Nenhuma farmácia encontrada</h3>
                 <p className="text-sm text-muted-foreground">
-                  Não encontramos farmácias com "{medicamento}" próximas à sua localização.
-                  Tente buscar outro medicamento ou aumente a área de busca.
+                  Não encontramos farmácias com "{medicamento}" em um raio de {raioKm}km.
+                  {raioKm < 50 && ' Tente aumentar o raio de busca acima.'}
                 </p>
               </Card>
             )}
