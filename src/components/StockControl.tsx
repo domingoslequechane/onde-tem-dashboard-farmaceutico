@@ -14,7 +14,6 @@ interface Medicine {
   nome: string;
   preco: number;
   categoria: string;
-  quantidade: number;
   disponivel: boolean;
 }
 
@@ -65,7 +64,6 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
         .from('estoque')
         .select(`
           medicamento_id,
-          quantidade,
           preco,
           disponivel,
           medicamentos (
@@ -83,7 +81,6 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
         nome: item.medicamentos.nome,
         preco: parseFloat(item.preco),
         categoria: item.medicamentos.categoria || 'Sem categoria',
-        quantidade: item.quantidade,
         disponivel: item.disponivel,
       }));
 
@@ -115,9 +112,9 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
 
   const handleExport = () => {
     const csvContent = [
-      'Nome,Preço,Categoria,Quantidade,Disponível',
+      'Nome,Preço,Categoria,Disponível',
       ...medicines.map(m => 
-        `${m.nome},${m.preco.toFixed(2)},${m.categoria},${m.quantidade},${m.disponivel ? 'Sim' : 'Não'}`
+        `${m.nome},${m.preco.toFixed(2)},${m.categoria},${m.disponivel ? 'Sim' : 'Não'}`
       )
     ].join('\n');
     
@@ -240,15 +237,14 @@ const StockControl = ({ expanded = false }: StockControlProps) => {
                         <span className="font-semibold text-foreground">
                           {medicine.preco.toFixed(2)} MT
                         </span>
-                        <span>Qtd: <strong>{medicine.quantidade}</strong></span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
                       <Badge 
-                        variant={medicine.disponivel && medicine.quantidade > 0 ? "default" : "destructive"}
-                        className={`text-xs px-1.5 py-0 ${medicine.disponivel && medicine.quantidade > 0 ? "bg-secondary" : ""}`}
+                        variant={medicine.disponivel ? "default" : "destructive"}
+                        className={`text-xs px-1.5 py-0 ${medicine.disponivel ? "bg-secondary" : ""}`}
                       >
-                        {medicine.disponivel && medicine.quantidade > 0 ? 'Disponível' : 'Indisponível'}
+                        {medicine.disponivel ? 'Disponível' : 'Indisponível'}
                       </Badge>
                       <Button
                         variant="ghost"
