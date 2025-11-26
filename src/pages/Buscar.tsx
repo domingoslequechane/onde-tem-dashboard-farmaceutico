@@ -145,7 +145,7 @@ const Buscar = () => {
     if (!map.current || !userLocation) return;
 
     try {
-      // Build Mapbox Directions API URL
+      // Build Mapbox Directions API URL - always use real route distance
       const url = `https://api.mapbox.com/directions/v5/mapbox/${mode}/${userLocation.lng},${userLocation.lat};${item.farmacia_longitude},${item.farmacia_latitude}?geometries=geojson&access_token=${mapboxToken}`;
       
       const response = await fetch(url);
@@ -153,16 +153,7 @@ const Buscar = () => {
 
       if (data.routes && data.routes.length > 0) {
         const route = data.routes[0];
-        const realDistance = route.distance / 1000; // Convert to km
-        
-        // Update the item with real route distance
-        const updatedMedicamentos = medicamentos.map(med => {
-          if (med.medicamento_id === item.medicamento_id && med.farmacia_id === item.farmacia_id) {
-            return { ...med, distancia_km: realDistance };
-          }
-          return med;
-        });
-        setMedicamentos(updatedMedicamentos);
+        const realDistance = route.distance / 1000; // Real route distance in km
         
         // Remove existing route layer if it exists
         if (map.current.getLayer('route')) {
@@ -207,7 +198,7 @@ const Buscar = () => {
         );
         map.current.fitBounds(bounds, { padding: 80 });
 
-        // Set route info with updated item
+        // Set route info - use real route distance for both displays
         setRouteInfo({
           distance: realDistance,
           duration: route.duration / 60, // Convert to minutes
@@ -545,7 +536,7 @@ const Buscar = () => {
           }
         });
 
-        // Fetch real distances for each pharmacy
+        // Fetch real route distances for each pharmacy - ALWAYS use route distance
         const distancePromises = Array.from(uniquePharmacies.values()).map(async (pharmacy) => {
           try {
             const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${userLocation.lng},${userLocation.lat};${pharmacy.farmacia_longitude},${pharmacy.farmacia_latitude}?access_token=${mapboxToken}`;
@@ -553,13 +544,15 @@ const Buscar = () => {
             const routeData = await response.json();
             
             if (routeData.routes && routeData.routes.length > 0) {
-              const realDistance = routeData.routes[0].distance / 1000; // Convert to km
-              console.log(`Distance for ${pharmacy.farmacia_nome}: ${realDistance.toFixed(2)} km (was ${pharmacy.distancia_km.toFixed(2)} km)`);
+              const realDistance = routeData.routes[0].distance / 1000; // Real route distance in km
+              console.log(`Real route distance for ${pharmacy.farmacia_nome}: ${realDistance.toFixed(2)} km (straight-line was ${pharmacy.distancia_km.toFixed(2)} km)`);
               return { farmacia_id: pharmacy.farmacia_id, distancia_km: realDistance };
             }
+            // If no route found, keep Haversine as fallback
+            console.warn(`No route found for ${pharmacy.farmacia_nome}, using Haversine: ${pharmacy.distancia_km.toFixed(2)} km`);
             return { farmacia_id: pharmacy.farmacia_id, distancia_km: pharmacy.distancia_km };
           } catch (err) {
-            console.error(`Error calculating distance for ${pharmacy.farmacia_nome}:`, err);
+            console.error(`Error calculating route distance for ${pharmacy.farmacia_nome}:`, err);
             return { farmacia_id: pharmacy.farmacia_id, distancia_km: pharmacy.distancia_km };
           }
         });
