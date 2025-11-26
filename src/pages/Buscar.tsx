@@ -229,6 +229,80 @@ const Buscar = () => {
     }
   };
 
+  const fetchNearbyPharmacies = async (lat: number, lng: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('farmacias')
+        .select('*')
+        .eq('ativa', true);
+
+      if (error) throw error;
+
+      // Calculate distance for each pharmacy in real-time
+      const farmaciasComDistancia = (data || [])
+        .map((farmacia) => {
+          const R = 6371; // Earth radius in km
+          const dLat = (farmacia.latitude - lat) * Math.PI / 180;
+          const dLon = (farmacia.longitude - lng) * Math.PI / 180;
+          const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat * Math.PI / 180) * Math.cos(farmacia.latitude * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          const distancia_km = R * c;
+
+          return {
+            ...farmacia,
+            distancia_km
+          };
+        })
+        .filter(f => f.distancia_km <= raioKm)
+        .sort((a, b) => a.distancia_km - b.distancia_km);
+
+      // Add pharmacy markers to map
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+
+      farmaciasComDistancia.forEach((farmacia) => {
+        if (farmacia.latitude && farmacia.longitude && map.current) {
+          const marker = new mapboxgl.Marker({ color: '#10b981' })
+            .setLngLat([farmacia.longitude, farmacia.latitude])
+            .setPopup(
+              new mapboxgl.Popup().setHTML(`
+                <div class="p-2">
+                  <p class="font-semibold text-sm">${farmacia.nome}</p>
+                  <p class="text-xs text-gray-600 mt-1">${farmacia.distancia_km.toFixed(2)} km</p>
+                  <p class="text-xs text-gray-600">${farmacia.endereco_completo}</p>
+                </div>
+              `)
+            )
+            .addTo(map.current);
+          
+          markersRef.current.push(marker);
+        }
+      });
+
+      // Fit map to show all markers
+      if (markersRef.current.length > 0 && map.current) {
+        const bounds = new mapboxgl.LngLatBounds();
+        bounds.extend([lng, lat]);
+        farmaciasComDistancia.forEach((farmacia) => {
+          if (farmacia.latitude && farmacia.longitude) {
+            bounds.extend([farmacia.longitude, farmacia.latitude]);
+          }
+        });
+        map.current.fitBounds(bounds, { padding: 50 });
+      }
+
+      toast({
+        title: 'Farmácias próximas',
+        description: `Encontramos ${farmaciasComDistancia.length} farmácia${farmaciasComDistancia.length !== 1 ? 's' : ''} próxima${farmaciasComDistancia.length !== 1 ? 's' : ''}`,
+      });
+    } catch (error) {
+      console.error('Error fetching nearby pharmacies:', error);
+    }
+  };
+
   const requestGeolocation = () => {
     if (!navigator.geolocation) {
       toast({
@@ -241,15 +315,19 @@ const Buscar = () => {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setUserLocation({
+        const coords = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        });
+        };
+        setUserLocation(coords);
         setLocationPermission('granted');
         toast({
           title: 'Localização obtida',
-          description: 'Agora você pode buscar farmácias próximas',
+          description: 'Buscando farmácias próximas...',
         });
+        
+        // Automatically fetch nearby pharmacies
+        fetchNearbyPharmacies(coords.lat, coords.lng);
       },
       (error) => {
         setLocationPermission('denied');
@@ -283,19 +361,6 @@ const Buscar = () => {
       .setPopup(new mapboxgl.Popup().setHTML('<p class="font-semibold">Sua Localização</p>'))
       .addTo(map.current);
 
-    // Add pharmacy marker from Google Maps link
-    new mapboxgl.Marker({ color: '#10b981' })
-      .setLngLat([34.8674968, -19.8305627])
-      .setPopup(
-        new mapboxgl.Popup().setHTML(`
-          <div class="p-2">
-            <p class="font-semibold">FARMACIA METRO FARMA MATACUANE</p>
-            <p class="text-xs mt-1">Lat: -19.8305627, Lng: 34.8674968</p>
-          </div>
-        `)
-      )
-      .addTo(map.current);
-
     // Wait for map to load before adding radius circle
     map.current.on('load', () => {
       addRadiusCircle();
@@ -311,6 +376,11 @@ const Buscar = () => {
   useEffect(() => {
     if (map.current && map.current.isStyleLoaded()) {
       addRadiusCircle();
+    }
+    
+    // Refetch nearby pharmacies when radius changes
+    if (userLocation) {
+      fetchNearbyPharmacies(userLocation.lat, userLocation.lng);
     }
   }, [raioKm, userLocation]);
 
