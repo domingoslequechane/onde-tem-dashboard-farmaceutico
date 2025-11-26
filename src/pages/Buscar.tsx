@@ -1347,26 +1347,29 @@ const Buscar = () => {
 
       {/* Location Permission Dialog */}
       <AlertDialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100%-2rem)] mx-4 max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" />
-              Ativar Geolocalização
+            <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <MapPin className="h-4 sm:h-5 w-4 sm:w-5 text-primary flex-shrink-0" />
+              <span>Ativar Geolocalização</span>
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3 pt-2">
-              <p>
+            <AlertDialogDescription className="space-y-2 sm:space-y-3 pt-2">
+              <p className="text-xs sm:text-sm">
                 Para encontrar farmácias próximas a você, precisamos acessar sua localização.
               </p>
-              <p className="text-sm">
+              <p className="text-xs sm:text-sm">
                 Por favor, ative a geolocalização nas configurações do seu navegador e recarregue a página.
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => {
-              setShowLocationDialog(false);
-              requestGeolocation();
-            }}>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogAction 
+              onClick={() => {
+                setShowLocationDialog(false);
+                requestGeolocation();
+              }}
+              className="w-full sm:w-auto"
+            >
               Tentar Novamente
             </AlertDialogAction>
           </AlertDialogFooter>

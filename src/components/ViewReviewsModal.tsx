@@ -86,7 +86,7 @@ export const ViewReviewsModal = ({
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`h-4 w-4 ${
+            className={`h-3 sm:h-4 w-3 sm:w-4 ${
               star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
             }`}
           />
@@ -97,15 +97,15 @@ export const ViewReviewsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] w-[calc(100%-2rem)] mx-4 overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Avaliações</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base sm:text-lg">Avaliações</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
             {farmaciaNome} • {totalReviews} avaliação{totalReviews !== 1 ? 'ões' : ''}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+        <div className="flex-1 overflow-y-auto space-y-2 sm:space-y-3 pr-1 sm:pr-2">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
               Carregando avaliações...
@@ -116,20 +116,22 @@ export const ViewReviewsModal = ({
             </div>
           ) : (
             reviews.map((review) => (
-              <Card key={review.id} className="p-4 space-y-2">
+              <Card key={review.id} className="p-2.5 sm:p-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm">{review.cliente_nome}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-xs sm:text-sm truncate">{review.cliente_nome}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       {format(new Date(review.criado_em), "d 'de' MMMM 'de' yyyy", {
                         locale: ptBR,
                       })}
                     </p>
                   </div>
-                  {renderStars(review.avaliacao)}
+                  <div className="flex-shrink-0">
+                    {renderStars(review.avaliacao)}
+                  </div>
                 </div>
                 {review.comentario && (
-                  <p className="text-sm text-muted-foreground">{review.comentario}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{review.comentario}</p>
                 )}
               </Card>
             ))
@@ -138,17 +140,18 @@ export const ViewReviewsModal = ({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex items-center justify-between gap-2 pt-3 sm:pt-4 border-t">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1 || loading}
+              className="h-8 sm:h-9 px-2 sm:px-3"
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Anterior
+              <ChevronLeft className="h-3 sm:h-4 w-3 sm:w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Anterior</span>
             </Button>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-[10px] sm:text-sm text-muted-foreground whitespace-nowrap">
               Página {currentPage} de {totalPages}
             </span>
             <Button
@@ -156,9 +159,10 @@ export const ViewReviewsModal = ({
               size="sm"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages || loading}
+              className="h-8 sm:h-9 px-2 sm:px-3"
             >
-              Próxima
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <span className="hidden sm:inline">Próxima</span>
+              <ChevronRight className="h-3 sm:h-4 w-3 sm:w-4 sm:ml-1" />
             </Button>
           </div>
         )}
