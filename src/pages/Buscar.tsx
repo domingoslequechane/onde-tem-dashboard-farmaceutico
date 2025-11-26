@@ -11,6 +11,15 @@ import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
 import { LeaveReviewModal } from '@/components/LeaveReviewModal';
 import { ViewReviewsModal } from '@/components/ViewReviewsModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface MedicamentoFarmacia {
   medicamento_id: string;
@@ -65,6 +74,7 @@ const Buscar = () => {
   const [showLeaveReview, setShowLeaveReview] = useState(false);
   const [showViewReviews, setShowViewReviews] = useState(false);
   const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
+  const [showLocationDialog, setShowLocationDialog] = useState(false);
 
   useEffect(() => {
     requestGeolocation();
@@ -72,6 +82,12 @@ const Buscar = () => {
     fetchAllMedicamentos();
     loadSearchHistory();
   }, []);
+
+  useEffect(() => {
+    if (locationPermission === 'denied') {
+      setShowLocationDialog(true);
+    }
+  }, [locationPermission]);
 
   const loadSearchHistory = () => {
     try {
@@ -896,30 +912,8 @@ const Buscar = () => {
             <div>
               <h1 className="text-lg font-bold mb-0.5">Buscar Medicamento</h1>
               <p className="text-xs text-muted-foreground">
-                Encontre farmácias próximas
+                Encontre ONDTem!
               </p>
-            </div>
-
-            {/* Location Status - More compact */}
-            <div className="flex items-center gap-2 text-xs">
-              <MapPin className={`h-3.5 w-3.5 ${locationPermission === 'granted' ? 'text-primary' : 'text-muted-foreground'}`} />
-              <span>
-                {locationPermission === 'granted' 
-                  ? 'Localização ativa' 
-                  : locationPermission === 'denied' 
-                    ? 'Localização negada' 
-                    : 'Obtendo localização...'}
-              </span>
-              {locationPermission === 'denied' && (
-                <Button
-                  variant="link"
-                  size="sm"
-                  onClick={requestGeolocation}
-                  className="ml-auto text-xs h-auto p-0"
-                >
-                  Ativar
-                </Button>
-              )}
             </div>
 
             {/* Search Input - Smaller */}
@@ -1331,6 +1325,34 @@ const Buscar = () => {
           />
         </>
       )}
+
+      {/* Location Permission Dialog */}
+      <AlertDialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              Ativar Geolocalização
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <p>
+                Para encontrar farmácias próximas a você, precisamos acessar sua localização.
+              </p>
+              <p className="text-sm">
+                Por favor, ative a geolocalização nas configurações do seu navegador e recarregue a página.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => {
+              setShowLocationDialog(false);
+              requestGeolocation();
+            }}>
+              Tentar Novamente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
