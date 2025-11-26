@@ -359,37 +359,87 @@ const Buscar = () => {
             .setLngLat([farmacia.longitude, farmacia.latitude])
             .setPopup(
               new mapboxgl.Popup({ 
-                closeButton: true,
-                closeOnClick: true,
-                maxWidth: '300px'
+                closeButton: false,
+                closeOnClick: false,
+                maxWidth: '320px',
+                className: 'pharmacy-popup'
               }).setHTML(`
-                <div style="padding: 14px; font-family: system-ui, -apple-system, sans-serif;">
-                  <h3 style="margin: 0 0 10px 0; font-weight: 600; font-size: 15px; color: #0f172a; line-height: 1.3;">
+                <style>
+                  .pharmacy-popup .mapboxgl-popup-content {
+                    padding: 0;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                  }
+                  .pharmacy-popup-close {
+                    position: absolute;
+                    top: 12px;
+                    right: 12px;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 6px;
+                    background: #f1f5f9;
+                    border: none;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s;
+                    z-index: 10;
+                  }
+                  .pharmacy-popup-close:hover {
+                    background: #e2e8f0;
+                  }
+                  .pharmacy-popup-close svg {
+                    width: 14px;
+                    height: 14px;
+                    stroke: #64748b;
+                    stroke-width: 2.5;
+                  }
+                </style>
+                <div style="padding: 16px; padding-right: 44px; font-family: system-ui, -apple-system, sans-serif; position: relative;">
+                  <button class="pharmacy-popup-close" onclick="this.closest('.mapboxgl-popup').remove()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                  <h3 style="margin: 0 0 12px 0; font-weight: 600; font-size: 15px; color: #0f172a; line-height: 1.3; padding-right: 8px;">
                     ${farmacia.nome}
                   </h3>
-                  <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+                  <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
                     ${farmacia.endereco_completo ? `
-                      <div style="display: flex; align-items: start; gap: 8px;">
-                        <span style="color: #10b981; font-size: 16px; flex-shrink: 0;">📍</span>
+                      <div style="display: flex; align-items: start; gap: 10px;">
+                        <svg style="width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                          <circle cx="12" cy="10" r="3"/>
+                        </svg>
                         <span style="color: #64748b; line-height: 1.5;">${farmacia.endereco_completo}</span>
                       </div>
                     ` : ''}
                     ${farmacia.horario_abertura && farmacia.horario_fechamento ? `
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #10b981; font-size: 16px;">🕒</span>
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <svg style="width: 18px; height: 18px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"/>
+                          <polyline points="12 6 12 12 16 14"/>
+                        </svg>
                         <span style="color: #64748b;">${farmacia.horario_abertura} - ${farmacia.horario_fechamento}</span>
                       </div>
                     ` : ''}
                     ${farmacia.telefone ? `
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #10b981; font-size: 16px;">📞</span>
-                        <a href="tel:${farmacia.telefone}" style="color: #10b981; text-decoration: none; font-weight: 500;">${farmacia.telefone}</a>
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <svg style="width: 18px; height: 18px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                        <a href="tel:${farmacia.telefone}" style="color: #10b981; text-decoration: none; font-weight: 500; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">${farmacia.telefone}</a>
                       </div>
                     ` : ''}
                     ${farmacia.whatsapp ? `
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #10b981; font-size: 16px;">💬</span>
-                        <a href="https://wa.me/${farmacia.whatsapp.replace(/\D/g, '')}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 500;">${farmacia.whatsapp}</a>
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <svg style="width: 18px; height: 18px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="m3 21 1.65-3.8a9 9 0 1 1 3.4 2.9z"/>
+                          <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/>
+                        </svg>
+                        <a href="https://wa.me/${farmacia.whatsapp.replace(/\D/g, '')}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 500; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">${farmacia.whatsapp}</a>
                       </div>
                     ` : ''}
                   </div>
@@ -481,7 +531,28 @@ const Buscar = () => {
     // Add user location marker (blue marker for user)
     new mapboxgl.Marker({ color: '#3b82f6' })
       .setLngLat([userLocation.lng, userLocation.lat])
-      .setPopup(new mapboxgl.Popup().setHTML('<p class="font-semibold">Sua Localização</p>'))
+      .setPopup(
+        new mapboxgl.Popup({ 
+          closeButton: false,
+          maxWidth: '200px',
+          className: 'user-location-popup'
+        }).setHTML(`
+          <style>
+            .user-location-popup .mapboxgl-popup-content {
+              padding: 12px 16px;
+              border-radius: 10px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+          </style>
+          <div style="display: flex; align-items: center; gap: 8px; font-family: system-ui, -apple-system, sans-serif;">
+            <svg style="width: 18px; height: 18px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <p style="margin: 0; font-weight: 600; font-size: 14px; color: #0f172a;">Sua Localização</p>
+          </div>
+        `)
+      )
       .addTo(map.current);
 
     // Wait for map to load before adding radius circle and pharmacies
