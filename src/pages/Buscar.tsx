@@ -884,11 +884,11 @@ const Buscar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+    <div className="min-h-screen max-w-full bg-background flex flex-col overflow-x-hidden">
       {/* Header - More compact */}
-      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 flex justify-between items-center">
-          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0">
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full">
+        <div className="w-full max-w-full px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 flex justify-between items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
             <Button
               variant="ghost"
               size="icon"
@@ -897,12 +897,12 @@ const Buscar = () => {
             >
               <ArrowLeft className="h-3 sm:h-3.5 md:h-4 w-3 sm:w-3.5 md:w-4" />
             </Button>
-            <img src={logo} alt="ONDTem" className="h-4 sm:h-5 md:h-7" />
+            <img src={logo} alt="ONDTem" className="h-4 sm:h-5 md:h-7 flex-shrink-0" />
           </div>
           <Button 
             variant="ghost" 
             onClick={() => navigate('/entrar')}
-            className="text-[10px] sm:text-xs md:text-sm h-6 sm:h-7 md:h-8 px-2 sm:px-3 flex-shrink-0"
+            className="text-[10px] sm:text-xs md:text-sm h-6 sm:h-7 md:h-8 px-2 sm:px-3 flex-shrink-0 whitespace-nowrap"
             size="sm"
           >
             Entrar
@@ -911,17 +911,17 @@ const Buscar = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden w-full max-w-full">
         {/* Search Panel - More compact and narrower */}
-        <div className="w-full md:w-[340px] border-r border-border bg-background flex flex-col overflow-hidden">
+        <div className="w-full md:w-[340px] border-r border-border bg-background flex flex-col overflow-hidden max-w-full">
           {/* Search Header - Reduced padding */}
-          <div className="p-2 sm:p-3 border-b border-border space-y-2 sm:space-y-3">
-            <div>
-              <h1 className="text-base sm:text-lg font-bold">Encontre ONDTem!</h1>
+          <div className="p-2 sm:p-3 border-b border-border space-y-2 sm:space-y-3 w-full max-w-full">
+            <div className="w-full max-w-full">
+              <h1 className="text-base sm:text-lg font-bold truncate">Encontre ONDTem!</h1>
             </div>
 
             {/* Search Input - Mobile: with radius dropdown, Desktop: separate */}
-            <div className="flex gap-1.5 sm:gap-2">
+            <div className="flex gap-1.5 sm:gap-2 w-full max-w-full">
               <div className="relative flex-1 min-w-0">
                 <Input
                   placeholder="Ex: Paracetamol"
@@ -1025,21 +1025,21 @@ const Buscar = () => {
           </div>
 
           {/* Results List - Reduced padding */}
-          <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 w-full max-w-full">
             {medicamentos.length > 0 && (
-              <h2 className="text-[10px] sm:text-xs font-semibold text-muted-foreground sticky top-0 bg-background pb-1.5">
+              <h2 className="text-[10px] sm:text-xs font-semibold text-muted-foreground sticky top-0 bg-background pb-1.5 truncate">
                 {medicamentos.length} Medicamento{medicamentos.length > 1 ? 's' : ''} encontrado{medicamentos.length > 1 ? 's' : ''}
               </h2>
             )}
             
             {/* Loading State */}
             {searching && (
-              <Card className="p-4 text-center space-y-2">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
-                  <Search className="h-5 w-5 text-primary" />
+              <Card className="p-2 sm:p-4 text-center space-y-2 w-full max-w-full">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
+                  <Search className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </div>
-                <h3 className="font-semibold text-sm">Buscando medicamentos...</h3>
-                <p className="text-xs text-muted-foreground">
+                <h3 className="font-semibold text-xs sm:text-sm">Buscando medicamentos...</h3>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   Procurando as melhores opções próximas a você
                 </p>
               </Card>
@@ -1047,12 +1047,12 @@ const Buscar = () => {
             
             {/* Empty State */}
             {!searching && medicamentos.length === 0 && medicamento && (
-              <Card className="p-4 text-center space-y-2">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto">
-                  <Search className="h-5 w-5 text-muted-foreground" />
+              <Card className="p-2 sm:p-4 text-center space-y-2 w-full max-w-full">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center mx-auto">
+                  <Search className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                 </div>
-                <h3 className="font-semibold text-sm">Nenhum medicamento encontrado</h3>
-                <p className="text-xs text-muted-foreground">
+                <h3 className="font-semibold text-xs sm:text-sm">Nenhum medicamento encontrado</h3>
+                <p className="text-[10px] sm:text-xs text-muted-foreground break-words">
                   Não encontramos "{medicamento}" em farmácias próximas em um raio de {raioKm}km.
                   {raioKm < 5 && ' Tente aumentar o raio de busca acima.'}
                 </p>
@@ -1061,22 +1061,22 @@ const Buscar = () => {
 
             {/* Recent Searches Section - More compact */}
             {!searching && medicamentos.length === 0 && !medicamento && searchHistory.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2 w-full max-w-full">
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Clock className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-muted-foreground" />
+                  <Clock className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-muted-foreground flex-shrink-0" />
                   <h2 className="text-[10px] sm:text-xs font-semibold text-muted-foreground">Buscas Recentes</h2>
                 </div>
-                <div className="space-y-1.5 sm:space-y-2">
+                <div className="space-y-1.5 sm:space-y-2 w-full max-w-full">
                   {searchHistory.map((search, index) => (
                     <Card 
                       key={`recent-${index}`} 
-                      className="p-2 sm:p-2.5 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary"
+                      className="p-2 sm:p-2.5 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary w-full max-w-full"
                       onClick={() => {
                         setMedicamento(search);
                         setTimeout(() => searchPharmacies(search), 100);
                       }}
                     >
-                      <div className="flex justify-between items-center gap-2">
+                      <div className="flex justify-between items-center gap-2 w-full max-w-full">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-xs sm:text-sm truncate">{search}</p>
                           <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">
@@ -1107,14 +1107,14 @@ const Buscar = () => {
             {medicamentos.map((item, index) => (
               <Card 
                 key={`${item.medicamento_id}-${item.farmacia_id}-${index}`} 
-                className={`p-2 sm:p-2.5 space-y-1.5 hover:shadow-md transition-all cursor-pointer border-l-4 ${
+                className={`p-2 sm:p-2.5 space-y-1.5 hover:shadow-md transition-all cursor-pointer border-l-4 w-full max-w-full ${
                   selectedMedicamento?.medicamento_id === item.medicamento_id && selectedMedicamento?.farmacia_id === item.farmacia_id
                     ? 'border-l-green-600 bg-green-50' 
                     : 'border-l-green-500 hover:border-l-green-600 bg-green-50/50 hover:bg-green-50'
                 }`}
                 onClick={() => showRouteToPharmacy(item, routeMode)}
               >
-                <div className="flex justify-between items-start gap-2">
+                <div className="flex justify-between items-start gap-2 w-full max-w-full">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-xs sm:text-sm truncate">{item.medicamento_nome}</h3>
                     {item.medicamento_categoria && (
@@ -1131,19 +1131,19 @@ const Buscar = () => {
                   </div>
                 </div>
                 
-                <div className="pt-1.5 border-t border-border space-y-1.5">
+                <div className="pt-1.5 border-t border-border space-y-1.5 w-full max-w-full">
                   <div className="flex items-center gap-1 min-w-0">
                     <MapPin className="h-2.5 sm:h-3 w-2.5 sm:w-3 text-green-600 flex-shrink-0" />
-                    <p className="text-[10px] sm:text-xs font-medium text-green-600 truncate">
+                    <p className="text-[10px] sm:text-xs font-medium text-green-600 truncate flex-1">
                       {item.farmacia_nome}
                     </p>
                   </div>
                   
                   {/* Price and Rating on same line */}
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2 w-full max-w-full">
                     <div className="flex-1 min-w-0">
                       {item.medicamento_preco && (
-                        <p className="text-xs sm:text-sm font-semibold text-green-600">
+                        <p className="text-xs sm:text-sm font-semibold text-green-600 truncate">
                           MT {item.medicamento_preco.toFixed(2)}
                         </p>
                       )}
@@ -1153,7 +1153,7 @@ const Buscar = () => {
                     {item.media_avaliacoes ? (
                       <div className="flex items-center gap-0.5 flex-shrink-0">
                         {renderStars(item.media_avaliacoes, 'sm')}
-                        <span className="text-[10px] sm:text-xs font-semibold text-yellow-600 ml-0.5">
+                        <span className="text-[10px] sm:text-xs font-semibold text-yellow-600 ml-0.5 whitespace-nowrap">
                           {item.media_avaliacoes.toFixed(1)}
                         </span>
                         <span className="text-[8px] sm:text-[9px] text-muted-foreground whitespace-nowrap">
@@ -1166,7 +1166,7 @@ const Buscar = () => {
                   </div>
                 </div>
                 
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] pt-1.5 border-t border-border">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] pt-1.5 border-t border-border w-full max-w-full">
                   {item.farmacia_telefone && (
                     <a 
                       href={`tel:${item.farmacia_telefone}`}
@@ -1174,7 +1174,7 @@ const Buscar = () => {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Phone className="h-2.5 sm:h-3 w-2.5 sm:w-3 shrink-0" />
-                      <span>Ligar</span>
+                      <span className="truncate">Ligar</span>
                     </a>
                   )}
                   {item.farmacia_whatsapp && (
@@ -1185,7 +1185,7 @@ const Buscar = () => {
                       className="flex items-center gap-0.5 sm:gap-1 text-green-600 hover:text-green-700 font-medium"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <span>WhatsApp</span>
+                      <span className="truncate">WhatsApp</span>
                     </a>
                   )}
                 </div>
@@ -1195,14 +1195,14 @@ const Buscar = () => {
         </div>
 
         {/* Map */}
-        <div className="flex-1 relative h-[400px] md:h-auto min-h-0">
-          <div ref={mapContainer} className="absolute inset-0" />
+        <div className="flex-1 relative h-[400px] md:h-auto min-h-0 w-full max-w-full overflow-hidden">
+          <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
           
           {/* Route Info Overlay - More compact and responsive */}
           {routeInfo && selectedMedicamento && (
             <Card className="absolute top-2 sm:top-3 left-2 sm:left-1/2 sm:transform sm:-translate-x-1/2 p-1.5 sm:p-2 shadow-lg z-10 w-[calc(100%-1rem)] sm:w-[calc(100%-1.5rem)] max-w-md">
-              <div className="flex items-start gap-1 sm:gap-1.5">
-                <div className="flex-1 space-y-1 sm:space-y-1.5 min-w-0">
+              <div className="flex items-start gap-1 sm:gap-1.5 w-full max-w-full">
+                <div className="flex-1 space-y-1 sm:space-y-1.5 min-w-0 max-w-full">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-[10px] sm:text-xs mb-0.5 truncate">{selectedMedicamento.medicamento_nome}</h3>
                     <p className="text-[9px] sm:text-[11px] text-muted-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
@@ -1305,9 +1305,9 @@ const Buscar = () => {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-background mt-auto">
-        <div className="container mx-auto px-4 py-4">
-          <p className="text-center text-xs md:text-sm text-muted-foreground">
+      <footer className="border-t border-border bg-background mt-auto w-full max-w-full">
+        <div className="w-full max-w-full px-2 sm:px-4 py-3 sm:py-4">
+          <p className="text-center text-[10px] sm:text-xs md:text-sm text-muted-foreground break-words">
             © {new Date().getFullYear()} ONDTem. Todos os direitos reservados. by{' '}
             <a 
               href="https://onixagence.com" 

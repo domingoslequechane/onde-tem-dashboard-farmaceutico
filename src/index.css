@@ -107,4 +107,31 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Prevent horizontal overflow globally */
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Ensure all elements respect max width */
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Prevent images and media from causing overflow */
+  img, video, canvas, svg, iframe {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Ensure flex containers don't overflow */
+  .flex, [class*="flex"] {
+    min-width: 0;
+  }
+
+  /* Ensure grid containers don't overflow */
+  .grid, [class*="grid"] {
+    min-width: 0;
+  }
 }
