@@ -5,7 +5,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
@@ -178,6 +178,19 @@ const Buscar = () => {
     
     setSelectedPharmacy(null);
     setRouteInfo(null);
+  };
+
+  const clearSearch = () => {
+    setMedicamento('');
+    setPharmacies([]);
+    clearRoute();
+    
+    // Clear pharmacy markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+    
+    // Reset filtered medications to show all
+    setFilteredMedicamentos(allMedicamentos);
   };
 
   const fetchMapboxToken = async () => {
@@ -508,13 +521,25 @@ const Buscar = () => {
 
             {/* Search Input */}
             <div className="flex gap-2">
-              <Input
-                placeholder="Ex: Paracetamol"
-                value={medicamento}
-                onChange={(e) => setMedicamento(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && searchPharmacies()}
-                className="flex-1"
-              />
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Ex: Paracetamol"
+                  value={medicamento}
+                  onChange={(e) => setMedicamento(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchPharmacies()}
+                  className="pr-8"
+                />
+                {(medicamento || selectedPharmacy) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={clearSearch}
+                    className="absolute right-0 top-0 h-full w-8 hover:bg-transparent"
+                  >
+                    <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                  </Button>
+                )}
+              </div>
               <Button 
                 onClick={searchPharmacies}
                 disabled={searching || !userLocation}
