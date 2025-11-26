@@ -99,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
           
           <p style="color: #6b7280; font-size: 12px; text-align: center;">
             © 2025 ONDTem. Todos os direitos reservados.<br/>
-            <a href="https://ondtem.com" style="color: #2563eb; text-decoration: none;">ondtem.com</a>
+            by <a href="https://onixagence.com" style="color: #2563eb; text-decoration: none;">Onix Agence</a>
           </p>
         </div>
       `,
