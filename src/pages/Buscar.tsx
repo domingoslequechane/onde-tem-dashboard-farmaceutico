@@ -536,14 +536,8 @@ const Buscar = () => {
 
       if (error) throw error;
 
-      setMedicamentos(data || []);
-
       if (data && data.length > 0) {
-        // Clear existing pharmacy markers
-        markersRef.current.forEach(marker => marker.remove());
-        markersRef.current = [];
-
-        // Group by pharmacy to avoid duplicate markers
+        // Calculate real route distances for unique pharmacies
         const uniquePharmacies = new Map<string, MedicamentoFarmacia>();
         data.forEach((item) => {
           if (!uniquePharmacies.has(item.farmacia_id)) {
@@ -551,8 +545,48 @@ const Buscar = () => {
           }
         });
 
+        // Fetch real distances for each pharmacy
+        const distancePromises = Array.from(uniquePharmacies.values()).map(async (pharmacy) => {
+          try {
+            const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${userLocation.lng},${userLocation.lat};${pharmacy.farmacia_longitude},${pharmacy.farmacia_latitude}?access_token=${mapboxToken}`;
+            const response = await fetch(url);
+            const routeData = await response.json();
+            
+            if (routeData.routes && routeData.routes.length > 0) {
+              const realDistance = routeData.routes[0].distance / 1000; // Convert to km
+              return { farmacia_id: pharmacy.farmacia_id, distancia_km: realDistance };
+            }
+            return { farmacia_id: pharmacy.farmacia_id, distancia_km: pharmacy.distancia_km };
+          } catch {
+            return { farmacia_id: pharmacy.farmacia_id, distancia_km: pharmacy.distancia_km };
+          }
+        });
+
+        const realDistances = await Promise.all(distancePromises);
+        const distanceMap = new Map(realDistances.map(d => [d.farmacia_id, d.distancia_km]));
+
+        // Update medications with real distances
+        const updatedData = data.map(item => ({
+          ...item,
+          distancia_km: distanceMap.get(item.farmacia_id) || item.distancia_km
+        })).sort((a, b) => a.distancia_km - b.distancia_km); // Re-sort by real distance
+
+        setMedicamentos(updatedData);
+
+        // Clear existing pharmacy markers
+        markersRef.current.forEach(marker => marker.remove());
+        markersRef.current = [];
+
+        // Group by pharmacy again with updated distances
+        const updatedUniquePharmacies = new Map<string, MedicamentoFarmacia>();
+        updatedData.forEach((item) => {
+          if (!updatedUniquePharmacies.has(item.farmacia_id)) {
+            updatedUniquePharmacies.set(item.farmacia_id, item);
+          }
+        });
+
         // Add pharmacy markers to map
-        uniquePharmacies.forEach((item) => {
+        updatedUniquePharmacies.forEach((item) => {
           if (item.farmacia_latitude && item.farmacia_longitude && map.current) {
             const marker = new mapboxgl.Marker({ color: '#10b981' })
               .setLngLat([item.farmacia_longitude, item.farmacia_latitude])
@@ -560,7 +594,7 @@ const Buscar = () => {
                 new mapboxgl.Popup().setHTML(`
                   <div class="p-2">
                     <p class="font-semibold text-sm">${item.farmacia_nome}</p>
-                    <p class="text-xs text-gray-600 mt-1">${item.distancia_km.toFixed(2)} km</p>
+                    <p class="text-xs text-gray-600 mt-1">${item.distancia_km.toFixed(2)} km (via rota)</p>
                   </div>
                 `)
               )
@@ -574,7 +608,7 @@ const Buscar = () => {
         if (markersRef.current.length > 0 && map.current) {
           const bounds = new mapboxgl.LngLatBounds();
           bounds.extend([userLocation.lng, userLocation.lat]);
-          uniquePharmacies.forEach((item) => {
+          updatedUniquePharmacies.forEach((item) => {
             if (item.farmacia_latitude && item.farmacia_longitude) {
               bounds.extend([item.farmacia_longitude, item.farmacia_latitude]);
             }
@@ -584,8 +618,10 @@ const Buscar = () => {
 
         toast({
           title: 'Busca concluída',
-          description: `Encontramos ${data.length} medicamento${data.length > 1 ? 's' : ''}`,
+          description: `Encontramos ${updatedData.length} medicamento${updatedData.length > 1 ? 's' : ''}`,
         });
+      } else {
+        setMedicamentos([]);
       }
     } catch (error) {
       console.error('Search error:', error);
