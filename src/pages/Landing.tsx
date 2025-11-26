@@ -436,7 +436,7 @@ const Landing = () => {
                 </Card>
 
                 <div className="text-center p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border-2 border-primary/20">
-                  <p className="text-sm font-semibold text-primary">Retorno Imediato e Crescimento Sustentável</p>
+                  <p className="text-sm font-semibold text-primary">Crescimento Sustentável</p>
                 </div>
               </div>
             </div>
