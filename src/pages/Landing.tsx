@@ -198,16 +198,16 @@ const Landing = () => {
                 </div>
               </Card>
 
-              <Card className="p-6 md:p-8 bg-purple-50 border-purple-200">
+              <Card className="p-6 md:p-8 bg-orange-50 border-orange-200">
                 <div className="flex flex-col md:flex-row gap-6">
-                  <div className="w-16 h-16 rounded-xl bg-purple-100 flex items-center justify-center shrink-0">
-                    <BarChart3 className="h-8 w-8 text-purple-600" />
+                  <div className="w-16 h-16 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
+                    <BarChart3 className="h-8 w-8 text-orange-600" />
                   </div>
                   <div className="space-y-3 flex-1">
                     <h3 className="text-xl md:text-2xl font-bold text-foreground">
                       3. Inteligência de Mercado
                     </h3>
-                    <p className="text-base md:text-lg font-semibold text-purple-600">
+                    <p className="text-base md:text-lg font-semibold text-orange-600">
                       Decisões de Stock Estratégicas e Lucrativas
                     </p>
                     <p className="text-sm md:text-base text-muted-foreground">
