@@ -72,16 +72,16 @@ const Landing = () => {
               <Button 
                 size="lg" 
                 onClick={() => navigate('/contacto')}
-                className="text-base md:text-lg px-8 py-6 h-auto"
+                className="text-sm md:text-base px-4 md:px-8 py-3 md:py-4 h-auto whitespace-normal"
               >
                 Quero Aumentar Minhas Vendas
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
                 onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-base md:text-lg px-8 py-6 h-auto"
+                className="text-sm md:text-base px-4 md:px-8 py-3 md:py-4 h-auto whitespace-normal"
               >
                 Ver Como Funciona
               </Button>
@@ -500,10 +500,10 @@ const Landing = () => {
               size="lg" 
               variant="secondary"
               onClick={() => navigate('/contacto')}
-              className="text-base md:text-lg px-8 py-6 h-auto"
+              className="text-sm md:text-base px-4 md:px-8 py-3 md:py-4 h-auto whitespace-normal"
             >
               Quero Falar com um Consultor ONDTem
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
             </Button>
             <p className="text-sm opacity-75 pt-4">
               Serviço Gratuito para o Consumidor. Assinatura Exclusiva para Farmácias.
