@@ -686,7 +686,7 @@ const Buscar = () => {
                 
                 {/* Autocomplete Dropdown */}
                 {medicamento && filteredMedicamentos.length > 0 && medicamentos.length === 0 && !searching && (
-                  <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-[200px] overflow-y-auto shadow-lg">
+                  <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-[200px] overflow-y-auto shadow-lg bg-background">
                     {filteredMedicamentos.slice(0, 5).map((med, index) => (
                       <div
                         key={`${med.nome}-${index}`}
@@ -697,43 +697,6 @@ const Buscar = () => {
                         }}
                       >
                         <p className="text-sm font-medium">{med.nome}</p>
-                      </div>
-                    ))}
-                  </Card>
-                )}
-                
-                {/* Search History Dropdown */}
-                {!medicamento && searchHistory.length > 0 && medicamentos.length === 0 && !searching && (
-                  <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-[200px] overflow-y-auto shadow-lg">
-                    <div className="p-2 border-b bg-muted/50">
-                      <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        Buscas Recentes
-                      </p>
-                    </div>
-                    {searchHistory.map((search, index) => (
-                      <div
-                        key={`history-${index}`}
-                        className="p-2 hover:bg-muted cursor-pointer border-b last:border-b-0 flex items-center justify-between group"
-                        onClick={() => {
-                          setMedicamento(search);
-                          setTimeout(() => searchPharmacies(), 100);
-                        }}
-                      >
-                        <p className="text-sm font-medium">{search}</p>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const newHistory = searchHistory.filter((_, i) => i !== index);
-                            setSearchHistory(newHistory);
-                            localStorage.setItem('ondtem_search_history', JSON.stringify(newHistory));
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
                       </div>
                     ))}
                   </Card>
@@ -801,6 +764,50 @@ const Buscar = () => {
                   {raioKm < 5 && ' Tente aumentar o raio de busca acima.'}
                 </p>
               </Card>
+            )}
+
+            {/* Recent Searches Section */}
+            {!searching && medicamentos.length === 0 && !medicamento && searchHistory.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-muted-foreground">Buscas Recentes</h2>
+                </div>
+                <div className="space-y-2">
+                  {searchHistory.map((search, index) => (
+                    <Card 
+                      key={`recent-${index}`} 
+                      className="p-3 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary"
+                      onClick={() => {
+                        setMedicamento(search);
+                        setTimeout(() => searchPharmacies(), 100);
+                      }}
+                    >
+                      <div className="flex justify-between items-center gap-2">
+                        <div className="flex-1">
+                          <p className="font-medium text-base">{search}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Toque para buscar novamente
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newHistory = searchHistory.filter((_, i) => i !== index);
+                            setSearchHistory(newHistory);
+                            localStorage.setItem('ondtem_search_history', JSON.stringify(newHistory));
+                          }}
+                        >
+                          <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Medications List - Ordered by proximity */}
