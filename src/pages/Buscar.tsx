@@ -305,7 +305,7 @@ const Buscar = () => {
               }).setHTML(`
                 <div style="padding: 12px; font-family: system-ui, -apple-system, sans-serif;">
                   <h3 style="margin: 0 0 8px 0; font-weight: 600; font-size: 14px;">${farmacia.nome}</h3>
-                  <p style="margin: 0; font-size: 12px; color: #64748b;">${farmacia.endereco_completo}</p>
+                  <p style="margin: 0; font-size: 12px; color: #64748b;">${[farmacia.bairro, farmacia.cidade].filter(Boolean).join(', ') || 'Localização não especificada'}</p>
                 </div>
               `)
             )

@@ -232,18 +232,18 @@ export type Database = {
           atualizado_em: string | null
           bairro: string | null
           cep: string | null
-          cidade: string
+          cidade: string | null
           criado_em: string | null
           data_vencimento: string | null
           email: string | null
-          estado: string
+          estado: string | null
           horario_abertura: string | null
           horario_fechamento: string | null
           horario_funcionamento: string | null
           id: string
-          latitude: number
+          latitude: number | null
           link_google_maps: string | null
-          longitude: number
+          longitude: number | null
           nome: string
           plano: string | null
           ponto_referencia: string | null
@@ -258,18 +258,18 @@ export type Database = {
           atualizado_em?: string | null
           bairro?: string | null
           cep?: string | null
-          cidade: string
+          cidade?: string | null
           criado_em?: string | null
           data_vencimento?: string | null
           email?: string | null
-          estado: string
+          estado?: string | null
           horario_abertura?: string | null
           horario_fechamento?: string | null
           horario_funcionamento?: string | null
           id?: string
-          latitude: number
+          latitude?: number | null
           link_google_maps?: string | null
-          longitude: number
+          longitude?: number | null
           nome: string
           plano?: string | null
           ponto_referencia?: string | null
@@ -284,18 +284,18 @@ export type Database = {
           atualizado_em?: string | null
           bairro?: string | null
           cep?: string | null
-          cidade?: string
+          cidade?: string | null
           criado_em?: string | null
           data_vencimento?: string | null
           email?: string | null
-          estado?: string
+          estado?: string | null
           horario_abertura?: string | null
           horario_fechamento?: string | null
           horario_funcionamento?: string | null
           id?: string
-          latitude?: number
+          latitude?: number | null
           link_google_maps?: string | null
-          longitude?: number
+          longitude?: number | null
           nome?: string
           plano?: string | null
           ponto_referencia?: string | null
