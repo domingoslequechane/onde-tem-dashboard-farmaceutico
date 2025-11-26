@@ -538,6 +538,12 @@ const Landing = () => {
                   ondtem.com
                 </a>
                 <button 
+                  onClick={() => navigate('/instalar')}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Instalar App
+                </button>
+                <button 
                   onClick={() => navigate('/entrar')}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
