@@ -571,6 +571,8 @@ export type Database = {
           distancia_km: number
           endereco_completo: string
           farmacia_id: string
+          farmacia_latitude: number
+          farmacia_longitude: number
           farmacia_nome: string
           medicamento_nome: string
           ponto_referencia: string
