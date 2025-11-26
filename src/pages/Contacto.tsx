@@ -138,12 +138,12 @@ const Contacto = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Email</h3>
                         <p className="text-sm text-muted-foreground mb-1">Informações Gerais:</p>
-                        <a href="mailto:comercial@onixagence.com" className="text-sm text-primary hover:underline block mb-2">
-                          comercial@onixagence.com
+                        <a href="mailto:comercial@ondtem.com" className="text-sm text-primary hover:underline block mb-2">
+                          comercial@ondtem.com
                         </a>
                         <p className="text-sm text-muted-foreground mb-1">Adesão:</p>
-                        <a href="mailto:adesao-ondtem@onixagence.com" className="text-sm text-primary hover:underline block">
-                          adesao-ondtem@onixagence.com
+                        <a href="mailto:adesao@ondtem.com" className="text-sm text-primary hover:underline block">
+                          adesao@ondtem.com
                         </a>
                       </div>
                     </div>
