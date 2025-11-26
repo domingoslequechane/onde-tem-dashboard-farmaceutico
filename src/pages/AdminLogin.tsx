@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff, Shield } from 'lucide-react';
+import { Eye, EyeOff, Shield, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import ondeTemLogo from '@/assets/ondtem-logo.svg';
@@ -120,6 +120,17 @@ const AdminLogin = () => {
       {/* Left Side - Form */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-background">
         <div className="w-full max-w-md">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/')}
+            className="mb-6 -ml-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
+          
           {/* Logo and Header */}
           <div className="mb-6 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
