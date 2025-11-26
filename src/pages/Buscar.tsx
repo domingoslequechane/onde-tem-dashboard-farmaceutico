@@ -143,8 +143,18 @@ const Buscar = () => {
       .setPopup(new mapboxgl.Popup().setHTML('<p class="font-semibold">Sua Localização</p>'))
       .addTo(map.current);
 
-    // Load and display all active pharmacies
-    loadAllActivePharmacies();
+    // Add pharmacy marker from Google Maps link
+    new mapboxgl.Marker({ color: '#10b981' })
+      .setLngLat([34.8674968, -19.8305627])
+      .setPopup(
+        new mapboxgl.Popup().setHTML(`
+          <div class="p-2">
+            <p class="font-semibold">FARMACIA METRO FARMA MATACUANE</p>
+            <p class="text-xs mt-1">Lat: -19.8305627, Lng: 34.8674968</p>
+          </div>
+        `)
+      )
+      .addTo(map.current);
 
     // Wait for map to load before adding radius circle
     map.current.on('load', () => {
@@ -156,36 +166,6 @@ const Buscar = () => {
     };
   }, [mapboxToken, userLocation]);
 
-  const loadAllActivePharmacies = async () => {
-    if (!map.current) return;
-
-    try {
-      const { data: pharmacies, error } = await supabase
-        .from('farmacias')
-        .select('id, nome, latitude, longitude, endereco_completo, telefone, whatsapp')
-        .eq('ativa', true);
-
-      if (error) throw error;
-
-      pharmacies?.forEach((pharmacy) => {
-        new mapboxgl.Marker({ color: '#10b981' })
-          .setLngLat([pharmacy.longitude, pharmacy.latitude])
-          .setPopup(
-            new mapboxgl.Popup().setHTML(`
-              <div class="p-2">
-                <p class="font-semibold">${pharmacy.nome}</p>
-                <p class="text-xs mt-1">${pharmacy.endereco_completo}</p>
-                ${pharmacy.telefone ? `<p class="text-xs mt-1">Tel: ${pharmacy.telefone}</p>` : ''}
-                ${pharmacy.whatsapp ? `<p class="text-xs mt-1">WhatsApp: ${pharmacy.whatsapp}</p>` : ''}
-              </div>
-            `)
-          )
-          .addTo(map.current!);
-      });
-    } catch (error) {
-      console.error('Error loading pharmacies:', error);
-    }
-  };
 
   // Update radius circle when raioKm changes
   useEffect(() => {
