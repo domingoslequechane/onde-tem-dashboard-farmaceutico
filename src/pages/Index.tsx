@@ -13,7 +13,7 @@ const Index = () => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      navigate('/auth');
+      navigate('/entrar');
       return;
     }
 
@@ -28,7 +28,7 @@ const Index = () => {
     } else {
       // Se não tiver role definido, logout e redirecionar para auth
       await supabase.auth.signOut();
-      navigate('/auth');
+      navigate('/entrar');
     }
   };
 
