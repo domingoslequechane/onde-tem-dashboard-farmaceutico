@@ -24,6 +24,12 @@ interface Pharmacy {
   farmacia_longitude: number;
 }
 
+interface Medicamento {
+  id: string;
+  nome: string;
+  categoria: string | null;
+}
+
 const Buscar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -39,11 +45,30 @@ const Buscar = () => {
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [loadingToken, setLoadingToken] = useState(true);
   const [raioKm, setRaioKm] = useState(10);
+  const [allMedicamentos, setAllMedicamentos] = useState<Medicamento[]>([]);
+  const [loadingMedicamentos, setLoadingMedicamentos] = useState(true);
 
   useEffect(() => {
     requestGeolocation();
     fetchMapboxToken();
+    fetchAllMedicamentos();
   }, []);
+
+  const fetchAllMedicamentos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('medicamentos')
+        .select('id, nome, categoria')
+        .order('nome');
+
+      if (error) throw error;
+      setAllMedicamentos(data || []);
+    } catch (error) {
+      console.error('Error fetching medications:', error);
+    } finally {
+      setLoadingMedicamentos(false);
+    }
+  };
 
   const fetchMapboxToken = async () => {
     try {
@@ -346,15 +371,49 @@ const Buscar = () => {
               </Card>
             )}
 
-            {/* Initial State */}
+            {/* Initial State - Display All Medications */}
             {!searching && pharmacies.length === 0 && !medicamento && (
-              <Card className="p-6 text-center space-y-2 bg-muted/30">
-                <MapPin className="h-8 w-8 text-primary mx-auto" />
-                <h3 className="font-semibold">Pronto para buscar</h3>
-                <p className="text-sm text-muted-foreground">
-                  Digite o nome do medicamento que você precisa e encontre as farmácias mais próximas.
-                </p>
-              </Card>
+              <>
+                <div className="mb-3">
+                  <h2 className="text-sm font-semibold text-muted-foreground">
+                    Medicamentos Disponíveis
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Clique em um medicamento para pesquisar farmácias
+                  </p>
+                </div>
+                
+                {loadingMedicamentos ? (
+                  <Card className="p-6 text-center">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
+                      <Search className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">Carregando medicamentos...</p>
+                  </Card>
+                ) : allMedicamentos.length === 0 ? (
+                  <Card className="p-6 text-center">
+                    <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto" />
+                    <p className="text-sm text-muted-foreground mt-2">Nenhum medicamento cadastrado</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-2">
+                    {allMedicamentos.map((med) => (
+                      <Card
+                        key={med.id}
+                        className="p-3 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-transparent hover:border-l-primary"
+                        onClick={() => setMedicamento(med.nome)}
+                      >
+                        <h3 className="font-medium text-sm">{med.nome}</h3>
+                        {med.categoria && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {med.categoria}
+                          </p>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
             {pharmacies.map((pharmacy, index) => (
               <Card key={`${pharmacy.farmacia_id}-${index}`} className="p-3 space-y-2 hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary">
