@@ -45,11 +45,20 @@ const Buscar = () => {
   }, []);
 
   const fetchMapboxToken = async () => {
+    console.log('Fetching Mapbox token...');
     try {
       const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-      if (error) throw error;
+      console.log('Mapbox token response:', { data, error });
+      if (error) {
+        console.error('Error from edge function:', error);
+        throw error;
+      }
       if (data?.token) {
+        console.log('Token received, setting state');
         setMapboxToken(data.token);
+      } else {
+        console.error('No token in response:', data);
+        throw new Error('Token not found in response');
       }
     } catch (error) {
       console.error('Error fetching Mapbox token:', error);
@@ -59,6 +68,7 @@ const Buscar = () => {
         variant: 'destructive',
       });
     } finally {
+      console.log('Setting loadingToken to false');
       setLoadingToken(false);
     }
   };
