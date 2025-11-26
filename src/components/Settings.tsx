@@ -21,7 +21,6 @@ const Settings = ({ farmacia }: SettingsProps) => {
     nome: '',
     telefone: '',
     whatsapp: '',
-    endereco_completo: '',
     bairro: '',
     cidade: '',
     estado: '',
@@ -31,6 +30,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
     horario_fechamento: '',
     latitude: '',
     longitude: '',
+    link_google_maps: '',
     ativa: true,
   });
 
@@ -40,7 +40,6 @@ const Settings = ({ farmacia }: SettingsProps) => {
         nome: farmacia.nome || '',
         telefone: farmacia.telefone || '',
         whatsapp: farmacia.whatsapp || '',
-        endereco_completo: farmacia.endereco_completo || '',
         bairro: farmacia.bairro || '',
         cidade: farmacia.cidade || '',
         estado: farmacia.estado || '',
@@ -50,6 +49,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
         horario_fechamento: farmacia.horario_fechamento || '',
         latitude: farmacia.latitude ? String(farmacia.latitude) : '',
         longitude: farmacia.longitude ? String(farmacia.longitude) : '',
+        link_google_maps: farmacia.link_google_maps || '',
         ativa: farmacia.ativa ?? true,
       });
     }
@@ -83,7 +83,6 @@ const Settings = ({ farmacia }: SettingsProps) => {
           nome: pharmacyData.nome,
           telefone: pharmacyData.telefone,
           whatsapp: pharmacyData.whatsapp,
-          endereco_completo: pharmacyData.endereco_completo,
           bairro: pharmacyData.bairro,
           cidade: pharmacyData.cidade,
           estado: pharmacyData.estado,
@@ -93,6 +92,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
           horario_fechamento: pharmacyData.horario_fechamento,
           latitude: pharmacyData.latitude ? parseFloat(pharmacyData.latitude) : null,
           longitude: pharmacyData.longitude ? parseFloat(pharmacyData.longitude) : null,
+          link_google_maps: pharmacyData.link_google_maps,
           ativa: pharmacyData.ativa,
         })
         .eq('id', farmacia.id);
@@ -132,7 +132,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
         <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
           <div className="grid grid-cols-1 gap-3 sm:gap-4">
             <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="nome" className="text-xs sm:text-sm font-medium">Nome da Farmácia</Label>
+              <Label htmlFor="nome" className="text-xs sm:text-sm font-medium">Nome da Farmácia *</Label>
               <Input
                 id="nome"
                 value={pharmacyData.nome}
@@ -144,7 +144,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="telefone" className="text-xs sm:text-sm font-medium">Telefone</Label>
+                <Label htmlFor="telefone" className="text-xs sm:text-sm font-medium">Telefone *</Label>
                 <PhoneInput
                   value={pharmacyData.telefone}
                   onChange={(value) => setPharmacyData({ ...pharmacyData, telefone: value })}
@@ -152,7 +152,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
                 />
               </div>
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="whatsapp" className="text-xs sm:text-sm font-medium">WhatsApp</Label>
+                <Label htmlFor="whatsapp" className="text-xs sm:text-sm font-medium">WhatsApp *</Label>
                 <PhoneInput
                   value={pharmacyData.whatsapp}
                   onChange={(value) => setPharmacyData({ ...pharmacyData, whatsapp: value })}
@@ -162,7 +162,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
             </div>
 
             <div className="space-y-1.5 sm:space-y-2">
-              <Label className="text-sm font-medium">Horário de Funcionamento</Label>
+              <Label className="text-sm font-medium">Horário de Funcionamento *</Label>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="horario_abertura" className="text-xs text-muted-foreground">Abertura</Label>
@@ -187,20 +187,9 @@ const Settings = ({ farmacia }: SettingsProps) => {
               </div>
             </div>
 
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="endereco" className="text-xs sm:text-sm font-medium">Endereço Completo</Label>
-              <Input
-                id="endereco"
-                value={pharmacyData.endereco_completo}
-                onChange={(e) => setPharmacyData({ ...pharmacyData, endereco_completo: e.target.value })}
-                className="h-9 sm:h-10 text-sm"
-                placeholder="Ex: Av. Julius Nyerere, 123"
-              />
-            </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="bairro" className="text-xs sm:text-sm font-medium">Bairro</Label>
+                <Label htmlFor="bairro" className="text-xs sm:text-sm font-medium">Bairro *</Label>
                 <Input
                   id="bairro"
                   value={pharmacyData.bairro}
@@ -210,7 +199,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
                 />
               </div>
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="cidade" className="text-xs sm:text-sm font-medium">Cidade</Label>
+                <Label htmlFor="cidade" className="text-xs sm:text-sm font-medium">Cidade *</Label>
                 <Input
                   id="cidade"
                   value={pharmacyData.cidade}
@@ -223,7 +212,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="estado" className="text-xs sm:text-sm font-medium">Província</Label>
+                <Label htmlFor="estado" className="text-xs sm:text-sm font-medium">Província *</Label>
                 <Input
                   id="estado"
                   value={pharmacyData.estado}
@@ -233,7 +222,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
                 />
               </div>
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="nuit" className="text-xs sm:text-sm font-medium">NUIT</Label>
+                <Label htmlFor="nuit" className="text-xs sm:text-sm font-medium">NUIT *</Label>
                 <Input
                   id="nuit"
                   value={pharmacyData.nuit}
@@ -249,7 +238,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
             </div>
 
             <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="ponto_referencia" className="text-xs sm:text-sm font-medium">Ponto de Referência</Label>
+              <Label htmlFor="ponto_referencia" className="text-xs sm:text-sm font-medium">Ponto de Referência *</Label>
               <Input
                 id="ponto_referencia"
                 value={pharmacyData.ponto_referencia}
@@ -259,9 +248,23 @@ const Settings = ({ farmacia }: SettingsProps) => {
               />
             </div>
 
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="link_google_maps" className="text-xs sm:text-sm font-medium">Link do Google Maps</Label>
+              <Input
+                id="link_google_maps"
+                value={pharmacyData.link_google_maps}
+                onChange={(e) => setPharmacyData({ ...pharmacyData, link_google_maps: e.target.value })}
+                className="h-9 sm:h-10 text-sm"
+                placeholder="https://maps.google.com/..."
+              />
+              <p className="text-xs text-muted-foreground">
+                Cole o link do Google Maps da localização da farmácia
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="latitude" className="text-xs sm:text-sm font-medium">Latitude</Label>
+                <Label htmlFor="latitude" className="text-xs sm:text-sm font-medium">Latitude *</Label>
                 <Input
                   id="latitude"
                   type="number"
@@ -273,7 +276,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
                 />
               </div>
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="longitude" className="text-xs sm:text-sm font-medium">Longitude</Label>
+                <Label htmlFor="longitude" className="text-xs sm:text-sm font-medium">Longitude *</Label>
                 <Input
                   id="longitude"
                   type="number"
