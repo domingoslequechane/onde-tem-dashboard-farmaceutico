@@ -198,10 +198,10 @@ const Landing = () => {
                 </div>
               </Card>
 
-              <Card className="p-6 md:p-8 bg-accent/5 border-accent/20">
+              <Card className="p-6 md:p-8 bg-secondary/5 border-secondary/20">
                 <div className="flex flex-col md:flex-row gap-6">
-                  <div className="w-16 h-16 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                    <BarChart3 className="h-8 w-8 text-accent" />
+                  <div className="w-16 h-16 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                    <BarChart3 className="h-8 w-8 text-secondary" />
                   </div>
                   <div className="space-y-3 flex-1">
                     <h3 className="text-xl md:text-2xl font-bold text-foreground">
