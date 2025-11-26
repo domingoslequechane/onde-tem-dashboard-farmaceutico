@@ -80,15 +80,31 @@ const Buscar = () => {
     }
   };
 
-  // Filter medications based on input
+  // Filter medications based on input - show only unique names
   useEffect(() => {
     if (medicamento.trim().length > 0) {
       const filtered = allMedicamentos.filter(med =>
         med.nome.toLowerCase().includes(medicamento.toLowerCase())
       );
-      setFilteredMedicamentos(filtered);
+      
+      // Get unique medication names
+      const uniqueNames = new Map<string, Medicamento>();
+      filtered.forEach(med => {
+        if (!uniqueNames.has(med.nome.toLowerCase())) {
+          uniqueNames.set(med.nome.toLowerCase(), med);
+        }
+      });
+      
+      setFilteredMedicamentos(Array.from(uniqueNames.values()));
     } else {
-      setFilteredMedicamentos(allMedicamentos);
+      // Show unique names when no search
+      const uniqueNames = new Map<string, Medicamento>();
+      allMedicamentos.forEach(med => {
+        if (!uniqueNames.has(med.nome.toLowerCase())) {
+          uniqueNames.set(med.nome.toLowerCase(), med);
+        }
+      });
+      setFilteredMedicamentos(Array.from(uniqueNames.values()));
     }
   }, [medicamento, allMedicamentos]);
 
@@ -535,11 +551,21 @@ const Buscar = () => {
                   value={medicamento}
                   onChange={(e) => setMedicamento(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && searchPharmacies()}
-                  onFocus={() => setFilteredMedicamentos(
-                    medicamento ? 
-                    allMedicamentos.filter(med => med.nome.toLowerCase().includes(medicamento.toLowerCase())).slice(0, 5) : 
-                    allMedicamentos.slice(0, 5)
-                  )}
+                  onFocus={() => {
+                    // Show unique medication names on focus
+                    const filtered = medicamento ? 
+                      allMedicamentos.filter(med => med.nome.toLowerCase().includes(medicamento.toLowerCase())) : 
+                      allMedicamentos;
+                    
+                    const uniqueNames = new Map<string, Medicamento>();
+                    filtered.forEach(med => {
+                      if (!uniqueNames.has(med.nome.toLowerCase())) {
+                        uniqueNames.set(med.nome.toLowerCase(), med);
+                      }
+                    });
+                    
+                    setFilteredMedicamentos(Array.from(uniqueNames.values()).slice(0, 5));
+                  }}
                   className="pr-8"
                 />
                 {(medicamento || selectedMedicamento) && (
@@ -556,9 +582,9 @@ const Buscar = () => {
                 {/* Autocomplete Dropdown */}
                 {medicamento && filteredMedicamentos.length > 0 && medicamentos.length === 0 && !searching && (
                   <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-[200px] overflow-y-auto shadow-lg">
-                    {filteredMedicamentos.slice(0, 5).map((med) => (
+                    {filteredMedicamentos.slice(0, 5).map((med, index) => (
                       <div
-                        key={med.id}
+                        key={`${med.nome}-${index}`}
                         className="p-2 hover:bg-muted cursor-pointer border-b last:border-b-0"
                         onClick={() => {
                           setMedicamento(med.nome);
@@ -566,9 +592,6 @@ const Buscar = () => {
                         }}
                       >
                         <p className="text-sm font-medium">{med.nome}</p>
-                        {med.categoria && (
-                          <p className="text-xs text-muted-foreground">{med.categoria}</p>
-                        )}
                       </div>
                     ))}
                   </Card>
