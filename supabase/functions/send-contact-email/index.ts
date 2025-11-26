@@ -90,13 +90,6 @@ const handler = async (req: Request): Promise<Response> => {
             A nossa equipa irá analisar a sua solicitação e entraremos em contacto consigo em breve através do email ou telefone fornecido.
           </p>
           
-          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #6b7280; font-size: 14px;">
-              <strong>Resumo da sua mensagem:</strong><br/>
-              ${message.substring(0, 200)}${message.length > 200 ? '...' : ''}
-            </p>
-          </div>
-          
           <p style="line-height: 1.6; color: #4b5563;">
             Atenciosamente,<br/>
             <strong>Equipa ONDTem</strong>
