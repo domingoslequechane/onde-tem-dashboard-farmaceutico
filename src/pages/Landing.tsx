@@ -492,7 +492,7 @@ const Landing = () => {
             <Button 
               size="lg" 
               variant="secondary"
-              onClick={() => navigate('/entrar')}
+              onClick={() => navigate('/contacto')}
               className="text-base md:text-lg px-8 py-6 h-auto"
             >
               Quero Falar com um Consultor ONDTem
@@ -513,7 +513,7 @@ const Landing = () => {
               <div className="flex items-center gap-4">
                 <img src={logo} alt="ONDTem" className="h-8" />
                 <p className="text-sm text-muted-foreground">
-                  © 2024 ONDTem. Todos os direitos reservados.
+                  © 2025 ONDTem. Todos os direitos reservados.
                 </p>
               </div>
               <div className="flex gap-6">
