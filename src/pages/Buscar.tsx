@@ -519,7 +519,7 @@ const Buscar = () => {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/standard', // Latest Mapbox style
+      style: 'mapbox://styles/mapbox/light-v11', // Clean, minimal style similar to Google Maps
       center: [userLocation.lng, userLocation.lat],
       zoom: 12,
       pitch: 0,
