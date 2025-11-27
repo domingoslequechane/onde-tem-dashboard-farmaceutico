@@ -659,7 +659,7 @@ const Buscar = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden w-full">
       {/* Header */}
-      <header className={`border-b border-border bg-background/95 backdrop-blur sticky top-0 z-50 w-full ${selectedMedicamento ? 'hidden md:block' : ''}`}>
+      <header className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-50 w-full">
         <div className="px-3 py-2 flex justify-between items-center gap-2 max-w-full min-w-0">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <Button
@@ -689,7 +689,7 @@ const Buscar = () => {
         <div className={`w-full md:w-80 border-r border-border bg-background flex flex-col overflow-hidden`}>
           {/* Route Info Card - Mobile/Tablet Only */}
           {selectedMedicamento && routeInfo && (
-            <div className="md:hidden flex-1 overflow-y-auto p-3">
+            <div className="md:hidden flex-1 overflow-y-auto p-3 animate-fade-in">
               <Card className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 space-y-2 min-w-0">
@@ -770,7 +770,7 @@ const Buscar = () => {
           )}
 
           {/* Search Panel - Hidden on Mobile/Tablet when route is selected */}
-          <div className={`flex-1 flex flex-col ${selectedMedicamento ? 'hidden md:flex' : 'flex'}`}>
+          <div className={`flex-1 flex flex-col transition-all duration-300 ${selectedMedicamento ? 'hidden md:flex' : 'flex animate-fade-in'}`}>
           {/* Search Header */}
           <div className="p-3 border-b border-border space-y-2">
             <h1 className="text-lg sm:text-xl font-bold truncate">Encontre ONDTem!</h1>
@@ -998,7 +998,7 @@ const Buscar = () => {
           
           {/* Route Info - Desktop Only */}
           {routeInfo && selectedMedicamento && (
-            <Card className="hidden md:block absolute top-3 left-1/2 -translate-x-1/2 w-96 p-3 shadow-lg z-10">
+            <Card className="hidden md:block absolute top-3 left-1/2 -translate-x-1/2 w-96 p-3 shadow-lg z-10 animate-slide-in-right">
               <div className="flex items-start gap-3">
                 <div className="flex-1 space-y-2 min-w-0">
                   <h3 className="font-semibold text-sm truncate">{selectedMedicamento.medicamento_nome}</h3>
@@ -1087,7 +1087,7 @@ const Buscar = () => {
       </div>
 
       {/* Footer */}
-      <footer className={`border-t bg-background ${selectedMedicamento ? 'hidden md:block' : ''}`}>
+      <footer className="border-t bg-background">
         <div className="px-3 py-3">
           <p className="text-center text-sm text-muted-foreground">
             © {new Date().getFullYear()} ONDTem. Todos os direitos reservados. by{' '}
