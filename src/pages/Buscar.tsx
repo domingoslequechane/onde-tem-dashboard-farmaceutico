@@ -84,7 +84,7 @@ const Buscar = () => {
   const [showLocationDialog, setShowLocationDialog] = useState(false);
 
   useEffect(() => {
-    requestGeolocation();
+    checkLocationPermission();
     fetchMapboxToken();
     fetchAllMedicamentos();
     loadSearchHistory();
@@ -93,6 +93,8 @@ const Buscar = () => {
   useEffect(() => {
     if (locationPermission === 'denied') {
       setShowLocationDialog(true);
+    } else if (locationPermission === 'prompt') {
+      requestGeolocation();
     }
   }, [locationPermission]);
 
@@ -333,15 +335,52 @@ const Buscar = () => {
     }
   };
 
-  const requestGeolocation = () => {
+  const checkLocationPermission = async () => {
     if (!navigator.geolocation) {
       toast({
         title: 'Erro',
         description: 'Seu navegador não suporta geolocalização',
         variant: 'destructive',
       });
+      setLocationPermission('denied');
       return;
     }
+
+    try {
+      // Check permission status first
+      if (navigator.permissions) {
+        const result = await navigator.permissions.query({ name: 'geolocation' });
+        
+        if (result.state === 'granted') {
+          setLocationPermission('granted');
+          requestGeolocation();
+        } else if (result.state === 'denied') {
+          setLocationPermission('denied');
+        } else {
+          setLocationPermission('prompt');
+        }
+
+        // Listen for permission changes
+        result.addEventListener('change', () => {
+          if (result.state === 'granted') {
+            setLocationPermission('granted');
+            requestGeolocation();
+          } else if (result.state === 'denied') {
+            setLocationPermission('denied');
+          }
+        });
+      } else {
+        // Fallback for browsers without Permissions API
+        requestGeolocation();
+      }
+    } catch (error) {
+      console.error('Error checking geolocation permission:', error);
+      requestGeolocation();
+    }
+  };
+
+  const requestGeolocation = () => {
+    if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -351,19 +390,15 @@ const Buscar = () => {
         };
         setUserLocation(coords);
         setLocationPermission('granted');
+        setShowLocationDialog(false);
         toast({
           title: 'Localização obtida',
           description: 'Mapa carregado com sucesso',
         });
       },
       (error) => {
-        setLocationPermission('denied');
-        toast({
-          title: 'Permissão negada',
-          description: 'Por favor, permita acesso à sua localização',
-          variant: 'destructive',
-        });
         console.error('Geolocation error:', error);
+        setLocationPermission('denied');
       }
     );
   };
