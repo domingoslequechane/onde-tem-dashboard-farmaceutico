@@ -1090,12 +1090,15 @@ const Buscar = () => {
       <footer className="border-t bg-background">
         <div className="px-3 py-3">
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} ONDTem. Todos os direitos reservados. by{' '}
+            © {new Date().getFullYear()} ONDTem. Todos os direitos reservados.
+          </p>
+          <p className="text-center text-xs text-muted-foreground mt-1">
+            by{' '}
             <a 
               href="https://onixagence.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-primary hover:underline"
+              className="hover:text-foreground transition-colors"
             >
               Onix Agence
             </a>
