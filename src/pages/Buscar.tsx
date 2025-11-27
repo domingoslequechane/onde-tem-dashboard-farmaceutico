@@ -98,6 +98,30 @@ const Buscar = () => {
     }
   }, [locationPermission]);
 
+  // Adjust map zoom when radius changes
+  useEffect(() => {
+    if (!map.current || !userLocation) return;
+
+    // Calculate appropriate zoom level based on radius
+    // Mapbox zoom levels: higher number = more zoomed in
+    const getZoomForRadius = (radiusKm: number) => {
+      if (radiusKm <= 1) return 14;
+      if (radiusKm <= 2) return 13;
+      if (radiusKm <= 3) return 12.5;
+      if (radiusKm <= 4) return 12;
+      return 11.5;
+    };
+
+    const targetZoom = getZoomForRadius(raioKm);
+
+    map.current.flyTo({
+      center: [userLocation.lng, userLocation.lat],
+      zoom: targetZoom,
+      duration: 1000,
+      essential: true
+    });
+  }, [raioKm, userLocation]);
+
   const loadSearchHistory = () => {
     try {
       const history = localStorage.getItem('ondtem_search_history');
