@@ -25,14 +25,6 @@ const Landing = () => {
           <div className="flex gap-2 md:gap-3">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/contacto')}
-              className="text-xs md:text-sm lg:text-base px-2 md:px-4"
-              size="sm"
-            >
-              Contacto
-            </Button>
-            <Button 
-              variant="ghost" 
               onClick={() => navigate('/entrar')}
               className="text-xs md:text-sm lg:text-base px-2 md:px-4"
               size="sm"
@@ -44,7 +36,7 @@ const Landing = () => {
               className="text-xs md:text-sm lg:text-base px-3 md:px-4"
               size="sm"
             >
-              Começar
+              Contacto
             </Button>
           </div>
         </div>
