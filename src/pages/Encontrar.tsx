@@ -685,8 +685,92 @@ const Buscar = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden w-full">
-        {/* Search Panel */}
-        <div className={`w-full md:w-80 border-r border-border bg-background flex flex-col overflow-hidden ${selectedMedicamento ? 'hidden md:flex' : ''}`}>
+        {/* Search Panel / Route Info Panel */}
+        <div className={`w-full md:w-80 border-r border-border bg-background flex flex-col overflow-hidden`}>
+          {/* Route Info Card - Mobile/Tablet Only */}
+          {selectedMedicamento && routeInfo && (
+            <div className="md:hidden flex-1 overflow-y-auto p-3">
+              <Card className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <h3 className="font-semibold text-base truncate">{selectedMedicamento.medicamento_nome}</h3>
+                    <p className="text-sm text-muted-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
+                    
+                    {selectedMedicamento.media_avaliacoes ? (
+                      <div className="flex items-center gap-1">
+                        {renderStars(selectedMedicamento.media_avaliacoes, 'sm')}
+                        <span className="text-sm font-semibold text-yellow-600">
+                          {selectedMedicamento.media_avaliacoes.toFixed(1)}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Sem avaliações</p>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={clearRoute}
+                    className="h-8 w-8 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Distância:</span>
+                    <p className="font-semibold">{routeInfo.distance.toFixed(2)} km</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Tempo:</span>
+                    <p className="font-semibold">{Math.round(routeInfo.duration)} min</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    size="sm"
+                    variant={routeMode === 'walking' ? 'default' : 'outline'}
+                    onClick={() => showRouteToPharmacy(selectedMedicamento, 'walking')}
+                    className="text-sm h-9"
+                  >
+                    🚶 A pé
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={routeMode === 'driving' ? 'default' : 'outline'}
+                    onClick={() => showRouteToPharmacy(selectedMedicamento, 'driving')}
+                    className="text-sm h-9"
+                  >
+                    🚗 Viatura
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowLeaveReview(true)}
+                    className="text-sm h-9"
+                  >
+                    Avaliar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowViewReviews(true)}
+                    className="text-sm h-9"
+                  >
+                    Ver Avaliações
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Search Panel - Hidden on Mobile/Tablet when route is selected */}
+          <div className={`flex-1 flex flex-col ${selectedMedicamento ? 'hidden md:flex' : 'flex'}`}>
           {/* Search Header */}
           <div className="p-3 border-b border-border space-y-2">
             <h1 className="text-lg sm:text-xl font-bold truncate">Encontre ONDTem!</h1>
@@ -905,15 +989,16 @@ const Buscar = () => {
               </Card>
             ))}
           </div>
+          </div>
         </div>
 
         {/* Map */}
         <div className="flex-1 relative h-96 md:h-auto overflow-hidden">
           <div ref={mapContainer} className="absolute inset-0" />
           
-          {/* Route Info */}
+          {/* Route Info - Desktop Only */}
           {routeInfo && selectedMedicamento && (
-            <Card className="absolute top-3 left-3 right-3 md:left-1/2 md:-translate-x-1/2 md:w-96 p-3 shadow-lg z-10">
+            <Card className="hidden md:block absolute top-3 left-1/2 -translate-x-1/2 w-96 p-3 shadow-lg z-10">
               <div className="flex items-start gap-3">
                 <div className="flex-1 space-y-2 min-w-0">
                   <h3 className="font-semibold text-sm truncate">{selectedMedicamento.medicamento_nome}</h3>
