@@ -75,7 +75,7 @@ const Landing = () => {
               <Button 
                 size="lg" 
                 variant="outline"
-                onClick={() => navigate('/buscar')}
+                onClick={() => navigate('/encontrar')}
                 className="text-sm md:text-base px-4 md:px-8 py-3 md:py-4 h-auto whitespace-normal"
               >
                 Buscar Medicamento
