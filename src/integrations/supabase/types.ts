@@ -603,7 +603,6 @@ export type Database = {
         }
         Returns: {
           distancia_km: number
-          farmacia_endereco: string
           farmacia_id: string
           farmacia_latitude: number
           farmacia_longitude: number
