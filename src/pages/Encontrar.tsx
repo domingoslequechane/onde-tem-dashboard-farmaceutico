@@ -5,7 +5,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X, Clock, Star } from 'lucide-react';
+import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X, Clock, Star, Navigation } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
@@ -36,10 +36,12 @@ interface MedicamentoFarmacia {
   farmacia_id: string;
   farmacia_nome: string;
   farmacia_endereco: string;
-  farmacia_telefone: string;
-  farmacia_whatsapp: string;
+  farmacia_telefone: string | null;
+  farmacia_whatsapp: string | null;
   farmacia_latitude: number;
   farmacia_longitude: number;
+  farmacia_horario_abertura: string | null;
+  farmacia_horario_fechamento: string | null;
   distancia_km: number;
   media_avaliacoes?: number;
   total_avaliacoes?: number;
@@ -82,6 +84,11 @@ const Buscar = () => {
   const [showViewReviews, setShowViewReviews] = useState(false);
   const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [showArrivalModal, setShowArrivalModal] = useState(false);
+  const [walkingDuration, setWalkingDuration] = useState(0);
+  const [drivingDuration, setDrivingDuration] = useState(0);
+  const navigationWatchId = useRef<number | null>(null);
 
   useEffect(() => {
     checkLocationPermission();
@@ -192,9 +199,40 @@ const Buscar = () => {
   }, [medicamento, allMedicamentos]);
 
   const showRouteToPharmacy = async (item: MedicamentoFarmacia, mode: 'walking' | 'driving' = 'walking') => {
-    if (!map.current || !userLocation) return;
+    if (!userLocation || !mapboxToken) return;
 
     try {
+      // Fetch complete pharmacy data
+      const { data: farmaciaData, error: farmaciaError } = await supabase
+        .from('farmacias')
+        .select('*')
+        .eq('id', item.farmacia_id)
+        .single();
+
+      if (farmaciaError) throw farmaciaError;
+
+      // Fetch both walking and driving routes
+      const walkingUrl = `https://api.mapbox.com/directions/v5/mapbox/walking/${userLocation.lng},${userLocation.lat};${item.farmacia_longitude},${item.farmacia_latitude}?geometries=geojson&access_token=${mapboxToken}`;
+      const drivingUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${item.farmacia_longitude},${item.farmacia_latitude}?geometries=geojson&access_token=${mapboxToken}`;
+      
+      const [walkingResponse, drivingResponse] = await Promise.all([
+        fetch(walkingUrl),
+        fetch(drivingUrl)
+      ]);
+      
+      const [walkingData, drivingData] = await Promise.all([
+        walkingResponse.json(),
+        drivingResponse.json()
+      ]);
+
+      if (walkingData.routes && walkingData.routes.length > 0) {
+        setWalkingDuration(walkingData.routes[0].duration / 60);
+      }
+      
+      if (drivingData.routes && drivingData.routes.length > 0) {
+        setDrivingDuration(drivingData.routes[0].duration / 60);
+      }
+
       const url = `https://api.mapbox.com/directions/v5/mapbox/${mode}/${userLocation.lng},${userLocation.lat};${item.farmacia_longitude},${item.farmacia_latitude}?geometries=geojson&access_token=${mapboxToken}`;
       
       const response = await fetch(url);
@@ -204,52 +242,61 @@ const Buscar = () => {
         const route = data.routes[0];
         const realDistance = route.distance / 1000;
         
-        if (map.current.getLayer('route')) {
+        if (map.current && map.current.getLayer('route')) {
           map.current.removeLayer('route');
         }
-        if (map.current.getSource('route')) {
+        if (map.current && map.current.getSource('route')) {
           map.current.removeSource('route');
         }
 
-        map.current.addSource('route', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: route.geometry,
-          },
-        });
+        if (map.current) {
+          map.current.addSource('route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: route.geometry,
+            },
+          });
 
-        map.current.addLayer({
-          id: 'route',
-          type: 'line',
-          source: 'route',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': mode === 'walking' ? '#3b82f6' : '#10b981',
-            'line-width': 4,
-            'line-opacity': 0.8,
-          },
-        });
+          map.current.addLayer({
+            id: 'route',
+            type: 'line',
+            source: 'route',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round',
+            },
+            paint: {
+              'line-color': mode === 'walking' ? '#3b82f6' : '#10b981',
+              'line-width': 4,
+              'line-opacity': 0.8,
+            },
+          });
 
-        const coordinates = route.geometry.coordinates;
-        const bounds = coordinates.reduce(
-          (bounds: mapboxgl.LngLatBounds, coord: [number, number]) => {
-            return bounds.extend(coord as [number, number]);
-          },
-          new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
-        );
-        map.current.fitBounds(bounds, { padding: 80 });
+          const coordinates = route.geometry.coordinates;
+          const bounds = coordinates.reduce(
+            (bounds: mapboxgl.LngLatBounds, coord: [number, number]) => {
+              return bounds.extend(coord as [number, number]);
+            },
+            new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
+          );
+          map.current.fitBounds(bounds, { padding: 80 });
+        }
 
         setRouteInfo({
           distance: realDistance,
           duration: route.duration / 60,
           mode: mode,
         });
-        setSelectedMedicamento({ ...item, distancia_km: realDistance });
+        setSelectedMedicamento({ 
+          ...item, 
+          distancia_km: realDistance,
+          farmacia_telefone: farmaciaData.telefone,
+          farmacia_whatsapp: farmaciaData.whatsapp,
+          farmacia_horario_abertura: farmaciaData.horario_abertura,
+          farmacia_horario_fechamento: farmaciaData.horario_fechamento,
+        });
         setRouteMode(mode);
       }
     } catch (error) {
@@ -262,6 +309,93 @@ const Buscar = () => {
     }
   };
 
+  const isPharmacyOpen = () => {
+    if (!selectedMedicamento?.farmacia_horario_abertura || !selectedMedicamento?.farmacia_horario_fechamento) {
+      return { isOpen: true, label: 'Horário não definido' };
+    }
+
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    const [openHour, openMin] = selectedMedicamento.farmacia_horario_abertura.split(':').map(Number);
+    const [closeHour, closeMin] = selectedMedicamento.farmacia_horario_fechamento.split(':').map(Number);
+    
+    const openTime = openHour * 60 + openMin;
+    const closeTime = closeHour * 60 + closeMin;
+    
+    const isOpen = currentTime >= openTime && currentTime <= closeTime;
+    
+    return {
+      isOpen,
+      label: isOpen ? 'Aberto' : 'Fechado'
+    };
+  };
+
+  const startNavigation = () => {
+    if (!selectedMedicamento || !userLocation) return;
+    
+    setIsNavigating(true);
+    
+    if (navigator.geolocation) {
+      navigationWatchId.current = navigator.geolocation.watchPosition(
+        (position) => {
+          const currentPos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          
+          // Update user location marker
+          setUserLocation(currentPos);
+          
+          // Check if arrived (within 50 meters)
+          const distance = calculateDistance(
+            currentPos.lat,
+            currentPos.lng,
+            selectedMedicamento.farmacia_latitude,
+            selectedMedicamento.farmacia_longitude
+          );
+          
+          if (distance < 0.05) {
+            stopNavigation();
+            setShowArrivalModal(true);
+          }
+        },
+        (error) => {
+          console.error('Navigation error:', error);
+          toast({
+            title: 'Erro na navegação',
+            description: 'Não foi possível atualizar sua localização',
+            variant: 'destructive',
+          });
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 5000
+        }
+      );
+    }
+  };
+
+  const stopNavigation = () => {
+    if (navigationWatchId.current !== null) {
+      navigator.geolocation.clearWatch(navigationWatchId.current);
+      navigationWatchId.current = null;
+    }
+    setIsNavigating(false);
+  };
+
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
   const clearRoute = () => {
     if (!map.current) return;
     
@@ -272,6 +406,7 @@ const Buscar = () => {
       map.current.removeSource('route');
     }
     
+    stopNavigation();
     setSelectedMedicamento(null);
     setRouteInfo(null);
   };
@@ -690,7 +825,7 @@ const Buscar = () => {
           {/* Route Info Card - Mobile/Tablet Only */}
           {selectedMedicamento && routeInfo && (
             <div className="md:hidden flex-1 overflow-y-auto p-3 animate-fade-in">
-              <Card className="p-3 space-y-2.5">
+              <Card className="p-3 space-y-2">
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-bold text-base truncate flex-1">{selectedMedicamento.medicamento_nome}</h3>
@@ -719,62 +854,49 @@ const Buscar = () => {
                   <p className="text-sm text-muted-foreground">Sem avaliações</p>
                 )}
 
-                {/* Contact Info */}
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center gap-1.5">
-                    <Phone className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                    <span className="truncate">{selectedMedicamento.farmacia_telefone || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <svg className="h-3.5 w-3.5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                    </svg>
-                    <span className="truncate">{selectedMedicamento.farmacia_whatsapp || 'N/A'}</span>
-                  </div>
-                </div>
-
                 {/* Operating Hours */}
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">Horário:</span>
-                  <span className="font-medium">08:00 - 18:00</span>
-                  <span className="ml-auto px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Aberto</span>
-                </div>
-
-                {/* Distance */}
-                <div className="flex items-center gap-2 text-sm pt-2 border-t">
-                  <MapPin className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                  <span className="text-muted-foreground">Distância:</span>
-                  <span className="font-bold text-base">{routeInfo.distance.toFixed(2)} km</span>
-                </div>
-
-                {/* Travel Times */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <span className="text-lg">🚶</span>
+                {selectedMedicamento.farmacia_horario_abertura && selectedMedicamento.farmacia_horario_fechamento ? (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground">Horário:</span>
                     <span className="font-medium">
-                      {routeInfo.mode === 'walking' 
-                        ? Math.round(routeInfo.duration) 
-                        : Math.round(routeInfo.duration * 3)} min
+                      {selectedMedicamento.farmacia_horario_abertura} - {selectedMedicamento.farmacia_horario_fechamento}
+                    </span>
+                    <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${
+                      isPharmacyOpen().isOpen 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {isPharmacyOpen().label}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <span className="text-lg">🚗</span>
-                    <span className="font-medium">
-                      {routeInfo.mode === 'driving' 
-                        ? Math.round(routeInfo.duration) 
-                        : Math.round(routeInfo.duration / 3)} min
-                    </span>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Horário não definido</p>
+                )}
+
+                {/* Distance and Travel Times - Single Line */}
+                <div className="flex items-center gap-3 text-sm pt-2 border-t">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                    <span className="font-bold text-base text-green-600">{routeInfo.distance.toFixed(2)} km</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-base">🚶</span>
+                    <span className="font-bold text-primary">{Math.round(walkingDuration)} min</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-base">🚗</span>
+                    <span className="font-bold text-primary">{Math.round(drivingDuration)} min</span>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-3 gap-1.5 pt-2 border-t">
+                <div className="grid grid-cols-4 gap-1.5 pt-2 border-t">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => setShowLeaveReview(true)}
-                    className="text-xs h-8 px-2"
+                    className="text-xs h-8 px-1"
                   >
                     Avaliar
                   </Button>
@@ -782,17 +904,35 @@ const Buscar = () => {
                     size="sm"
                     variant="outline"
                     onClick={() => setShowViewReviews(true)}
-                    className="text-xs h-8 px-2"
+                    className="text-xs h-8 px-1"
                   >
                     Avaliações
                   </Button>
                   <Button
                     size="sm"
-                    variant="default"
-                    onClick={() => window.open(`tel:${selectedMedicamento.farmacia_telefone}`, '_self')}
-                    className="text-xs h-8 px-2"
+                    variant="outline"
+                    onClick={() => {
+                      if (selectedMedicamento.farmacia_telefone) {
+                        window.open(`tel:${selectedMedicamento.farmacia_telefone}`, '_self');
+                      } else {
+                        toast({
+                          title: 'Telefone não disponível',
+                          description: 'Esta farmácia não tem telefone cadastrado',
+                          variant: 'destructive',
+                        });
+                      }
+                    }}
+                    className="text-xs h-8 px-1"
                   >
                     Ligar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={isNavigating ? "destructive" : "default"}
+                    onClick={isNavigating ? stopNavigation : startNavigation}
+                    className="text-xs h-8 px-1"
+                  >
+                    <Navigation className="h-3 w-3" />
                   </Button>
                 </div>
               </Card>
@@ -1030,7 +1170,7 @@ const Buscar = () => {
           {routeInfo && selectedMedicamento && (
             <Card className="hidden md:block absolute top-3 left-1/2 -translate-x-1/2 w-96 p-3 shadow-lg z-10 animate-slide-in-right">
               <div className="flex items-start gap-2">
-                <div className="flex-1 space-y-2 min-w-0">
+                <div className="flex-1 space-y-1.5 min-w-0">
                   {/* Header */}
                   <h3 className="font-bold text-sm truncate">{selectedMedicamento.medicamento_nome}</h3>
                   
@@ -1049,62 +1189,49 @@ const Buscar = () => {
                     <p className="text-xs text-muted-foreground">Sem avaliações</p>
                   )}
 
-                  {/* Contact Info */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="flex items-center gap-1">
-                      <Phone className="h-3 w-3 text-primary flex-shrink-0" />
-                      <span className="truncate">{selectedMedicamento.farmacia_telefone || 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <svg className="h-3 w-3 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                      </svg>
-                      <span className="truncate">{selectedMedicamento.farmacia_whatsapp || 'N/A'}</span>
-                    </div>
-                  </div>
-
                   {/* Operating Hours */}
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <Clock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                    <span className="text-muted-foreground">Horário:</span>
-                    <span className="font-medium">08:00 - 18:00</span>
-                    <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700">Aberto</span>
-                  </div>
-
-                  {/* Distance */}
-                  <div className="flex items-center gap-1.5 text-xs pt-2 border-t">
-                    <MapPin className="h-3 w-3 text-primary flex-shrink-0" />
-                    <span className="text-muted-foreground">Distância:</span>
-                    <span className="font-bold text-sm">{routeInfo.distance.toFixed(2)} km</span>
-                  </div>
-
-                  {/* Travel Times */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center gap-1 text-xs">
-                      <span>🚶</span>
+                  {selectedMedicamento.farmacia_horario_abertura && selectedMedicamento.farmacia_horario_fechamento ? (
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <Clock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <span className="text-muted-foreground">Horário:</span>
                       <span className="font-medium">
-                        {routeInfo.mode === 'walking' 
-                          ? Math.round(routeInfo.duration) 
-                          : Math.round(routeInfo.duration * 3)} min
+                        {selectedMedicamento.farmacia_horario_abertura} - {selectedMedicamento.farmacia_horario_fechamento}
+                      </span>
+                      <span className={`ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                        isPharmacyOpen().isOpen 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {isPharmacyOpen().label}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs">
-                      <span>🚗</span>
-                      <span className="font-medium">
-                        {routeInfo.mode === 'driving' 
-                          ? Math.round(routeInfo.duration) 
-                          : Math.round(routeInfo.duration / 3)} min
-                      </span>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Horário não definido</p>
+                  )}
+
+                  {/* Distance and Travel Times - Single Line */}
+                  <div className="flex items-center gap-2 text-xs pt-1.5 border-t">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-primary flex-shrink-0" />
+                      <span className="font-bold text-sm text-green-600">{routeInfo.distance.toFixed(2)} km</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm">🚶</span>
+                      <span className="font-bold text-primary">{Math.round(walkingDuration)} min</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm">🚗</span>
+                      <span className="font-bold text-primary">{Math.round(drivingDuration)} min</span>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="grid grid-cols-3 gap-1.5 pt-2 border-t">
+                  <div className="grid grid-cols-4 gap-1.5 pt-1.5 border-t">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setShowLeaveReview(true)}
-                      className="text-xs h-7 px-2"
+                      className="text-xs h-7 px-1"
                     >
                       Avaliar
                     </Button>
@@ -1112,17 +1239,35 @@ const Buscar = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => setShowViewReviews(true)}
-                      className="text-xs h-7 px-2"
+                      className="text-xs h-7 px-1"
                     >
                       Avaliações
                     </Button>
                     <Button
                       size="sm"
-                      variant="default"
-                      onClick={() => window.open(`tel:${selectedMedicamento.farmacia_telefone}`, '_self')}
-                      className="text-xs h-7 px-2"
+                      variant="outline"
+                      onClick={() => {
+                        if (selectedMedicamento.farmacia_telefone) {
+                          window.open(`tel:${selectedMedicamento.farmacia_telefone}`, '_self');
+                        } else {
+                          toast({
+                            title: 'Telefone não disponível',
+                            description: 'Esta farmácia não tem telefone cadastrado',
+                            variant: 'destructive',
+                          });
+                        }
+                      }}
+                      className="text-xs h-7 px-1"
                     >
                       Ligar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={isNavigating ? "destructive" : "default"}
+                      onClick={isNavigating ? stopNavigation : startNavigation}
+                      className="text-xs h-7 px-1"
+                    >
+                      <Navigation className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
@@ -1150,17 +1295,17 @@ const Buscar = () => {
 
       {/* Footer */}
       <footer className="border-t bg-background">
-        <div className="px-3 py-3">
+        <div className="px-3 py-2">
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} ONDTem. Todos os direitos reservados.
+            © {new Date().getFullYear()} ONDTem.
           </p>
-          <p className="text-center text-xs text-muted-foreground mt-1">
+          <p className="text-center text-xs mt-0.5">
             by{' '}
             <a 
               href="https://onixagence.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
+              className="text-primary hover:underline transition-colors"
             >
               Onix Agence
             </a>
@@ -1215,6 +1360,47 @@ const Buscar = () => {
               }}
             >
               Tentar Novamente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Arrival Modal */}
+      <AlertDialog open={showArrivalModal} onOpenChange={setShowArrivalModal}>
+        <AlertDialogContent className="w-[calc(100%-2rem)] mx-auto max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center text-lg">
+              🎉 Você chegou ao destino!
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 text-center">
+              <p className="text-base font-medium">
+                {selectedMedicamento?.farmacia_nome}
+              </p>
+              {selectedMedicamento?.farmacia_telefone && (
+                <p className="text-sm text-muted-foreground">
+                  Em caso de dúvida, ligue: {selectedMedicamento.farmacia_telefone}
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2">
+            {selectedMedicamento?.farmacia_telefone && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  window.open(`tel:${selectedMedicamento.farmacia_telefone}`, '_self');
+                  setShowArrivalModal(false);
+                }}
+                className="flex-1"
+              >
+                Ligar
+              </Button>
+            )}
+            <AlertDialogAction 
+              onClick={() => setShowArrivalModal(false)}
+              className="flex-1"
+            >
+              Ok
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
