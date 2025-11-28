@@ -331,10 +331,66 @@ const Buscar = () => {
     };
   };
 
-  const startNavigation = () => {
+  const startNavigation = async () => {
     if (!selectedMedicamento || !userLocation) return;
     
     setIsNavigating(true);
+    
+    // Fetch detailed route with steps for navigation
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${selectedMedicamento.farmacia_longitude},${selectedMedicamento.farmacia_latitude}?steps=true&banner_instructions=true&voice_instructions=true&geometries=geojson&access_token=${mapboxToken}`
+      );
+      const data = await response.json();
+
+      if (data.routes && data.routes.length > 0 && map.current) {
+        const route = data.routes[0];
+        
+        // Remove existing route and add new one with navigation styling
+        if (map.current.getLayer('route')) {
+          map.current.removeLayer('route');
+        }
+        if (map.current.getSource('route')) {
+          map.current.removeSource('route');
+        }
+
+        map.current.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: route.geometry,
+          },
+        });
+
+        map.current.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#3b82f6',
+            'line-width': 6,
+            'line-opacity': 0.9,
+          },
+        });
+
+        // Store route steps for turn-by-turn instructions
+        const steps = route.legs[0]?.steps || [];
+        console.log('Navigation steps:', steps);
+        
+        // You can display these steps in the UI if needed
+        toast({
+          title: 'Navegação iniciada',
+          description: 'Acompanhe sua posição em tempo real',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching navigation route:', error);
+    }
     
     if (navigator.geolocation) {
       navigationWatchId.current = navigator.geolocation.watchPosition(
@@ -346,6 +402,26 @@ const Buscar = () => {
           
           // Update user location marker
           setUserLocation(currentPos);
+          
+          // Update user marker on map
+          if (map.current) {
+            const markers = document.querySelectorAll('.mapboxgl-marker');
+            markers.forEach(marker => {
+              const markerElement = marker as HTMLElement;
+              const bgColor = window.getComputedStyle(markerElement.querySelector('svg > g[fill]')!).fill;
+              if (bgColor.includes('59, 130, 246')) { // Blue marker (user location)
+                (marker as any)._lngLat = new mapboxgl.LngLat(currentPos.lng, currentPos.lat);
+                (marker as any)._pos = map.current!.project(new mapboxgl.LngLat(currentPos.lng, currentPos.lat));
+                (marker as any)._update();
+              }
+            });
+            
+            // Center map on user location
+            map.current.easeTo({
+              center: [currentPos.lng, currentPos.lat],
+              duration: 1000
+            });
+          }
           
           // Check if arrived (within 50 meters)
           const distance = calculateDistance(
@@ -874,19 +950,21 @@ const Buscar = () => {
                   <p className="text-sm text-muted-foreground">Horário não definido</p>
                 )}
 
-                {/* Distance and Travel Times - Single Line */}
-                <div className="flex items-center gap-3 text-sm pt-2 border-t">
+                {/* Distance and Travel Times */}
+                <div className="flex items-center justify-between text-sm pt-2 border-t">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                     <span className="font-bold text-base text-green-600">{routeInfo.distance.toFixed(2)} km</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-base">🚶</span>
-                    <span className="font-bold text-primary">{Math.round(walkingDuration)} min</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-base">🚗</span>
-                    <span className="font-bold text-primary">{Math.round(drivingDuration)} min</span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
+                      <span className="text-base">🚶</span>
+                      <span className="font-bold text-primary">{Math.round(walkingDuration)} min</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-base">🚗</span>
+                      <span className="font-bold text-primary">{Math.round(drivingDuration)} min</span>
+                    </div>
                   </div>
                 </div>
 
@@ -1004,19 +1082,6 @@ const Buscar = () => {
                 )}
               </div>
               
-              {/* Radius Mobile */}
-              <Select value={raioKm.toString()} onValueChange={(value) => setRaioKm(Number(value))}>
-                <SelectTrigger className="w-16 h-10 text-sm md:hidden">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5].map((km) => (
-                    <SelectItem key={km} value={km.toString()} className="text-sm">
-                      {km}km
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               
               <Button 
                 onClick={() => searchPharmacies()}
@@ -1028,11 +1093,11 @@ const Buscar = () => {
               </Button>
             </div>
 
-            {/* Radius Desktop */}
-            <div className="hidden md:flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Raio:</span>
+            {/* Radius Filters */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap hidden md:inline">Raio:</span>
               <div className="flex gap-1 flex-1">
-                {[1, 2, 3, 4, 5].map((km) => (
+                {[1, 2, 4, 8, 16].map((km) => (
                   <Button
                     key={km}
                     variant={raioKm === km ? "default" : "outline"}
@@ -1209,19 +1274,21 @@ const Buscar = () => {
                     <p className="text-xs text-muted-foreground">Horário não definido</p>
                   )}
 
-                  {/* Distance and Travel Times - Single Line */}
-                  <div className="flex items-center gap-2 text-xs pt-1.5 border-t">
+                  {/* Distance and Travel Times */}
+                  <div className="flex items-center justify-between text-xs pt-1.5 border-t">
                     <div className="flex items-center gap-1">
                       <MapPin className="h-3 w-3 text-primary flex-shrink-0" />
                       <span className="font-bold text-sm text-green-600">{routeInfo.distance.toFixed(2)} km</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm">🚶</span>
-                      <span className="font-bold text-primary">{Math.round(walkingDuration)} min</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm">🚗</span>
-                      <span className="font-bold text-primary">{Math.round(drivingDuration)} min</span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm">🚶</span>
+                        <span className="font-bold text-primary">{Math.round(walkingDuration)} min</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm">🚗</span>
+                        <span className="font-bold text-primary">{Math.round(drivingDuration)} min</span>
+                      </div>
                     </div>
                   </div>
 
@@ -1295,12 +1362,9 @@ const Buscar = () => {
 
       {/* Footer */}
       <footer className="border-t bg-background">
-        <div className="px-3 py-2">
-          <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} ONDTem.
-          </p>
-          <p className="text-center text-xs mt-0.5">
-            by{' '}
+        <div className="px-3 py-1.5">
+          <p className="text-center text-xs text-muted-foreground">
+            © {new Date().getFullYear()} ONDTem. by{' '}
             <a 
               href="https://onixagence.com" 
               target="_blank" 
