@@ -134,14 +134,22 @@ const Buscar = () => {
     if (!googleMapsKey || !mapContainer.current) return;
 
     try {
+      console.log('Initializing Google Maps with key:', googleMapsKey?.substring(0, 10) + '...');
+      
       // Configure Google Maps options
       setOptions({
         key: googleMapsKey,
         v: 'weekly',
       });
 
-      // Load the maps library
-      await importLibrary('maps');
+      // Load required libraries
+      await Promise.all([
+        importLibrary('maps'),
+        importLibrary('geometry'),
+        importLibrary('marker')
+      ]);
+
+      console.log('Google Maps libraries loaded successfully');
 
       // Now google.maps is available globally
       const mapInstance = new google.maps.Map(mapContainer.current, {
@@ -155,6 +163,14 @@ const Buscar = () => {
           {
             featureType: 'poi',
             elementType: 'labels',
+            stylers: [{ visibility: 'off' }]
+          },
+          {
+            featureType: 'poi.business',
+            stylers: [{ visibility: 'off' }]
+          },
+          {
+            featureType: 'poi.medical',
             stylers: [{ visibility: 'off' }]
           }
         ]
@@ -172,6 +188,8 @@ const Buscar = () => {
         }
       });
 
+      console.log('Map initialized successfully');
+
       if (userLocation) {
         updateMapWithUserLocation(userLocation);
       }
@@ -179,7 +197,7 @@ const Buscar = () => {
       console.error('Error initializing Google Maps:', error);
       toast({
         title: 'Erro ao carregar mapa',
-        description: 'Não foi possível carregar o Google Maps',
+        description: 'Não foi possível carregar o Google Maps. Verifique sua conexão.',
         variant: 'destructive',
       });
     }
@@ -526,7 +544,7 @@ const Buscar = () => {
 
       setMedicamentos(results);
 
-      // Add markers to map
+      // Add pharmacy markers to map with custom icons
       if (map.current) {
         results.forEach(item => {
           const marker = new google.maps.Marker({
@@ -536,9 +554,19 @@ const Buscar = () => {
             },
             map: map.current!,
             icon: {
-              url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
+                  <path fill="#26a74d" stroke="#ffffff" stroke-width="2" d="M20,0 C31,0 40,9 40,20 C40,35 20,52 20,52 C20,52 0,35 0,20 C0,9 9,0 20,0 Z"/>
+                  <rect x="13" y="12" width="14" height="16" fill="#ffffff" rx="1"/>
+                  <rect x="18" y="14" width="4" height="12" fill="#26a74d"/>
+                  <rect x="15" y="18" width="10" height="4" fill="#26a74d"/>
+                </svg>
+              `),
+              scaledSize: new google.maps.Size(40, 52),
+              anchor: new google.maps.Point(20, 52),
             },
-            title: item.farmacia_nome
+            title: item.farmacia_nome,
+            animation: google.maps.Animation.DROP
           });
 
           marker.addListener('click', () => {
@@ -547,6 +575,8 @@ const Buscar = () => {
 
           markersRef.current.push(marker);
         });
+        
+        console.log(`Added ${results.length} pharmacy markers to map`);
       }
 
       if (results.length === 0) {
