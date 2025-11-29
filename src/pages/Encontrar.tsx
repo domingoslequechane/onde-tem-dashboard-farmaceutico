@@ -98,6 +98,8 @@ const Buscar = () => {
   const [arrivalTime, setArrivalTime] = useState<string>('');
   const [showTravelModeDialog, setShowTravelModeDialog] = useState(false);
   const [selectedTravelMode, setSelectedTravelMode] = useState<'WALKING' | 'DRIVING'>('WALKING');
+  const [medicamentosComprar, setMedicamentosComprar] = useState<string[]>([]);
+  const [novoMedicamento, setNovoMedicamento] = useState('');
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
@@ -1144,7 +1146,22 @@ const Buscar = () => {
   };
 
   const handleStartNavigation = () => {
+    // Add current medication to list if not already there
+    if (selectedMedicamento && !medicamentosComprar.includes(selectedMedicamento.medicamento_nome)) {
+      setMedicamentosComprar([selectedMedicamento.medicamento_nome]);
+    }
     setShowTravelModeDialog(true);
+  };
+
+  const handleAddMedicamento = () => {
+    if (novoMedicamento.trim() && !medicamentosComprar.includes(novoMedicamento.trim())) {
+      setMedicamentosComprar([...medicamentosComprar, novoMedicamento.trim()]);
+      setNovoMedicamento('');
+    }
+  };
+
+  const handleRemoveMedicamento = (med: string) => {
+    setMedicamentosComprar(medicamentosComprar.filter(m => m !== med));
   };
 
   const handleCallPharmacy = () => {
@@ -1306,13 +1323,13 @@ const Buscar = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 px-2 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
                           removeFromSearchHistory(item);
                         }}
                       >
-                        <X className="h-3 w-3" />
+                        Remover
                       </Button>
                     </div>
                   ))}
@@ -1324,7 +1341,7 @@ const Buscar = () => {
 
         {/* Pharmacy Info Card - Hidden during navigation */}
         {selectedMedicamento && !isNavigating && (
-          <Card className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card p-4 md:p-5 shadow-xl z-20 animate-in slide-in-from-bottom-5 duration-300">
+          <Card className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card p-4 md:p-5 shadow-xl z-10 animate-in slide-in-from-bottom-5 duration-300">
             <div className="space-y-3">
               {/* Medication Name */}
               <div>
@@ -1427,8 +1444,26 @@ const Buscar = () => {
         {/* Navigation UI - Google Maps style */}
         {isNavigating && (
           <>
-            {/* Navigation Instructions Card - Top */}
-            <Card className="absolute top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-lg bg-green-700 text-white p-4 shadow-xl z-20 animate-in fade-in slide-in-from-top-2 rounded-lg">
+            {/* Trip Info Card - Top */}
+            <Card className="absolute top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-lg bg-card p-3 shadow-xl z-30 animate-in fade-in slide-in-from-top-2 rounded-lg">
+              <div className="space-y-2 text-sm">
+                <div className="font-semibold text-primary">A comprar:</div>
+                <div className="flex flex-wrap gap-1">
+                  {medicamentosComprar.map((med, idx) => (
+                    <span key={idx} className="inline-block px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">
+                      {med}
+                    </span>
+                  ))}
+                </div>
+                <div className="pt-1 border-t border-border">
+                  <span className="font-semibold text-foreground">Destino: </span>
+                  <span className="text-muted-foreground">{selectedMedicamento?.farmacia_nome}</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Navigation Instructions Card */}
+            <Card className="absolute top-28 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-lg bg-green-700 text-white p-4 shadow-xl z-20 animate-in fade-in slide-in-from-top-2 rounded-lg">
               <div className="space-y-2">
                 {/* Current Direction */}
                 <div className="flex items-start gap-3">
@@ -1450,7 +1485,7 @@ const Buscar = () => {
             </Card>
 
             {/* Control Buttons - Right side */}
-            <div className="absolute right-4 bottom-32 flex flex-col gap-3 z-20">
+            <div className="absolute right-4 bottom-40 flex flex-col gap-3 z-30">
               {/* Recenter Button */}
               <Button
                 size="icon"
@@ -1463,16 +1498,16 @@ const Buscar = () => {
             </div>
 
             {/* Navigation Footer - Bottom */}
-            <Card className="absolute bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-4 shadow-2xl z-20 rounded-t-2xl">
+            <Card className="absolute bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-4 shadow-2xl z-30 rounded-t-2xl">
               <div className="flex items-center justify-between">
-                {/* Close Button */}
+                {/* Close Button with Text */}
                 <Button
-                  size="icon"
                   variant="ghost"
-                  className="h-12 w-12 rounded-full"
+                  size="sm"
                   onClick={stopNavigation}
+                  className="text-sm font-medium"
                 >
-                  <X className="h-6 w-6" />
+                  Fechar
                 </Button>
 
                 {/* Travel Time and Distance */}
@@ -1486,16 +1521,8 @@ const Buscar = () => {
                   </div>
                 </div>
 
-                {/* Routes/Options Button */}
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-12 w-12 rounded-full"
-                >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
-                </Button>
+                {/* Empty space for symmetry */}
+                <div className="w-16"></div>
               </div>
             </Card>
           </>
@@ -1584,39 +1611,85 @@ const Buscar = () => {
 
       {/* Travel Mode Selection Dialog */}
       <AlertDialog open={showTravelModeDialog} onOpenChange={setShowTravelModeDialog}>
-        <AlertDialogContent className="rounded-lg max-w-sm">
+        <AlertDialogContent className="rounded-lg max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl text-center">Como você vai se dirigir?</AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-center">
-              Escolha o modo de transporte para traçar a melhor rota
+            <AlertDialogTitle className="text-xl">Preparar Viagem</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              Adicione os medicamentos que pretende comprar e escolha como vai se dirigir à farmácia
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="flex flex-col gap-3 py-4">
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-16 text-lg justify-start gap-3"
-              onClick={() => {
-                setShowTravelModeDialog(false);
-                startNavigationWithMode('WALKING');
-              }}
-            >
-              <span className="text-3xl">🚶</span>
-              <span>A pé</span>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-16 text-lg justify-start gap-3"
-              onClick={() => {
-                setShowTravelModeDialog(false);
-                startNavigationWithMode('DRIVING');
-              }}
-            >
-              <span className="text-3xl">🚗</span>
-              <span>Veículo</span>
-            </Button>
+          
+          <div className="space-y-4 py-4">
+            {/* Medications List Section */}
+            <div>
+              <label className="text-sm font-semibold mb-2 block">Medicamentos a comprar:</label>
+              <div className="space-y-2">
+                {medicamentosComprar.map((med, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 bg-accent rounded-md">
+                    <span className="text-sm">{med}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveMedicamento(med)}
+                      className="h-6 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Add Medication Input */}
+              <div className="flex gap-2 mt-3">
+                <Input
+                  placeholder="Adicionar medicamento..."
+                  value={novoMedicamento}
+                  onChange={(e) => setNovoMedicamento(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddMedicamento()}
+                  className="flex-1 text-sm"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleAddMedicamento}
+                  disabled={!novoMedicamento.trim()}
+                >
+                  Adicionar
+                </Button>
+              </div>
+            </div>
+
+            {/* Travel Mode Selection */}
+            <div>
+              <label className="text-sm font-semibold mb-2 block">Como vai se dirigir?</label>
+              <div className="flex flex-col gap-2">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-14 text-base justify-start gap-3"
+                  onClick={() => {
+                    setShowTravelModeDialog(false);
+                    startNavigationWithMode('WALKING');
+                  }}
+                >
+                  <span className="text-2xl">🚶</span>
+                  <span>A pé</span>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-14 text-base justify-start gap-3"
+                  onClick={() => {
+                    setShowTravelModeDialog(false);
+                    startNavigationWithMode('DRIVING');
+                  }}
+                >
+                  <span className="text-2xl">🚗</span>
+                  <span>Veículo</span>
+                </Button>
+              </div>
+            </div>
           </div>
+          
           <AlertDialogFooter>
             <Button
               variant="ghost"
