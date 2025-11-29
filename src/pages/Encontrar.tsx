@@ -1138,8 +1138,7 @@ const Buscar = () => {
               scaledSize: new google.maps.Size(40, 40),
               anchor: new google.maps.Point(20, 40),
             },
-            title: item.farmacia_nome,
-            animation: google.maps.Animation.DROP
+            title: item.farmacia_nome
           });
 
           // Create InfoWindow
