@@ -393,6 +393,9 @@ const Buscar = () => {
     }
     
     if (navigator.geolocation) {
+      let lastUpdateTime = Date.now();
+      let lastPosition: { lat: number; lng: number } | null = null;
+      
       navigationWatchId.current = navigator.geolocation.watchPosition(
         (position) => {
           const currentPos = {
@@ -400,40 +403,57 @@ const Buscar = () => {
             lng: position.coords.longitude
           };
           
-          // Update user location marker
-          setUserLocation(currentPos);
+          const now = Date.now();
+          const timeSinceLastUpdate = now - lastUpdateTime;
           
-          // Update user marker on map
-          if (map.current) {
-            const markers = document.querySelectorAll('.mapboxgl-marker');
-            markers.forEach(marker => {
-              const markerElement = marker as HTMLElement;
-              const bgColor = window.getComputedStyle(markerElement.querySelector('svg > g[fill]')!).fill;
-              if (bgColor.includes('59, 130, 246')) { // Blue marker (user location)
-                (marker as any)._lngLat = new mapboxgl.LngLat(currentPos.lng, currentPos.lat);
-                (marker as any)._pos = map.current!.project(new mapboxgl.LngLat(currentPos.lng, currentPos.lat));
-                (marker as any)._update();
-              }
-            });
+          // Calculate distance moved since last update
+          const distanceMoved = lastPosition 
+            ? calculateDistance(lastPosition.lat, lastPosition.lng, currentPos.lat, currentPos.lng)
+            : 999; // Large number to force first update
+          
+          // Only update if 3 seconds have passed OR moved more than 10 meters
+          if (timeSinceLastUpdate >= 3000 || distanceMoved > 0.01) {
+            lastUpdateTime = now;
+            lastPosition = currentPos;
             
-            // Center map on user location
-            map.current.easeTo({
-              center: [currentPos.lng, currentPos.lat],
-              duration: 1000
-            });
-          }
-          
-          // Check if arrived (within 50 meters)
-          const distance = calculateDistance(
-            currentPos.lat,
-            currentPos.lng,
-            selectedMedicamento.farmacia_latitude,
-            selectedMedicamento.farmacia_longitude
-          );
-          
-          if (distance < 0.05) {
-            stopNavigation();
-            setShowArrivalModal(true);
+            // Update user marker on map without causing re-render
+            if (map.current) {
+              const markers = document.querySelectorAll('.mapboxgl-marker');
+              markers.forEach(marker => {
+                const markerElement = marker as HTMLElement;
+                const svgElement = markerElement.querySelector('svg > g[fill]');
+                if (svgElement) {
+                  const bgColor = window.getComputedStyle(svgElement).fill;
+                  if (bgColor.includes('59, 130, 246')) { // Blue marker (user location)
+                    (marker as any)._lngLat = new mapboxgl.LngLat(currentPos.lng, currentPos.lat);
+                    (marker as any)._pos = map.current!.project(new mapboxgl.LngLat(currentPos.lng, currentPos.lat));
+                    (marker as any)._update();
+                  }
+                }
+              });
+              
+              // Smoothly pan map to keep user centered, but only if they've moved significantly
+              if (distanceMoved > 0.02) { // 20 meters
+                map.current.easeTo({
+                  center: [currentPos.lng, currentPos.lat],
+                  duration: 2000,
+                  easing: (t) => t
+                });
+              }
+            }
+            
+            // Check if arrived (within 50 meters)
+            const distance = calculateDistance(
+              currentPos.lat,
+              currentPos.lng,
+              selectedMedicamento.farmacia_latitude,
+              selectedMedicamento.farmacia_longitude
+            );
+            
+            if (distance < 0.05) {
+              stopNavigation();
+              setShowArrivalModal(true);
+            }
           }
         },
         (error) => {
@@ -446,8 +466,8 @@ const Buscar = () => {
         },
         {
           enableHighAccuracy: true,
-          maximumAge: 0,
-          timeout: 5000
+          maximumAge: 1000,
+          timeout: 10000
         }
       );
     }

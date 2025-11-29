@@ -29,83 +29,110 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
   const fetchDemandData = async () => {
     setIsLoading(true);
     try {
-      // Top 5 most searched medications
-      const { data: consultas } = await supabase
-        .from('consultas')
-        .select('medicamento_buscado')
-        .order('criado_em', { ascending: false })
-        .limit(500);
+      // Mock data for top 5 medications
+      const mockTopMedications = [
+        { name: 'Paracetamol', found: 85, notFound: 15, searches: 100 },
+        { name: 'Ibuprofeno', found: 72, notFound: 28, searches: 100 },
+        { name: 'Amoxicilina', found: 65, notFound: 35, searches: 100 },
+        { name: 'Dipirona', found: 78, notFound: 22, searches: 100 },
+        { name: 'Loratadina', found: 60, notFound: 40, searches: 100 },
+      ];
+      
+      setDemandData(mockTopMedications);
 
-      if (consultas) {
-        const medicationCounts: { [key: string]: { found: number; notFound: number } } = {};
-        
-        for (const consulta of consultas) {
-          const medName = consulta.medicamento_buscado;
-          if (!medicationCounts[medName]) {
-            medicationCounts[medName] = { found: 0, notFound: 0 };
+      // Mock regional demand data
+      const mockNeighborhoods = [
+        { 
+          name: 'Polana Cimento', 
+          searches: 145, 
+          latitude: -25.9655,
+          longitude: 32.5892,
+          color: 'bg-blue-500',
+          level: 'Alta',
+          detailData: {
+            found: [
+              { name: 'Paracetamol', count: 45 },
+              { name: 'Ibuprofeno', count: 32 },
+              { name: 'Amoxicilina', count: 28 },
+            ],
+            notFound: []
           }
-          
-          const { data: estoque } = await supabase
-            .from('estoque')
-            .select('medicamento_id')
-            .eq('disponivel', true)
-            .limit(1);
-
-          if (estoque && estoque.length > 0) {
-            medicationCounts[medName].found++;
-          } else {
-            medicationCounts[medName].notFound++;
+        },
+        { 
+          name: 'Sommerschield', 
+          searches: 98, 
+          latitude: -25.9555,
+          longitude: 32.5992,
+          color: 'bg-green-500',
+          level: 'Média',
+          detailData: {
+            found: [
+              { name: 'Dipirona', count: 38 },
+              { name: 'Loratadina', count: 25 },
+            ],
+            notFound: []
           }
-        }
+        },
+        { 
+          name: 'Alto Maé', 
+          searches: 87, 
+          latitude: -25.9755,
+          longitude: 32.5792,
+          color: 'bg-orange-500',
+          level: 'Média',
+          detailData: {
+            found: [
+              { name: 'Paracetamol', count: 30 },
+              { name: 'Amoxicilina', count: 22 },
+            ],
+            notFound: []
+          }
+        },
+        { 
+          name: 'Matola', 
+          searches: 76, 
+          latitude: -25.9855,
+          longitude: 32.5692,
+          color: 'bg-purple-500',
+          level: 'Média',
+          detailData: {
+            found: [
+              { name: 'Ibuprofeno', count: 28 },
+            ],
+            notFound: []
+          }
+        },
+        { 
+          name: 'Costa do Sol', 
+          searches: 65, 
+          latitude: -25.9455,
+          longitude: 32.6092,
+          color: 'bg-red-500',
+          level: 'Média',
+          detailData: {
+            found: [
+              { name: 'Loratadina', count: 25 },
+            ],
+            notFound: []
+          }
+        },
+        { 
+          name: 'Baixa', 
+          searches: 54, 
+          latitude: -25.9655,
+          longitude: 32.5692,
+          color: 'bg-yellow-500',
+          level: 'Baixa',
+          detailData: {
+            found: [
+              { name: 'Dipirona', count: 20 },
+            ],
+            notFound: []
+          }
+        },
+      ];
 
-        const topMedications = Object.entries(medicationCounts)
-          .map(([name, counts]) => ({
-            name,
-            found: counts.found,
-            notFound: counts.notFound,
-            searches: counts.found + counts.notFound
-          }))
-          .sort((a, b) => b.searches - a.searches)
-          .slice(0, 5);
-
-        setDemandData(topMedications);
-      }
-
-      // Regional demand data
-      const { data: consultasWithLocation } = await supabase
-        .from('consultas')
-        .select('medicamento_buscado, localizacao_informada')
-        .not('localizacao_informada', 'is', null)
-        .limit(200);
-
-      if (consultasWithLocation) {
-        const regionMap: { [key: string]: number } = {};
-
-        consultasWithLocation.forEach(consulta => {
-          const region = consulta.localizacao_informada || 'Desconhecido';
-          regionMap[region] = (regionMap[region] || 0) + 1;
-        });
-
-        const colors = ['bg-blue-500', 'bg-green-500', 'bg-orange-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500'];
-        const regionData = Object.entries(regionMap)
-          .map(([name, searches], index) => ({
-            name,
-            searches,
-            color: colors[index % colors.length],
-            level: searches > 50 ? 'Alta' : searches > 20 ? 'Média' : 'Baixa',
-            detailData: {
-              found: consultasWithLocation
-                .filter(c => c.localizacao_informada === name)
-                .slice(0, 5)
-                .map(c => ({ name: c.medicamento_buscado, count: 1 })),
-              notFound: []
-            }
-          }))
-          .sort((a, b) => b.searches - a.searches)
-          .slice(0, 6);
-
-        setNeighborhoods(regionData);
-      }
+      setNeighborhoods(mockNeighborhoods);
 
     } catch (error) {
       console.error('Erro ao buscar dados de demanda:', error);

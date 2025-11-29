@@ -28,71 +28,16 @@ const ServiceImpact = () => {
   const fetchStats = async () => {
     setIsLoading(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
+      // Mock data for demonstration
+      const mockTodaysSearches = 247;
+      const mockMyPharmacyImpressions = 89;
+      const mockMonthlyReferrals = 1840;
+      const mockViews = 342;
 
-      const { data: farmaciaData } = await supabase
-        .from('farmacias')
-        .select('id')
-        .eq('user_id', userData.user.id)
-        .maybeSingle();
-
-      if (!farmaciaData) return;
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayISO = today.toISOString();
-
-      // Total searches today
-      const { count: totalSearches } = await supabase
-        .from('consultas')
-        .select('*', { count: 'exact', head: true })
-        .gte('criado_em', todayISO);
-
-      setTodaysSearches(totalSearches || 0);
-
-      // Impressions for this pharmacy today (via estoque matches)
-      const { data: estoqueData } = await supabase
-        .from('estoque')
-        .select('medicamento_id')
-        .eq('farmacia_id', farmaciaData.id)
-        .eq('disponivel', true);
-
-      const medicamentoIds = estoqueData?.map(e => e.medicamento_id) || [];
-
-      if (medicamentoIds.length > 0) {
-        const { data: medicamentos } = await supabase
-          .from('medicamentos')
-          .select('nome')
-          .in('id', medicamentoIds);
-
-        const medicamentoNames = medicamentos?.map(m => m.nome.toLowerCase()) || [];
-
-        const { count: impressions } = await supabase
-          .from('consultas')
-          .select('*', { count: 'exact', head: true })
-          .gte('criado_em', todayISO)
-          .ilike('medicamento_buscado', `%${medicamentoNames.join('%')}%`);
-
-        setMyPharmacyImpressions(impressions || 0);
-      }
-
-      // Monthly referrals
-      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const { count: monthlyCount } = await supabase
-        .from('consultas')
-        .select('*', { count: 'exact', head: true })
-        .gte('criado_em', firstDayOfMonth.toISOString());
-
-      setMonthlyReferrals(monthlyCount || 0);
-
-      // Views (reviews count as proxy)
-      const { count: reviewsCount } = await supabase
-        .from('avaliacoes')
-        .select('*', { count: 'exact', head: true })
-        .eq('farmacia_id', farmaciaData.id);
-
-      setViews(reviewsCount || 0);
+      setTodaysSearches(mockTodaysSearches);
+      setMyPharmacyImpressions(mockMyPharmacyImpressions);
+      setMonthlyReferrals(mockMonthlyReferrals);
+      setViews(mockViews);
 
     } catch (error) {
       console.error('Erro ao buscar estatísticas:', error);
