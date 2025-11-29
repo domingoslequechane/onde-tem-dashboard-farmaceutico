@@ -457,19 +457,11 @@ const Buscar = () => {
             },
             map: map.current!,
             icon: {
-              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
-                  <path fill="#10b981" stroke="#ffffff" stroke-width="2" d="M16,0 C24.8,0 32,7.2 32,16 C32,28 16,42 16,42 C16,42 0,28 0,16 C0,7.2 7.2,0 16,0 Z"/>
-                  <rect x="10.4" y="9.6" width="11.2" height="12.8" fill="#ffffff" rx="1"/>
-                  <rect x="14.4" y="11.2" width="3.2" height="9.6" fill="#10b981"/>
-                  <rect x="12" y="14.4" width="8" height="3.2" fill="#10b981"/>
-                </svg>
-              `),
-              scaledSize: new google.maps.Size(32, 42),
-              anchor: new google.maps.Point(16, 42),
+              url: pharmacyMarkerIcon,
+              scaledSize: new google.maps.Size(40, 40),
+              anchor: new google.maps.Point(20, 40),
             },
-            title: pharmacy.nome,
-            animation: google.maps.Animation.DROP
+            title: pharmacy.nome
           });
 
           // Create InfoWindow
@@ -896,19 +888,11 @@ const Buscar = () => {
             },
             map: map.current!,
             icon: {
-              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
-                  <path fill="#10b981" stroke="#ffffff" stroke-width="2" d="M16,0 C24.8,0 32,7.2 32,16 C32,28 16,42 16,42 C16,42 0,28 0,16 C0,7.2 7.2,0 16,0 Z"/>
-                  <rect x="10.4" y="9.6" width="11.2" height="12.8" fill="#ffffff" rx="1"/>
-                  <rect x="14.4" y="11.2" width="3.2" height="9.6" fill="#10b981"/>
-                  <rect x="12" y="14.4" width="8" height="3.2" fill="#10b981"/>
-                </svg>
-              `),
-              scaledSize: new google.maps.Size(32, 42),
-              anchor: new google.maps.Point(16, 42),
+              url: pharmacyMarkerIcon,
+              scaledSize: new google.maps.Size(40, 40),
+              anchor: new google.maps.Point(20, 40),
             },
-            title: item.farmacia_nome,
-            animation: google.maps.Animation.DROP
+            title: item.farmacia_nome
           });
 
           const infoWindow = new google.maps.InfoWindow({
@@ -1719,19 +1703,11 @@ const Buscar = () => {
           },
           map: map.current!,
           icon: {
-            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
-                <path fill="#10b981" stroke="#ffffff" stroke-width="2" d="M16,0 C24.8,0 32,7.2 32,16 C32,28 16,42 16,42 C16,42 0,28 0,16 C0,7.2 7.2,0 16,0 Z"/>
-                <rect x="10.4" y="9.6" width="11.2" height="12.8" fill="#ffffff" rx="1"/>
-                <rect x="14.4" y="11.2" width="3.2" height="9.6" fill="#10b981"/>
-                <rect x="12" y="14.4" width="8" height="3.2" fill="#10b981"/>
-              </svg>
-            `),
-            scaledSize: new google.maps.Size(32, 42),
-            anchor: new google.maps.Point(16, 42),
+            url: pharmacyMarkerIcon,
+            scaledSize: new google.maps.Size(40, 40),
+            anchor: new google.maps.Point(20, 40),
           },
-          title: item.farmacia_nome,
-          animation: google.maps.Animation.DROP
+          title: item.farmacia_nome
         });
 
         const infoWindow = new google.maps.InfoWindow({
