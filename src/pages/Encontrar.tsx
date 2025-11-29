@@ -171,6 +171,7 @@ const Buscar = () => {
         streetViewControl: true, // Allow street view
         zoomControl: true,
         scaleControl: true, // Show scale information
+        gestureHandling: 'greedy', // Enable single-finger panning
         styles: [
           {
             featureType: 'poi.business',
