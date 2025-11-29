@@ -93,9 +93,11 @@ const Buscar = () => {
   const [drivingDuration, setDrivingDuration] = useState(0);
   const [currentInstruction, setCurrentInstruction] = useState<string>('');
   const [distanceToDestination, setDistanceToDestination] = useState<number>(0);
+  const [distanceToNextStep, setDistanceToNextStep] = useState<number>(0);
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
+  const destinationLocation = useRef<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     checkLocationPermission();
@@ -905,6 +907,10 @@ const Buscar = () => {
     
     setIsNavigating(true);
     setCurrentInstruction('Preparando navegação...');
+    destinationLocation.current = {
+      lat: selectedMedicamento.farmacia_latitude,
+      lng: selectedMedicamento.farmacia_longitude
+    };
     playNavigationSound('start');
 
     try {
@@ -917,8 +923,9 @@ const Buscar = () => {
 
       directionsService.current.route(request, (result, status) => {
         if (status === 'OK' && result && directionsRenderer.current && map.current) {
-          // Configure renderer for navigation mode
+          // Configure renderer for navigation mode with thick blue route
           directionsRenderer.current.setOptions({
+            suppressMarkers: true,
             polylineOptions: {
               strokeColor: '#4F46E5',
               strokeWeight: 8,
@@ -932,15 +939,30 @@ const Buscar = () => {
           currentStepIndex.current = 0;
 
           if (currentRouteSteps.current.length > 0) {
-            setCurrentInstruction(currentRouteSteps.current[0].instructions?.replace(/<[^>]*>/g, '') || 'Siga em frente');
+            const firstStep = currentRouteSteps.current[0];
+            setCurrentInstruction(firstStep.instructions?.replace(/<[^>]*>/g, '') || 'Siga em frente');
+            
+            // Calculate distance to first step
+            if (firstStep.distance) {
+              setDistanceToNextStep(firstStep.distance.value);
+            }
           }
 
-          // Set navigation view
-          map.current.setZoom(17);
+          // Set navigation view - tilted and zoomed in
+          map.current.setZoom(18);
           map.current.setCenter(userLocation);
           map.current.setTilt(45);
 
-          // Start real-time tracking
+          // Calculate initial distance to destination
+          const initialDist = calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            selectedMedicamento.farmacia_latitude,
+            selectedMedicamento.farmacia_longitude
+          );
+          setDistanceToDestination(initialDist);
+
+          // Start real-time tracking with high precision
           let lastUpdateTime = Date.now();
           let lastPosition = { ...userLocation };
 
@@ -952,66 +974,78 @@ const Buscar = () => {
                 lng: position.coords.longitude
               };
 
-              // Throttle updates
+              // Throttle updates - update every second or every 3 meters
               const timeSinceLastUpdate = now - lastUpdateTime;
-              const distance = calculateDistance(lastPosition.lat, lastPosition.lng, newPos.lat, newPos.lng) * 1000; // meters
+              const distanceMoved = calculateDistance(lastPosition.lat, lastPosition.lng, newPos.lat, newPos.lng) * 1000;
 
-              if (timeSinceLastUpdate >= 1000 || distance >= 3) {
+              if (timeSinceLastUpdate >= 1000 || distanceMoved >= 3) {
                 setUserLocation(newPos);
                 lastUpdateTime = now;
                 lastPosition = newPos;
 
-                // Update user marker
+                // Update user marker position
                 if (userMarkerRef.current) {
                   userMarkerRef.current.setPosition(newPos);
                 }
 
-                // Smoothly recenter map
+                // Smoothly pan map to follow user
                 if (map.current) {
                   map.current.panTo(newPos);
                   
-                  // Update heading if available
-                  if (position.coords.heading !== null) {
+                  // Update heading/bearing if available
+                  if (position.coords.heading !== null && position.coords.heading !== undefined) {
                     map.current.setHeading(position.coords.heading);
                   }
                 }
 
                 // Calculate distance to destination
-                const distToDest = calculateDistance(
-                  newPos.lat,
-                  newPos.lng,
-                  selectedMedicamento.farmacia_latitude,
-                  selectedMedicamento.farmacia_longitude
-                );
-                setDistanceToDestination(distToDest);
+                if (destinationLocation.current) {
+                  const distToDest = calculateDistance(
+                    newPos.lat,
+                    newPos.lng,
+                    destinationLocation.current.lat,
+                    destinationLocation.current.lng
+                  );
+                  setDistanceToDestination(distToDest);
 
-                // Check for arrival
-                if (distToDest < 0.03) {
-                  stopNavigation();
-                  playNavigationSound('arrival');
-                  setShowArrivalModal(true);
-                  return;
+                  // Check for arrival (within 30 meters)
+                  if (distToDest < 0.03) {
+                    stopNavigation();
+                    playNavigationSound('arrival');
+                    setShowArrivalModal(true);
+                    return;
+                  }
                 }
 
-                // Check for turn/step change
-                if (currentRouteSteps.current.length > 0 && currentStepIndex.current < currentRouteSteps.current.length - 1) {
+                // Update current step and instruction
+                if (currentRouteSteps.current.length > 0 && currentStepIndex.current < currentRouteSteps.current.length) {
                   const currentStep = currentRouteSteps.current[currentStepIndex.current];
                   const stepEndLocation = currentStep.end_location;
                   
                   if (stepEndLocation) {
+                    // Calculate distance to end of current step
                     const distToStepEnd = calculateDistance(
                       newPos.lat,
                       newPos.lng,
                       stepEndLocation.lat(),
                       stepEndLocation.lng()
-                    ) * 1000; // meters
+                    );
+                    
+                    setDistanceToNextStep(distToStepEnd * 1000); // Convert to meters
 
-                    if (distToStepEnd < 20) {
-                      currentStepIndex.current++;
-                      const nextStep = currentRouteSteps.current[currentStepIndex.current];
-                      if (nextStep) {
-                        setCurrentInstruction(nextStep.instructions?.replace(/<[^>]*>/g, '') || 'Siga em frente');
-                        playNavigationSound('turn');
+                    // If close to step end, advance to next step
+                    if (distToStepEnd < 0.02) { // 20 meters
+                      if (currentStepIndex.current < currentRouteSteps.current.length - 1) {
+                        currentStepIndex.current++;
+                        const nextStep = currentRouteSteps.current[currentStepIndex.current];
+                        if (nextStep) {
+                          setCurrentInstruction(nextStep.instructions?.replace(/<[^>]*>/g, '') || 'Siga em frente');
+                          playNavigationSound('turn');
+                          
+                          if (nextStep.distance) {
+                            setDistanceToNextStep(nextStep.distance.value);
+                          }
+                        }
                       }
                     }
                   }
@@ -1020,6 +1054,11 @@ const Buscar = () => {
             },
             (error) => {
               console.error('Navigation error:', error);
+              toast({
+                title: 'Erro de Localização',
+                description: 'Não foi possível obter sua localização. Verifique as permissões.',
+                variant: 'destructive',
+              });
             },
             {
               enableHighAccuracy: true,
@@ -1027,6 +1066,14 @@ const Buscar = () => {
               timeout: 10000
             }
           );
+        } else {
+          console.error('Directions request failed:', status);
+          toast({
+            title: 'Erro na Rota',
+            description: 'Não foi possível calcular a rota. Tente novamente.',
+            variant: 'destructive',
+          });
+          setIsNavigating(false);
         }
       });
     } catch (error) {
@@ -1048,12 +1095,15 @@ const Buscar = () => {
     
     setIsNavigating(false);
     setCurrentInstruction('');
+    setDistanceToNextStep(0);
     currentStepIndex.current = 0;
     currentRouteSteps.current = [];
+    destinationLocation.current = null;
     
     if (map.current) {
       map.current.setTilt(0);
       map.current.setHeading(0);
+      map.current.setZoom(14);
     }
   };
 
@@ -1338,14 +1388,16 @@ const Buscar = () => {
                   </Button>
                 </div>
               ) : (
-                <>
-                  {/* Navigation Info */}
-                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 space-y-2">
-                    <div className="text-sm font-medium text-primary">
+                <div className="space-y-3 pt-2">
+                  {/* Next Turn Instruction */}
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+                    <div className="text-base font-bold text-primary mb-1">
                       {currentInstruction}
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-semibold">Distância: {distanceToDestination.toFixed(2)} km</span>
+                    <div className="text-sm text-muted-foreground">
+                      Distância: {distanceToNextStep >= 1000 
+                        ? `${(distanceToNextStep / 1000).toFixed(2)} km` 
+                        : `${Math.round(distanceToNextStep)} m`}
                     </div>
                   </div>
 
@@ -1357,19 +1409,23 @@ const Buscar = () => {
                   >
                     Parar Navegação
                   </Button>
-                </>
+                </div>
               )}
             </div>
           </Card>
         )}
 
-        {/* Navigation Instructions Card - Only on Desktop */}
+        {/* Navigation Instructions Card - Top center during navigation */}
         {isNavigating && currentInstruction && (
-          <Card className="hidden md:block absolute top-4 left-1/2 -translate-x-1/2 bg-card p-4 shadow-xl z-20 min-w-[300px] animate-in fade-in slide-in-from-top-2">
+          <Card className="absolute top-4 left-1/2 -translate-x-1/2 bg-card/95 backdrop-blur-sm p-4 shadow-xl z-20 min-w-[280px] md:min-w-[350px] animate-in fade-in slide-in-from-top-2">
             <div className="space-y-2">
-              <div className="text-base font-bold text-primary">{currentInstruction}</div>
+              <div className="text-lg md:text-xl font-bold text-primary">{currentInstruction}</div>
               <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Distância: {distanceToDestination.toFixed(2)} km</span>
+                <span className="font-medium">
+                  {distanceToNextStep >= 1000 
+                    ? `${(distanceToNextStep / 1000).toFixed(2)} km` 
+                    : `${Math.round(distanceToNextStep)} m`}
+                </span>
               </div>
             </div>
           </Card>
