@@ -334,6 +334,43 @@ const Buscar = () => {
     };
   };
 
+  // Audio system for navigation feedback
+  const playNavigationSound = (type: 'start' | 'turn' | 'arrival') => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Different sounds for different events
+    if (type === 'start') {
+      // Rising tone for start
+      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.2);
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } else if (type === 'turn') {
+      // Quick beep for turn
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.15);
+    } else if (type === 'arrival') {
+      // Two-tone arrival sound
+      oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(700, audioContext.currentTime + 0.15);
+      oscillator.frequency.setValueAtTime(500, audioContext.currentTime + 0.3);
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    }
+  };
+
   const recenterMap = () => {
     if (map.current && userLocation) {
       map.current.flyTo({
@@ -351,10 +388,13 @@ const Buscar = () => {
     setIsNavigating(true);
     setCurrentInstruction('Preparando navegação...');
     
+    // Play start sound
+    playNavigationSound('start');
+    
     // Fetch detailed route with steps
     try {
       const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${selectedMedicamento.farmacia_longitude},${selectedMedicamento.farmacia_latitude}?steps=true&banner_instructions=true&geometries=geojson&access_token=${mapboxToken}`
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${selectedMedicamento.farmacia_longitude},${selectedMedicamento.farmacia_latitude}?steps=true&banner_instructions=true&voice_instructions=true&geometries=geojson&access_token=${mapboxToken}`
       );
       const data = await response.json();
 
@@ -419,71 +459,122 @@ const Buscar = () => {
         map.current.setPitch(45);
         map.current.flyTo({
           center: [userLocation.lng, userLocation.lat],
-          zoom: 16,
+          zoom: 17,
+          bearing: 0,
           duration: 1000,
         });
 
         toast({
           title: 'Navegação iniciada',
-          description: 'Acompanhando sua posição',
+          description: 'Acompanhando sua posição em tempo real',
           duration: 3000,
         });
 
-        // Start real-time tracking
+        // Track current step for turn detection
+        let currentStepIndex = 0;
+        let lastUpdateTime = Date.now();
+        let lastPosition = { ...userLocation };
+
+        // Start real-time tracking with high accuracy
         if (navigator.geolocation) {
           navigationWatchId.current = navigator.geolocation.watchPosition(
             (position) => {
+              const now = Date.now();
+              const timeSinceLastUpdate = now - lastUpdateTime;
+              
               const newPos = {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
               };
               
-              // Update user location state
-              setUserLocation(newPos);
+              // Calculate movement distance
+              const movementDistance = calculateDistance(
+                lastPosition.lat,
+                lastPosition.lng,
+                newPos.lat,
+                newPos.lng
+              );
               
-              // Update user marker position
-              if (userMarkerRef.current) {
-                userMarkerRef.current.setLngLat([newPos.lng, newPos.lat]);
+              // Only update if significant movement (reduces flickering)
+              // Update every 1 second OR if moved more than 5 meters
+              if (timeSinceLastUpdate > 1000 || movementDistance > 0.005) {
+                
+                // Update user location state
+                setUserLocation(newPos);
+                
+                // Update user marker position smoothly
+                if (userMarkerRef.current) {
+                  userMarkerRef.current.setLngLat([newPos.lng, newPos.lat]);
+                }
+                
+                // Calculate distance to destination
+                const distToDest = calculateDistance(
+                  newPos.lat,
+                  newPos.lng,
+                  selectedMedicamento.farmacia_latitude,
+                  selectedMedicamento.farmacia_longitude
+                );
+                setDistanceToDestination(distToDest);
+                
+                // Find closest step for instruction
+                let closestStep = steps[currentStepIndex];
+                let closestStepIndex = currentStepIndex;
+                let minDist = 9999;
+                
+                // Look ahead a few steps
+                for (let i = Math.max(0, currentStepIndex - 1); i < Math.min(steps.length, currentStepIndex + 3); i++) {
+                  const step = steps[i];
+                  if (step.maneuver?.location) {
+                    const [lng, lat] = step.maneuver.location;
+                    const dist = calculateDistance(newPos.lat, newPos.lng, lat, lng);
+                    if (dist < minDist) {
+                      minDist = dist;
+                      closestStep = step;
+                      closestStepIndex = i;
+                    }
+                  }
+                }
+                
+                // Detect when we move to a new step (turn)
+                if (closestStepIndex > currentStepIndex && minDist < 0.05) {
+                  currentStepIndex = closestStepIndex;
+                  playNavigationSound('turn');
+                }
+                
+                // Update instruction
+                if (closestStep?.maneuver?.instruction) {
+                  const instruction = closestStep.maneuver.instruction;
+                  setCurrentInstruction(instruction);
+                }
+                
+                // Center map on user with smooth animation
+                if (map.current) {
+                  // Calculate bearing if heading is available
+                  const bearing = position.coords.heading ?? map.current.getBearing();
+                  
+                  map.current.easeTo({
+                    center: [newPos.lng, newPos.lat],
+                    bearing: bearing,
+                    zoom: 17,
+                    duration: 1000,
+                    pitch: 45,
+                  });
+                }
+                
+                lastUpdateTime = now;
+                lastPosition = newPos;
               }
               
-              // Calculate distance to destination
+              // Check if arrived (within 30 meters)
               const distToDest = calculateDistance(
                 newPos.lat,
                 newPos.lng,
                 selectedMedicamento.farmacia_latitude,
                 selectedMedicamento.farmacia_longitude
               );
-              setDistanceToDestination(distToDest);
               
-              // Update instruction based on current position
-              let closestStep = steps[0];
-              let minDist = 9999;
-              
-              steps.forEach((step: any) => {
-                if (step.maneuver?.location) {
-                  const [lng, lat] = step.maneuver.location;
-                  const dist = calculateDistance(newPos.lat, newPos.lng, lat, lng);
-                  if (dist < minDist) {
-                    minDist = dist;
-                    closestStep = step;
-                  }
-                }
-              });
-              
-              if (closestStep?.maneuver?.instruction) {
-                setCurrentInstruction(closestStep.maneuver.instruction);
-              }
-              
-              // Keep map centered on user
-              if (map.current) {
-                map.current.easeTo({
-                  center: [newPos.lng, newPos.lat],
-                  duration: 500,
-                });
-              }
-              
-              // Check if arrived (within 30 meters)
               if (distToDest < 0.03) {
+                playNavigationSound('arrival');
                 stopNavigation();
                 setShowArrivalModal(true);
               }
@@ -500,7 +591,7 @@ const Buscar = () => {
             {
               enableHighAccuracy: true,
               maximumAge: 0,
-              timeout: 5000
+              timeout: 10000
             }
           );
         }
