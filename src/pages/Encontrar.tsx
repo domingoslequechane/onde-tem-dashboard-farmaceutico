@@ -101,6 +101,8 @@ const Buscar = () => {
   const [medicamentosComprar, setMedicamentosComprar] = useState<string[]>([]);
   const [novoMedicamento, setNovoMedicamento] = useState('');
   const [showAddMedicationModal, setShowAddMedicationModal] = useState(false);
+  const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>(null);
+  const [showTravelModeDialog, setShowTravelModeDialog] = useState(false);
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
@@ -1322,6 +1324,63 @@ const Buscar = () => {
     setMedicamentoTags(medicamentoTags.filter(m => m !== med));
   };
 
+  const handleTravelModePreview = async (mode: 'WALKING' | 'DRIVING') => {
+    if (!selectedMedicamento || !userLocation || !map.current || !directionsService.current || !directionsRenderer.current) return;
+    
+    setTravelModePreview(mode);
+
+    try {
+      const origin = new google.maps.LatLng(userLocation.lat, userLocation.lng);
+      const destination = new google.maps.LatLng(selectedMedicamento.farmacia_latitude, selectedMedicamento.farmacia_longitude);
+
+      const request: google.maps.DirectionsRequest = {
+        origin: origin,
+        destination: destination,
+        travelMode: mode === 'WALKING' ? google.maps.TravelMode.WALKING : google.maps.TravelMode.DRIVING
+      };
+
+      directionsService.current.route(request, (result, status) => {
+        if (status === 'OK' && result && directionsRenderer.current && map.current) {
+          // Set route color based on mode
+          directionsRenderer.current.setOptions({
+            polylineOptions: {
+              strokeColor: mode === 'WALKING' ? '#4F46E5' : '#10b981',
+              strokeWeight: 6,
+              strokeOpacity: 0.8
+            }
+          });
+          directionsRenderer.current.setDirections(result);
+
+          const route = result.routes[0];
+          const leg = route.legs[0];
+
+          if (leg) {
+            // Update travel times
+            if (mode === 'WALKING') {
+              setWalkingDuration(leg.duration?.value ? leg.duration.value / 60 : 0);
+            } else {
+              setDrivingDuration(leg.duration?.value ? leg.duration.value / 60 : 0);
+            }
+
+            // Zoom to show the entire route
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(origin);
+            bounds.extend(destination);
+            
+            map.current.fitBounds(bounds, {
+              top: 50,
+              bottom: 320,
+              left: 50,
+              right: 50
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error calculating route preview:', error);
+    }
+  };
+
   const handleClearSearch = () => {
     setMedicamento('');
   };
@@ -1354,22 +1413,6 @@ const Buscar = () => {
             <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
           </Button>
           <img src={logo} alt="ONDTem" className="h-8 md:h-10 flex-shrink-0" />
-        </div>
-
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="flex items-center gap-1 md:gap-2">
-            {[1, 2, 4, 8, 16].map((km) => (
-              <Button
-                key={km}
-                variant={raioKm === km ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setRaioKm(km)}
-                className="h-8 px-2 md:px-3 text-xs md:text-sm font-medium transition-all duration-200"
-              >
-                {km}km
-              </Button>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -1452,11 +1495,11 @@ const Buscar = () => {
               )}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 items-center flex-wrap">
               <Button 
                 onClick={handleBuscar} 
                 disabled={searching || !userLocation}
-                className="flex-1 text-sm h-8"
+                className="flex-1 min-w-[100px] text-sm h-8"
               >
                 {searching ? 'Buscando...' : 'Buscar'}
               </Button>
@@ -1467,6 +1510,23 @@ const Buscar = () => {
               >
                 + Medicamentos
               </Button>
+              
+              {/* Radius Filter Buttons */}
+              <div className="flex gap-1 flex-wrap">
+                {[1, 2, 4, 8, 16].map((radius) => (
+                  <button
+                    key={radius}
+                    onClick={() => setRaioKm(radius)}
+                    className={`px-2 py-1 rounded-md text-xs transition-colors ${
+                      raioKm === radius
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    }`}
+                  >
+                    {radius}km
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Search Results */}
@@ -1568,7 +1628,7 @@ const Buscar = () => {
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`h-4 w-4 ${
+                          className={`h-3.5 w-3.5 ${
                             i < Math.round(selectedMedicamento.media_avaliacoes!)
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300'
@@ -1576,8 +1636,8 @@ const Buscar = () => {
                         />
                       ))}
                     </div>
-                    <span className="text-sm font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
-                    <span className="text-xs text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
+                    <span className="text-xs font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
+                    <span className="text-[10px] text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
                   </div>
                 )}
                 
@@ -1586,8 +1646,8 @@ const Buscar = () => {
                   const { isOpen, label } = isPharmacyOpen();
                   return (
                     <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className={`text-sm font-semibold ${isOpen ? 'text-green-600' : 'text-red-600'}`}>
+                      <Clock className="h-3 w-3 text-muted-foreground" />
+                      <span className={`text-xs font-semibold ${isOpen ? 'text-green-600' : 'text-red-600'}`}>
                         {label}
                       </span>
                     </div>
@@ -1595,54 +1655,41 @@ const Buscar = () => {
                 })()}
               </div>
 
-              {/* Distance and Duration */}
-              {routeInfo && (
-                <div className="flex items-center justify-between text-xs border-t border-border pt-2">
-                  <span className="font-medium">{routeInfo.distance.toFixed(1)} km</span>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <span>🚶</span>
-                      <span className="font-bold">{walkingDuration.toFixed(0)} min</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span>🚗</span>
-                      <span className="font-bold">{drivingDuration.toFixed(0)} min</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Travel Mode Selection Buttons */}
-              <div className="pt-2 border-t border-border">
-                <label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Como vai se dirigir?</label>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 h-8 text-xs"
-                    onClick={() => handleStartNavigationWithMode('WALKING')}
-                  >
-                    <span className="mr-1.5">🚶</span>
-                    A pé
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 h-8 text-xs"
-                    onClick={() => handleStartNavigationWithMode('DRIVING')}
-                  >
-                    <span className="mr-1.5">🚗</span>
-                    Veículo
-                  </Button>
-                </div>
+              {/* Travel Metrics in One Line */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-sm font-bold text-primary">📍 {routeInfo ? routeInfo.distance.toFixed(1) : selectedMedicamento.distancia_km.toFixed(1)} km</span>
+                <Button
+                  variant={travelModePreview === 'WALKING' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleTravelModePreview('WALKING')}
+                  className="text-xs h-7 px-2"
+                >
+                  🚶 {walkingDuration > 0 ? `${Math.round(walkingDuration)}min` : 'A pé'}
+                </Button>
+                <Button
+                  variant={travelModePreview === 'DRIVING' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleTravelModePreview('DRIVING')}
+                  className="text-xs h-7 px-2"
+                >
+                  🚗 {drivingDuration > 0 ? `${Math.round(drivingDuration)}min` : 'Viatura'}
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setShowTravelModeDialog(true)}
+                  className="text-xs h-7 px-3 ml-auto bg-green-600 hover:bg-green-700"
+                >
+                  Iniciar
+                </Button>
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-3 gap-1.5 pt-1.5">
+              <div className="grid grid-cols-2 gap-1.5 pt-1">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs"
+                  className="h-7 text-xs"
                   onClick={() => setShowLeaveReview(true)}
                 >
                   Avaliar
@@ -1650,20 +1697,10 @@ const Buscar = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs"
+                  className="h-7 text-xs"
                   onClick={() => setShowViewReviews(true)}
                 >
                   Avaliações
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs"
-                  onClick={handleCallPharmacy}
-                  disabled={!selectedMedicamento?.farmacia_telefone}
-                >
-                  <Phone className="h-3 w-3 mr-1" />
-                  Ligar
                 </Button>
               </div>
             </div>
@@ -1905,6 +1942,53 @@ const Buscar = () => {
               className="w-full"
             >
               Concluído
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Travel Mode Selection Dialog */}
+      <AlertDialog open={showTravelModeDialog} onOpenChange={setShowTravelModeDialog}>
+        <AlertDialogContent className="rounded-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl">Como vai se dirigir?</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              Escolha o modo de transporte para iniciar a navegação
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-14 text-base justify-start"
+              onClick={() => {
+                setShowTravelModeDialog(false);
+                handleStartNavigationWithMode('WALKING');
+              }}
+            >
+              <span className="mr-3 text-2xl">🚶</span>
+              A pé
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-14 text-base justify-start"
+              onClick={() => {
+                setShowTravelModeDialog(false);
+                handleStartNavigationWithMode('DRIVING');
+              }}
+            >
+              <span className="mr-3 text-2xl">🚗</span>
+              De viatura
+            </Button>
+          </div>
+          <AlertDialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setShowTravelModeDialog(false)}
+              className="w-full"
+            >
+              Cancelar
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
