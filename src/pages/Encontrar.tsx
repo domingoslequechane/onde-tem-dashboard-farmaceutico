@@ -102,7 +102,6 @@ const Buscar = () => {
   const [novoMedicamento, setNovoMedicamento] = useState('');
   const [showAddMedicationModal, setShowAddMedicationModal] = useState(false);
   const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>(null);
-  const [showTravelModeDialog, setShowTravelModeDialog] = useState(false);
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
@@ -1291,10 +1290,6 @@ const Buscar = () => {
     }
   };
 
-  const handleStartNavigationWithMode = (mode: 'WALKING' | 'DRIVING') => {
-    startNavigationWithMode(mode);
-  };
-
   const handleDeselectPharmacy = () => {
     setSelectedMedicamento(null);
     setRouteInfo(null);
@@ -1683,7 +1678,7 @@ const Buscar = () => {
                 <Button
                   variant="default"
                   size="sm"
-                  onClick={() => setShowTravelModeDialog(true)}
+                  onClick={() => startNavigationWithMode(travelModePreview || 'WALKING')}
                   className="text-xs md:text-sm h-7 md:h-8 px-3 ml-auto bg-green-600 hover:bg-green-700 flex items-center gap-1"
                 >
                   <Compass className="h-3 w-3 md:h-3.5 md:w-3.5" />
@@ -1974,52 +1969,7 @@ const Buscar = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Travel Mode Selection Dialog */}
-      <AlertDialog open={showTravelModeDialog} onOpenChange={setShowTravelModeDialog}>
-        <AlertDialogContent className="rounded-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl">Como vai se dirigir?</AlertDialogTitle>
-            <AlertDialogDescription className="text-base">
-              Escolha o modo de transporte para iniciar a navegação
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex flex-col gap-3 py-4">
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-14 text-base justify-start"
-              onClick={() => {
-                setShowTravelModeDialog(false);
-                handleStartNavigationWithMode('WALKING');
-              }}
-            >
-              <span className="mr-3 text-2xl">🚶</span>
-              A pé
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-14 text-base justify-start"
-              onClick={() => {
-                setShowTravelModeDialog(false);
-                handleStartNavigationWithMode('DRIVING');
-              }}
-            >
-              <span className="mr-3 text-2xl">🚗</span>
-              De viatura
-            </Button>
-          </div>
-          <AlertDialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setShowTravelModeDialog(false)}
-              className="w-full"
-            >
-              Cancelar
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Travel Mode Selection Dialog - Removed, now using preview selection */}
     </div>
   );
 };
