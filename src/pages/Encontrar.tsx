@@ -59,6 +59,7 @@ const Buscar = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
   
   const [mapboxToken, setMapboxToken] = useState('');
   const [medicamento, setMedicamento] = useState('');
@@ -88,6 +89,8 @@ const Buscar = () => {
   const [showArrivalModal, setShowArrivalModal] = useState(false);
   const [walkingDuration, setWalkingDuration] = useState(0);
   const [drivingDuration, setDrivingDuration] = useState(0);
+  const [currentInstruction, setCurrentInstruction] = useState<string>('');
+  const [distanceToDestination, setDistanceToDestination] = useState<number>(0);
   const navigationWatchId = useRef<number | null>(null);
 
   useEffect(() => {
@@ -331,22 +334,40 @@ const Buscar = () => {
     };
   };
 
+  const recenterMap = () => {
+    if (map.current && userLocation) {
+      map.current.flyTo({
+        center: [userLocation.lng, userLocation.lat],
+        zoom: 16,
+        duration: 1000,
+        pitch: 45,
+      });
+    }
+  };
+
   const startNavigation = async () => {
-    if (!selectedMedicamento || !userLocation) return;
+    if (!selectedMedicamento || !userLocation || !mapboxToken) return;
     
     setIsNavigating(true);
+    setCurrentInstruction('Preparando navegação...');
     
-    // Fetch detailed route with steps for navigation
+    // Fetch detailed route with steps
     try {
       const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${selectedMedicamento.farmacia_longitude},${selectedMedicamento.farmacia_latitude}?steps=true&banner_instructions=true&voice_instructions=true&geometries=geojson&access_token=${mapboxToken}`
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${selectedMedicamento.farmacia_longitude},${selectedMedicamento.farmacia_latitude}?steps=true&banner_instructions=true&geometries=geojson&access_token=${mapboxToken}`
       );
       const data = await response.json();
 
       if (data.routes && data.routes.length > 0 && map.current) {
         const route = data.routes[0];
+        const steps = route.legs[0]?.steps || [];
         
-        // Remove existing route and add new one with navigation styling
+        // Set initial instruction
+        if (steps.length > 0) {
+          setCurrentInstruction(steps[0].maneuver?.instruction || 'Siga em frente');
+        }
+        
+        // Draw route with navigation styling
         if (map.current.getLayer('route')) {
           map.current.removeLayer('route');
         }
@@ -372,104 +393,127 @@ const Buscar = () => {
             'line-cap': 'round',
           },
           paint: {
-            'line-color': '#3b82f6',
-            'line-width': 6,
+            'line-color': '#4F46E5',
+            'line-width': 8,
             'line-opacity': 0.9,
           },
         });
 
-        // Store route steps for turn-by-turn instructions
-        const steps = route.legs[0]?.steps || [];
-        console.log('Navigation steps:', steps);
-        
-        // You can display these steps in the UI if needed
+        // Add route casing for better visibility
+        map.current.addLayer({
+          id: 'route-casing',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#1E1B4B',
+            'line-width': 12,
+            'line-opacity': 0.4,
+          },
+        }, 'route');
+
+        // Change map style for navigation mode
+        map.current.setPitch(45);
+        map.current.flyTo({
+          center: [userLocation.lng, userLocation.lat],
+          zoom: 16,
+          duration: 1000,
+        });
+
         toast({
           title: 'Navegação iniciada',
-          description: 'Acompanhe sua posição em tempo real',
+          description: 'Acompanhando sua posição',
+          duration: 3000,
         });
-      }
-    } catch (error) {
-      console.error('Error fetching navigation route:', error);
-    }
-    
-    if (navigator.geolocation) {
-      let lastUpdateTime = Date.now();
-      let lastPosition: { lat: number; lng: number } | null = null;
-      
-      navigationWatchId.current = navigator.geolocation.watchPosition(
-        (position) => {
-          const currentPos = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          
-          const now = Date.now();
-          const timeSinceLastUpdate = now - lastUpdateTime;
-          
-          // Calculate distance moved since last update
-          const distanceMoved = lastPosition 
-            ? calculateDistance(lastPosition.lat, lastPosition.lng, currentPos.lat, currentPos.lng)
-            : 999; // Large number to force first update
-          
-          // Only update if 3 seconds have passed OR moved more than 10 meters
-          if (timeSinceLastUpdate >= 3000 || distanceMoved > 0.01) {
-            lastUpdateTime = now;
-            lastPosition = currentPos;
-            
-            // Update user marker on map without causing re-render
-            if (map.current) {
-              const markers = document.querySelectorAll('.mapboxgl-marker');
-              markers.forEach(marker => {
-                const markerElement = marker as HTMLElement;
-                const svgElement = markerElement.querySelector('svg > g[fill]');
-                if (svgElement) {
-                  const bgColor = window.getComputedStyle(svgElement).fill;
-                  if (bgColor.includes('59, 130, 246')) { // Blue marker (user location)
-                    (marker as any)._lngLat = new mapboxgl.LngLat(currentPos.lng, currentPos.lat);
-                    (marker as any)._pos = map.current!.project(new mapboxgl.LngLat(currentPos.lng, currentPos.lat));
-                    (marker as any)._update();
+
+        // Start real-time tracking
+        if (navigator.geolocation) {
+          navigationWatchId.current = navigator.geolocation.watchPosition(
+            (position) => {
+              const newPos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              };
+              
+              // Update user location state
+              setUserLocation(newPos);
+              
+              // Update user marker position
+              if (userMarkerRef.current) {
+                userMarkerRef.current.setLngLat([newPos.lng, newPos.lat]);
+              }
+              
+              // Calculate distance to destination
+              const distToDest = calculateDistance(
+                newPos.lat,
+                newPos.lng,
+                selectedMedicamento.farmacia_latitude,
+                selectedMedicamento.farmacia_longitude
+              );
+              setDistanceToDestination(distToDest);
+              
+              // Update instruction based on current position
+              let closestStep = steps[0];
+              let minDist = 9999;
+              
+              steps.forEach((step: any) => {
+                if (step.maneuver?.location) {
+                  const [lng, lat] = step.maneuver.location;
+                  const dist = calculateDistance(newPos.lat, newPos.lng, lat, lng);
+                  if (dist < minDist) {
+                    minDist = dist;
+                    closestStep = step;
                   }
                 }
               });
               
-              // Smoothly pan map to keep user centered, but only if they've moved significantly
-              if (distanceMoved > 0.02) { // 20 meters
+              if (closestStep?.maneuver?.instruction) {
+                setCurrentInstruction(closestStep.maneuver.instruction);
+              }
+              
+              // Keep map centered on user
+              if (map.current) {
                 map.current.easeTo({
-                  center: [currentPos.lng, currentPos.lat],
-                  duration: 2000,
-                  easing: (t) => t
+                  center: [newPos.lng, newPos.lat],
+                  duration: 500,
                 });
               }
+              
+              // Check if arrived (within 30 meters)
+              if (distToDest < 0.03) {
+                stopNavigation();
+                setShowArrivalModal(true);
+              }
+            },
+            (error) => {
+              console.error('Navigation error:', error);
+              toast({
+                title: 'Erro na navegação',
+                description: 'Não foi possível atualizar localização',
+                variant: 'destructive',
+                duration: 3000,
+              });
+            },
+            {
+              enableHighAccuracy: true,
+              maximumAge: 0,
+              timeout: 5000
             }
-            
-            // Check if arrived (within 50 meters)
-            const distance = calculateDistance(
-              currentPos.lat,
-              currentPos.lng,
-              selectedMedicamento.farmacia_latitude,
-              selectedMedicamento.farmacia_longitude
-            );
-            
-            if (distance < 0.05) {
-              stopNavigation();
-              setShowArrivalModal(true);
-            }
-          }
-        },
-        (error) => {
-          console.error('Navigation error:', error);
-          toast({
-            title: 'Erro na navegação',
-            description: 'Não foi possível atualizar sua localização',
-            variant: 'destructive',
-          });
-        },
-        {
-          enableHighAccuracy: true,
-          maximumAge: 1000,
-          timeout: 10000
+          );
         }
-      );
+      }
+    } catch (error) {
+      console.error('Error starting navigation:', error);
+      setIsNavigating(false);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível iniciar navegação',
+        variant: 'destructive',
+        duration: 3000,
+      });
     }
   };
 
@@ -479,6 +523,23 @@ const Buscar = () => {
       navigationWatchId.current = null;
     }
     setIsNavigating(false);
+    setCurrentInstruction('');
+    setDistanceToDestination(0);
+    
+    // Reset map view
+    if (map.current) {
+      map.current.setPitch(0);
+      
+      // Remove route casing if exists
+      if (map.current.getLayer('route-casing')) {
+        map.current.removeLayer('route-casing');
+      }
+    }
+    
+    toast({
+      title: 'Navegação encerrada',
+      duration: 3000,
+    });
   };
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -674,7 +735,8 @@ const Buscar = () => {
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    new mapboxgl.Marker({ color: '#3b82f6' })
+    // Create user marker and store reference
+    userMarkerRef.current = new mapboxgl.Marker({ color: '#3b82f6' })
       .setLngLat([userLocation.lng, userLocation.lat])
       .setPopup(
         new mapboxgl.Popup({ 
@@ -919,7 +981,7 @@ const Buscar = () => {
         {/* Search Panel / Route Info Panel */}
         <div className={`w-full md:w-80 border-r border-border bg-background flex flex-col overflow-hidden`}>
           {/* Route Info Card - Mobile/Tablet Only */}
-          {selectedMedicamento && routeInfo && (
+          {selectedMedicamento && routeInfo && !isNavigating && (
             <div className="md:hidden flex-1 overflow-y-auto p-3 animate-fade-in">
               <Card className="p-3 space-y-2">
                 {/* Header */}
@@ -1037,8 +1099,51 @@ const Buscar = () => {
             </div>
           )}
 
+          {/* Navigation Mode - Mobile/Tablet Only */}
+          {isNavigating && selectedMedicamento && (
+            <div className="md:hidden flex-1 overflow-y-auto p-3 animate-fade-in">
+              <Card className="p-4 space-y-3 bg-primary text-primary-foreground">
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary-foreground/20 rounded-full p-3 flex-shrink-0">
+                    <Navigation className="h-8 w-8" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xl font-bold mb-2">{currentInstruction}</p>
+                    <p className="text-base opacity-90">Para {selectedMedicamento.farmacia_nome}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between pt-3 border-t border-primary-foreground/20">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    <span className="text-xl font-bold">{(distanceToDestination * 1000).toFixed(0)} m</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-3 border-t border-primary-foreground/20">
+                  <Button
+                    size="default"
+                    variant="secondary"
+                    onClick={recenterMap}
+                    className="h-10"
+                  >
+                    Recentrar
+                  </Button>
+                  <Button
+                    size="default"
+                    variant="destructive"
+                    onClick={stopNavigation}
+                    className="h-10"
+                  >
+                    Parar
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+
           {/* Search Panel - Hidden on Mobile/Tablet when route is selected */}
-          <div className={`flex-1 flex flex-col transition-all duration-300 ${selectedMedicamento ? 'hidden md:flex' : 'flex animate-fade-in'}`}>
+          <div className={`flex-1 flex flex-col transition-all duration-300 ${(selectedMedicamento && !isNavigating) ? 'hidden md:flex' : 'flex animate-fade-in'}`}>
           {/* Search Header */}
           <div className="p-3 border-b border-border space-y-2">
             <h1 className="text-lg sm:text-xl font-bold truncate">Encontre ONDTem!</h1>
@@ -1251,8 +1356,52 @@ const Buscar = () => {
         <div className="flex-1 relative h-96 md:h-auto overflow-hidden">
           <div ref={mapContainer} className="absolute inset-0" />
           
+          {/* Navigation Mode UI */}
+          {isNavigating && selectedMedicamento && (
+            <div className="absolute top-0 left-0 right-0 z-20 p-3 animate-slide-in-right">
+              <Card className="bg-primary text-primary-foreground shadow-xl">
+                <div className="p-4 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-primary-foreground/20 rounded-full p-2 flex-shrink-0">
+                      <Navigation className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-lg font-bold mb-1">{currentInstruction}</p>
+                      <p className="text-sm opacity-90">Para {selectedMedicamento.farmacia_nome}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-2 border-t border-primary-foreground/20">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span className="font-bold">{(distanceToDestination * 1000).toFixed(0)} m</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={recenterMap}
+                        className="h-8"
+                      >
+                        Recentrar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={stopNavigation}
+                        className="h-8"
+                      >
+                        Parar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
+          
           {/* Route Info - Desktop Only */}
-          {routeInfo && selectedMedicamento && (
+          {routeInfo && selectedMedicamento && !isNavigating && (
             <Card className="hidden md:block absolute top-3 left-1/2 -translate-x-1/2 w-96 p-3 shadow-lg z-10 animate-slide-in-right">
               <div className="flex items-start gap-2">
                 <div className="flex-1 space-y-1.5 min-w-0">
