@@ -1313,9 +1313,9 @@ const Buscar = () => {
         {/* Map Container */}
         <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
 
-        {/* Search Box - Hidden during navigation on mobile/tablet */}
-        {!isNavigating && (
-          <div className="absolute top-4 left-4 right-4 md:left-auto md:w-96 bg-card rounded-lg shadow-lg p-3 md:p-4 z-10 transition-all duration-300">
+        {/* Search Box - Hidden when pharmacy selected or during navigation */}
+        {!selectedMedicamento && !isNavigating && (
+          <div className="absolute top-4 left-4 right-4 md:left-auto md:w-96 bg-card rounded-lg shadow-lg p-3 md:p-4 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
             <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-primary">Encontre ONDTem!</h2>
             
             <div className="relative mb-3">
@@ -1449,18 +1449,16 @@ const Buscar = () => {
         {selectedMedicamento && !isNavigating && (
           <Card className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card p-4 md:p-5 shadow-xl z-10 animate-in slide-in-from-bottom-5 duration-300">
             <div className="space-y-3">
-              {/* Close/Hide Button */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <h3 className="text-lg md:text-xl font-bold text-primary">{selectedMedicamento.medicamento_nome}</h3>
-                </div>
+              {/* Header with medication name and close button */}
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-lg md:text-xl font-bold text-primary flex-1">{selectedMedicamento.medicamento_nome}</h3>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={handleDeselectPharmacy}
-                  className="h-8 px-2 hover:bg-accent"
+                  className="h-8 w-8 hover:bg-accent shrink-0"
                 >
-                  Ocultar
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
 
@@ -1577,26 +1575,8 @@ const Buscar = () => {
         {/* Navigation UI - Google Maps style */}
         {isNavigating && (
           <>
-            {/* Trip Info Card - Top */}
-            <Card className="absolute top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-lg bg-card p-3 shadow-xl z-30 animate-in fade-in slide-in-from-top-2 rounded-lg">
-              <div className="space-y-2 text-sm">
-                <div className="font-semibold text-primary">A comprar:</div>
-                <div className="flex flex-wrap gap-1">
-                  {medicamentosComprar.map((med, idx) => (
-                    <span key={idx} className="inline-block px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">
-                      {med}
-                    </span>
-                  ))}
-                </div>
-                <div className="pt-1 border-t border-border">
-                  <span className="font-semibold text-foreground">Destino: </span>
-                  <span className="text-muted-foreground">{selectedMedicamento?.farmacia_nome}</span>
-                </div>
-              </div>
-            </Card>
-
             {/* Navigation Instructions Card */}
-            <Card className="absolute top-28 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-lg bg-green-700 text-white p-4 shadow-xl z-20 animate-in fade-in slide-in-from-top-2 rounded-lg">
+            <Card className="absolute top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-lg bg-green-700 text-white p-4 shadow-xl z-20 animate-in fade-in slide-in-from-top-2 rounded-lg">
               <div className="space-y-2">
                 {/* Current Direction */}
                 <div className="flex items-start gap-3">
@@ -1618,7 +1598,7 @@ const Buscar = () => {
             </Card>
 
             {/* Control Buttons - Right side */}
-            <div className="absolute right-4 bottom-40 flex flex-col gap-3 z-30">
+            <div className="absolute right-4 bottom-60 md:bottom-72 flex flex-col gap-3 z-30">
               {/* Recenter Button */}
               <Button
                 size="icon"
@@ -1630,32 +1610,56 @@ const Buscar = () => {
               </Button>
             </div>
 
-            {/* Navigation Footer - Bottom */}
+            {/* Navigation Footer - Bottom with Trip Info and Pharmacy Details */}
             <Card className="absolute bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-4 shadow-2xl z-30 rounded-t-2xl">
-              <div className="flex items-center justify-between">
-                {/* Close Button with Text */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={stopNavigation}
-                  className="text-sm font-medium"
-                >
-                  Fechar
-                </Button>
-
-                {/* Travel Time and Distance */}
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-2">
-                    <span className="text-3xl font-bold">{Math.round(distanceToDestination * 1000 / (selectedTravelMode === 'WALKING' ? 80 : 800))} min</span>
-                    <span className="text-xl">{selectedTravelMode === 'WALKING' ? '🚶' : '🚗'}</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {Math.round(distanceToDestination * 1000)} m • {arrivalTime}
-                  </div>
+              <div className="space-y-4">
+                {/* Close Button - Top Right */}
+                <div className="flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={stopNavigation}
+                    className="text-sm font-medium"
+                  >
+                    Fechar
+                  </Button>
                 </div>
 
-                {/* Empty space for symmetry */}
-                <div className="w-16"></div>
+                {/* Trip Info Section */}
+                <div className="space-y-3 pb-3 border-b border-border">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                      <div>
+                        <div className="text-xs font-semibold text-primary mb-1">A comprar:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {medicamentosComprar.map((med, idx) => (
+                            <span key={idx} className="inline-block px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">
+                              {med}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-foreground">Destino: </span>
+                        <span className="text-xs text-muted-foreground">{selectedMedicamento?.farmacia_nome}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Travel Time and Distance */}
+                    <div className="flex flex-col items-end shrink-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl md:text-3xl font-bold">{Math.round(distanceToDestination * 1000 / (selectedTravelMode === 'WALKING' ? 80 : 800))} min</span>
+                        <span className="text-xl">{selectedTravelMode === 'WALKING' ? '🚶' : '🚗'}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {Math.round(distanceToDestination * 1000)} m
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {arrivalTime}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </Card>
           </>
