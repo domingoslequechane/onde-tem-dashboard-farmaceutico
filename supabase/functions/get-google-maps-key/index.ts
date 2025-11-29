@@ -17,8 +17,13 @@ Deno.serve(async (req) => {
       throw new Error('Google Maps API key not configured');
     }
 
+    // Trim and clean the API key to ensure no extra whitespace or characters
+    const cleanKey = googleMapsApiKey.trim();
+    
+    console.log('Returning Google Maps API key (length:', cleanKey.length, ')');
+
     return new Response(
-      JSON.stringify({ key: googleMapsApiKey }),
+      JSON.stringify({ key: cleanKey }),
       { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
