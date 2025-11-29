@@ -1426,12 +1426,12 @@ const Buscar = () => {
 
         {/* Search Box - Hidden when pharmacy selected or during navigation */}
         {!selectedMedicamento && !isNavigating && (
-          <div className="absolute top-2 left-2 right-2 md:left-auto md:w-96 bg-card rounded-lg shadow-lg p-2 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
-            <h2 className="text-lg md:text-xl font-bold mb-2 text-primary">Encontre ONDTem!</h2>
+          <div className="absolute top-2 left-2 right-2 md:left-auto md:w-96 bg-card rounded-lg shadow-lg p-3 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
+            <h2 className="text-lg md:text-xl font-bold mb-3 text-primary">Encontre ONDTem!</h2>
             
             {/* Medication Tags */}
             {medicamentoTags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-2">
+              <div className="flex flex-wrap gap-1 mb-3">
                 {medicamentoTags.map((tag, idx) => (
                   <div key={idx} className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs animate-in fade-in slide-in-from-left-2">
                     <span>{tag}</span>
@@ -1446,7 +1446,7 @@ const Buscar = () => {
               </div>
             )}
 
-            <div className="relative mb-2">
+            <div className="relative mb-3">
               <Input
                 type="text"
                 placeholder="Digite o medicamento..."
@@ -1498,18 +1498,18 @@ const Buscar = () => {
               )}
             </div>
 
-            <div className="flex gap-1.5 items-center flex-wrap">
+            <div className="flex gap-2 items-center flex-wrap mb-3">
               <Button 
                 onClick={handleBuscar} 
                 disabled={searching || !userLocation}
-                className="flex-1 min-w-[100px] text-sm h-8"
+                className="flex-1 min-w-[100px] text-sm h-9"
               >
                 {searching ? 'Buscando...' : 'Buscar'}
               </Button>
               <Button 
                 onClick={() => setShowAddMedicationModal(true)}
                 variant="outline"
-                className="text-sm h-8 px-2"
+                className="text-sm h-9 px-3"
               >
                 + Medicamentos
               </Button>
