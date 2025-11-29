@@ -1099,48 +1099,6 @@ const Buscar = () => {
             </div>
           )}
 
-          {/* Navigation Mode - Mobile/Tablet Only */}
-          {isNavigating && selectedMedicamento && (
-            <div className="md:hidden flex-1 overflow-y-auto p-3 animate-fade-in">
-              <Card className="p-4 space-y-3 bg-primary text-primary-foreground">
-                <div className="flex items-start gap-3">
-                  <div className="bg-primary-foreground/20 rounded-full p-3 flex-shrink-0">
-                    <Navigation className="h-8 w-8" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xl font-bold mb-2">{currentInstruction}</p>
-                    <p className="text-base opacity-90">Para {selectedMedicamento.farmacia_nome}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between pt-3 border-t border-primary-foreground/20">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    <span className="text-xl font-bold">{(distanceToDestination * 1000).toFixed(0)} m</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-3 border-t border-primary-foreground/20">
-                  <Button
-                    size="default"
-                    variant="secondary"
-                    onClick={recenterMap}
-                    className="h-10"
-                  >
-                    Recentrar
-                  </Button>
-                  <Button
-                    size="default"
-                    variant="destructive"
-                    onClick={stopNavigation}
-                    className="h-10"
-                  >
-                    Parar
-                  </Button>
-                </div>
-              </Card>
-            </div>
-          )}
 
           {/* Search Panel - Hidden when navigation is active */}
           {!isNavigating && (
