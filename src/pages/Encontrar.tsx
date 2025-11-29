@@ -2078,24 +2078,14 @@ const Buscar = () => {
         {selectedMedicamento && !isNavigating && (
           <Card className="absolute bottom-4 left-4 right-4 md:bottom-auto md:top-2 md:left-auto md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card p-3 shadow-xl z-10 animate-in slide-in-from-bottom-5 md:slide-in-from-right-5 duration-300">
             <div className="space-y-2">
-              {/* Header with medication name and close button */}
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base md:text-lg lg:text-xl font-bold text-primary flex-1">
-                  {selectedMedicamento.medicamento_nome} - {selectedMedicamento.medicamento_preco.toFixed(2)} MT
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleDeselectPharmacy}
-                  className="h-7 w-7 hover:bg-accent shrink-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              {/* Medication name */}
+              <h3 className="text-base md:text-lg lg:text-xl font-bold text-primary">
+                {selectedMedicamento.medicamento_nome} - {selectedMedicamento.medicamento_preco.toFixed(2)} MT
+              </h3>
 
-              {/* Pharmacy Name with Border */}
+              {/* Pharmacy Name with Border - Single line */}
               <div className="border-l-4 border-l-green-500 pl-2">
-                <p className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{selectedMedicamento.farmacia_nome}</p>
+                <p className="text-sm md:text-base lg:text-lg font-semibold text-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
               </div>
 
               {/* Star Rating - No background */}
