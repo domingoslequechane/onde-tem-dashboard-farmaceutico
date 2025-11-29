@@ -2275,60 +2275,96 @@ const Buscar = () => {
       </AlertDialog>
 
       <AlertDialog open={showArrivalModal} onOpenChange={handleCloseArrivalModal}>
-        <AlertDialogContent className="sm:max-w-md w-[calc(100%-2rem)] mx-auto rounded-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl md:text-2xl">Você chegou!</AlertDialogTitle>
-            <AlertDialogDescription className="text-base space-y-3">
-              <div className="font-semibold text-foreground text-lg">
-                {selectedMedicamento?.farmacia_nome}
-              </div>
-              
+        <AlertDialogContent className="sm:max-w-md w-[calc(100%-2rem)] mx-auto rounded-lg p-0 gap-0 overflow-hidden">
+          <div className="relative">
+            <button
+              onClick={handleCloseArrivalModal}
+              className="absolute top-3 right-3 z-10 p-1 rounded-full bg-background/80 hover:bg-background transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="p-6 space-y-4">
+              {/* Medicamento e Preço */}
               {selectedMedicamento && (
-                <div className="space-y-2 text-sm md:text-base">
-                  <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
-                    <span className="text-muted-foreground">Medicamento:</span>
-                    <span className="font-medium text-foreground">{selectedMedicamento.medicamento_nome}</span>
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-primary">
+                    {selectedMedicamento.medicamento_nome} - {selectedMedicamento.medicamento_preco.toFixed(2)} MT
+                  </h3>
+
+                  {/* Nome da Farmácia com borda verde */}
+                  <div className="border-l-4 border-green-600 pl-3 py-1">
+                    <p className="font-medium text-foreground text-base uppercase">
+                      {selectedMedicamento.farmacia_nome}
+                    </p>
                   </div>
-                  
-                  <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
-                    <span className="text-muted-foreground">Preço:</span>
-                    <span className="font-semibold text-green-600">{selectedMedicamento.medicamento_preco.toFixed(2)} MT</span>
+
+                  {/* Rating (se disponível) */}
+                  {selectedMedicamento.media_avaliacoes !== undefined && selectedMedicamento.media_avaliacoes > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-5 w-5 ${
+                              star <= Math.round(selectedMedicamento.media_avaliacoes || 0)
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="font-semibold text-lg">
+                        {selectedMedicamento.media_avaliacoes.toFixed(1)}
+                      </span>
+                      {selectedMedicamento.total_avaliacoes !== undefined && (
+                        <span className="text-muted-foreground text-sm">
+                          ({selectedMedicamento.total_avaliacoes})
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Status de chegada */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                      ✓ Chegou ao destino
+                    </div>
                   </div>
-                  
+
+                  {/* Métricas de viagem */}
                   {travelDuration && (
-                    <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
-                      <span className="text-muted-foreground">Tempo de viagem:</span>
-                      <span className="font-medium text-foreground">{travelDuration}</span>
+                    <div className="flex items-center gap-4 text-sm py-2 border-t border-b">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold">{travelDuration}</span>
+                      </div>
                     </div>
                   )}
                 </div>
               )}
-              
-              {selectedMedicamento?.farmacia_telefone && (
-                <div className="text-muted-foreground text-sm">
-                  Telefone: {selectedMedicamento.farmacia_telefone}
-                </div>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3">
-            {selectedMedicamento?.farmacia_telefone && (
-              <Button
-                variant="outline"
-                onClick={handleCallPharmacy}
-                className="w-full sm:w-auto"
-              >
-                <Phone className="h-4 w-4 mr-2" />
-                Ligar
-              </Button>
-            )}
-            <AlertDialogAction
-              onClick={handleCloseArrivalModal}
-              className="w-full sm:w-auto"
-            >
-              Ok
-            </AlertDialogAction>
-          </AlertDialogFooter>
+
+              {/* Botões de ação */}
+              <div className="flex gap-2 pt-2">
+                {selectedMedicamento?.farmacia_telefone && (
+                  <Button
+                    variant="outline"
+                    onClick={handleCallPharmacy}
+                    className="flex-1"
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    Ligar
+                  </Button>
+                )}
+                <Button
+                  onClick={handleCloseArrivalModal}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  Ok
+                </Button>
+              </div>
+            </div>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </div>
