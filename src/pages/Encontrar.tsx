@@ -104,6 +104,8 @@ const Buscar = () => {
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
   const destinationLocation = useRef<{ lat: number; lng: number } | null>(null);
+  const lastAnnouncedDistance = useRef<number>(0);
+  const hasAnnouncedTurn = useRef<boolean>(false);
 
   useEffect(() => {
     checkLocationPermission();
@@ -872,6 +874,25 @@ const Buscar = () => {
     };
   };
 
+  const speakText = (text: string) => {
+    try {
+      if ('speechSynthesis' in window) {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'pt-BR';
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch (error) {
+      console.error('Error with speech synthesis:', error);
+    }
+  };
+
   const playNavigationSound = (type: 'start' | 'turn' | 'arrival') => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -906,6 +927,16 @@ const Buscar = () => {
     } catch (error) {
       console.error('Error playing sound:', error);
     }
+  };
+
+  const getTurnDirection = (instruction: string): 'esquerda' | 'direita' | null => {
+    const lowerInstruction = instruction.toLowerCase();
+    if (lowerInstruction.includes('esquerda') || lowerInstruction.includes('left')) {
+      return 'esquerda';
+    } else if (lowerInstruction.includes('direita') || lowerInstruction.includes('right')) {
+      return 'direita';
+    }
+    return null;
   };
 
   const startNavigationWithMode = async (mode: 'WALKING' | 'DRIVING') => {
@@ -968,10 +999,25 @@ const Buscar = () => {
             setArrivalTime(arrivalDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
           }
 
-          // Set navigation view - tilted and zoomed in
+          // Set navigation view - tilted, zoomed in, and position destination at top of screen
           map.current.setZoom(18);
-          map.current.setCenter(userLocation);
           map.current.setTilt(45);
+          
+          // Calculate bounds to position destination at top and user at bottom
+          const bounds = new google.maps.LatLngBounds();
+          bounds.extend(userLocation);
+          bounds.extend(new google.maps.LatLng(
+            selectedMedicamento.farmacia_latitude,
+            selectedMedicamento.farmacia_longitude
+          ));
+          
+          // Fit bounds with padding to position destination at top
+          map.current.fitBounds(bounds, {
+            top: 100,    // Destination near top
+            bottom: 400, // User near bottom
+            left: 50,
+            right: 50
+          });
 
           // Calculate initial distance to destination
           const initialDist = calculateDistance(
@@ -1032,6 +1078,7 @@ const Buscar = () => {
                   if (distToDest < 0.03) {
                     stopNavigation();
                     playNavigationSound('arrival');
+                    speakText('Você chegou ao destino');
                     setShowArrivalModal(true);
                     return;
                   }
@@ -1051,7 +1098,27 @@ const Buscar = () => {
                       stepEndLocation.lng()
                     );
                     
-                    setDistanceToNextStep(distToStepEnd * 1000); // Convert to meters
+                    const distToStepMeters = distToStepEnd * 1000;
+                    setDistanceToNextStep(distToStepMeters);
+
+                    // Announce upcoming turn at 100m and 50m
+                    const nextStep = currentRouteSteps.current[currentStepIndex.current + 1];
+                    if (nextStep && distToStepMeters > 20) {
+                      const turnDirection = getTurnDirection(nextStep.instructions || '');
+                      
+                      if (turnDirection) {
+                        // Announce at 100 meters
+                        if (distToStepMeters <= 100 && distToStepMeters > 50 && lastAnnouncedDistance.current !== 100) {
+                          speakText(`Curve à ${turnDirection} em ${Math.round(distToStepMeters)} metros`);
+                          lastAnnouncedDistance.current = 100;
+                        }
+                        // Announce at 50 meters
+                        else if (distToStepMeters <= 50 && distToStepMeters > 20 && lastAnnouncedDistance.current !== 50) {
+                          speakText(`Curve à ${turnDirection} em ${Math.round(distToStepMeters)} metros`);
+                          lastAnnouncedDistance.current = 50;
+                        }
+                      }
+                    }
 
                     // If close to step end, advance to next step
                     if (distToStepEnd < 0.02) { // 20 meters
@@ -1061,6 +1128,9 @@ const Buscar = () => {
                         if (nextStep) {
                           setCurrentInstruction(nextStep.instructions?.replace(/<[^>]*>/g, '') || 'Siga em frente');
                           playNavigationSound('turn');
+                          
+                          // Reset announcement tracking for new step
+                          lastAnnouncedDistance.current = 0;
                           
                           // Update next instruction
                           if (currentStepIndex.current < currentRouteSteps.current.length - 1) {
@@ -1121,6 +1191,11 @@ const Buscar = () => {
       navigationWatchId.current = null;
     }
     
+    // Cancel any ongoing speech
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    
     setIsNavigating(false);
     setCurrentInstruction('');
     setNextInstruction('');
@@ -1130,6 +1205,8 @@ const Buscar = () => {
     currentStepIndex.current = 0;
     currentRouteSteps.current = [];
     destinationLocation.current = null;
+    lastAnnouncedDistance.current = 0;
+    hasAnnouncedTurn.current = false;
     
     if (map.current) {
       map.current.setTilt(0);
