@@ -101,6 +101,8 @@ const Buscar = () => {
   const [selectedTravelMode, setSelectedTravelMode] = useState<'WALKING' | 'DRIVING'>('WALKING');
   const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>('WALKING');
   const [searchStatus, setSearchStatus] = useState<'idle' | 'searching' | 'found' | 'not-found'>('idle');
+  const [navigationStartTime, setNavigationStartTime] = useState<number | null>(null);
+  const [travelDuration, setTravelDuration] = useState<string>('');
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
@@ -1131,16 +1133,9 @@ const Buscar = () => {
             },
             map: map.current!,
             icon: {
-              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
-                  <path fill="#10b981" stroke="#ffffff" stroke-width="2" d="M16,0 C24.8,0 32,7.2 32,16 C32,28 16,42 16,42 C16,42 0,28 0,16 C0,7.2 7.2,0 16,0 Z"/>
-                  <rect x="10.4" y="9.6" width="11.2" height="12.8" fill="#ffffff" rx="1"/>
-                  <rect x="14.4" y="11.2" width="3.2" height="9.6" fill="#10b981"/>
-                  <rect x="12" y="14.4" width="8" height="3.2" fill="#10b981"/>
-                </svg>
-              `),
-              scaledSize: new google.maps.Size(32, 42),
-              anchor: new google.maps.Point(16, 42),
+              url: logo,
+              scaledSize: new google.maps.Size(40, 40),
+              anchor: new google.maps.Point(20, 40),
             },
             title: item.farmacia_nome,
             animation: google.maps.Animation.DROP
@@ -1400,6 +1395,7 @@ const Buscar = () => {
     setIsNavigating(true);
     setCurrentInstruction('Preparando navegação...');
     setNextInstruction('');
+    setNavigationStartTime(Date.now());
     destinationLocation.current = {
       lat: selectedMedicamento.farmacia_latitude,
       lng: selectedMedicamento.farmacia_longitude
@@ -1530,6 +1526,13 @@ const Buscar = () => {
 
                   // Check for arrival (within 30 meters)
                   if (distToDest < 0.03) {
+                    // Calculate travel duration
+                    if (navigationStartTime) {
+                      const duration = Date.now() - navigationStartTime;
+                      const minutes = Math.floor(duration / 60000);
+                      const seconds = Math.floor((duration % 60000) / 1000);
+                      setTravelDuration(`${minutes}min ${seconds}s`);
+                    }
                     stopNavigation();
                     playNavigationSound('arrival');
                     speakText('Você chegou ao destino');
@@ -2296,26 +2299,48 @@ const Buscar = () => {
       </AlertDialog>
 
       <AlertDialog open={showArrivalModal} onOpenChange={handleCloseArrivalModal}>
-        <AlertDialogContent className="rounded-lg">
+        <AlertDialogContent className="sm:max-w-md w-[calc(100%-2rem)] mx-auto rounded-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl">Você chegou!</AlertDialogTitle>
-            <AlertDialogDescription className="text-base space-y-2">
-              <div className="font-semibold text-foreground">
+            <AlertDialogTitle className="text-xl md:text-2xl">Você chegou!</AlertDialogTitle>
+            <AlertDialogDescription className="text-base space-y-3">
+              <div className="font-semibold text-foreground text-lg">
                 {selectedMedicamento?.farmacia_nome}
               </div>
+              
+              {selectedMedicamento && (
+                <div className="space-y-2 text-sm md:text-base">
+                  <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                    <span className="text-muted-foreground">Medicamento:</span>
+                    <span className="font-medium text-foreground">{selectedMedicamento.medicamento_nome}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                    <span className="text-muted-foreground">Preço:</span>
+                    <span className="font-semibold text-green-600">{selectedMedicamento.medicamento_preco.toFixed(2)} MT</span>
+                  </div>
+                  
+                  {travelDuration && (
+                    <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                      <span className="text-muted-foreground">Tempo de viagem:</span>
+                      <span className="font-medium text-foreground">{travelDuration}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               {selectedMedicamento?.farmacia_telefone && (
-                <div className="text-muted-foreground">
+                <div className="text-muted-foreground text-sm">
                   Telefone: {selectedMedicamento.farmacia_telefone}
                 </div>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row gap-2">
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3">
             {selectedMedicamento?.farmacia_telefone && (
               <Button
                 variant="outline"
                 onClick={handleCallPharmacy}
-                className="flex-1"
+                className="w-full sm:w-auto"
               >
                 <Phone className="h-4 w-4 mr-2" />
                 Ligar
@@ -2323,7 +2348,7 @@ const Buscar = () => {
             )}
             <AlertDialogAction
               onClick={handleCloseArrivalModal}
-              className="flex-1"
+              className="w-full sm:w-auto"
             >
               Ok
             </AlertDialogAction>
