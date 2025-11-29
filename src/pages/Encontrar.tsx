@@ -190,6 +190,9 @@ const Buscar = () => {
       if (userLocation) {
         updateMapWithUserLocation(userLocation);
       }
+
+      // Load all pharmacies and display on map
+      loadAllPharmacies();
     } catch (error) {
       console.error('Error initializing Google Maps:', error);
       toast({
@@ -227,6 +230,72 @@ const Buscar = () => {
     }
 
     updateRadiusCircle(location);
+  };
+
+  const loadAllPharmacies = async () => {
+    if (!map.current) return;
+
+    try {
+      console.log('Loading all pharmacies from database...');
+      
+      const { data: pharmacies, error } = await supabase
+        .from('farmacias')
+        .select('id, nome, latitude, longitude, telefone, whatsapp')
+        .eq('ativa', true)
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null);
+
+      if (error) throw error;
+
+      console.log(`Found ${pharmacies?.length || 0} pharmacies in database`);
+
+      // Clear existing markers
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current = [];
+
+      // Add markers for all pharmacies
+      if (pharmacies && pharmacies.length > 0) {
+        pharmacies.forEach(pharmacy => {
+          const marker = new google.maps.Marker({
+            position: {
+              lat: Number(pharmacy.latitude),
+              lng: Number(pharmacy.longitude)
+            },
+            map: map.current!,
+            icon: {
+              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
+                  <path fill="#10b981" stroke="#ffffff" stroke-width="2" d="M20,0 C31,0 40,9 40,20 C40,35 20,52 20,52 C20,52 0,35 0,20 C0,9 9,0 20,0 Z"/>
+                  <rect x="13" y="12" width="14" height="16" fill="#ffffff" rx="1"/>
+                  <rect x="18" y="14" width="4" height="12" fill="#10b981"/>
+                  <rect x="15" y="18" width="10" height="4" fill="#10b981"/>
+                </svg>
+              `),
+              scaledSize: new google.maps.Size(40, 52),
+              anchor: new google.maps.Point(20, 52),
+            },
+            title: pharmacy.nome,
+            animation: google.maps.Animation.DROP
+          });
+
+          marker.addListener('click', () => {
+            console.log('Pharmacy clicked:', pharmacy.nome);
+            // You can add click functionality here if needed
+          });
+
+          markersRef.current.push(marker);
+        });
+
+        console.log(`Added ${pharmacies.length} pharmacy markers to map`);
+      }
+    } catch (error) {
+      console.error('Error loading pharmacies:', error);
+      toast({
+        title: 'Erro ao carregar farmácias',
+        description: 'Não foi possível carregar as farmácias no mapa.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const updateRadiusCircle = (location: { lat: number; lng: number }) => {
