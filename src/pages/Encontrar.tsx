@@ -377,15 +377,15 @@ const Buscar = () => {
             map: map.current!,
             icon: {
               url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="62" viewBox="0 0 48 62">
-                  <path fill="#10b981" stroke="#ffffff" stroke-width="2.5" d="M24,0 C37.2,0 48,10.8 48,24 C48,42 24,62 24,62 C24,62 0,42 0,24 C0,10.8 10.8,0 24,0 Z"/>
-                  <rect x="15.6" y="14.4" width="16.8" height="19.2" fill="#ffffff" rx="1.5"/>
-                  <rect x="21.6" y="16.8" width="4.8" height="14.4" fill="#10b981"/>
-                  <rect x="18" y="21.6" width="12" height="4.8" fill="#10b981"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
+                  <path fill="#10b981" stroke="#ffffff" stroke-width="2" d="M16,0 C24.8,0 32,7.2 32,16 C32,28 16,42 16,42 C16,42 0,28 0,16 C0,7.2 7.2,0 16,0 Z"/>
+                  <rect x="10.4" y="9.6" width="11.2" height="12.8" fill="#ffffff" rx="1"/>
+                  <rect x="14.4" y="11.2" width="3.2" height="9.6" fill="#10b981"/>
+                  <rect x="12" y="14.4" width="8" height="3.2" fill="#10b981"/>
                 </svg>
               `),
-              scaledSize: new google.maps.Size(48, 62),
-              anchor: new google.maps.Point(24, 62),
+              scaledSize: new google.maps.Size(32, 42),
+              anchor: new google.maps.Point(16, 42),
             },
             title: pharmacy.nome,
             animation: google.maps.Animation.DROP
@@ -852,15 +852,15 @@ const Buscar = () => {
             map: map.current!,
             icon: {
               url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="62" viewBox="0 0 48 62">
-                  <path fill="#10b981" stroke="#ffffff" stroke-width="2.5" d="M24,0 C37.2,0 48,10.8 48,24 C48,42 24,62 24,62 C24,62 0,42 0,24 C0,10.8 10.8,0 24,0 Z"/>
-                  <rect x="15.6" y="14.4" width="16.8" height="19.2" fill="#ffffff" rx="1.5"/>
-                  <rect x="21.6" y="16.8" width="4.8" height="14.4" fill="#10b981"/>
-                  <rect x="18" y="21.6" width="12" height="4.8" fill="#10b981"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
+                  <path fill="#10b981" stroke="#ffffff" stroke-width="2" d="M16,0 C24.8,0 32,7.2 32,16 C32,28 16,42 16,42 C16,42 0,28 0,16 C0,7.2 7.2,0 16,0 Z"/>
+                  <rect x="10.4" y="9.6" width="11.2" height="12.8" fill="#ffffff" rx="1"/>
+                  <rect x="14.4" y="11.2" width="3.2" height="9.6" fill="#10b981"/>
+                  <rect x="12" y="14.4" width="8" height="3.2" fill="#10b981"/>
                 </svg>
               `),
-              scaledSize: new google.maps.Size(48, 62),
-              anchor: new google.maps.Point(24, 62),
+              scaledSize: new google.maps.Size(32, 42),
+              anchor: new google.maps.Point(16, 42),
             },
             title: item.farmacia_nome,
             animation: google.maps.Animation.DROP
