@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
 import { LeaveReviewModal } from '@/components/LeaveReviewModal';
 import { ViewReviewsModal } from '@/components/ViewReviewsModal';
+import Fuse from 'fuse.js';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -723,11 +724,20 @@ const Buscar = () => {
       return;
     }
 
-    // Filter suggestions
-    const filtered = allMedicamentos.filter(med =>
-      med.nome.toLowerCase().includes(medicamento.toLowerCase())
-    );
+    // Fuzzy search configuration
+    const fuse = new Fuse(allMedicamentos, {
+      keys: ['nome'],
+      threshold: 0.4, // 0.0 = exact match, 1.0 = match anything
+      distance: 100,
+      minMatchCharLength: 2,
+      includeScore: true,
+    });
+
+    // Perform fuzzy search
+    const fuzzyResults = fuse.search(medicamento);
+    const filtered = fuzzyResults.map(result => result.item);
     
+    // Remove duplicates by name
     const uniqueNames = new Map<string, Medicamento>();
     filtered.forEach(med => {
       if (!uniqueNames.has(med.nome.toLowerCase())) {
