@@ -98,6 +98,7 @@ const Buscar = () => {
   const [nextInstruction, setNextInstruction] = useState<string>('');
   const [distanceToDestination, setDistanceToDestination] = useState<number>(0);
   const [distanceToNextStep, setDistanceToNextStep] = useState<number>(0);
+  const [isFromSearch, setIsFromSearch] = useState(false);
   const [arrivalTime, setArrivalTime] = useState<string>('');
   const [selectedTravelMode, setSelectedTravelMode] = useState<'WALKING' | 'DRIVING'>('WALKING');
   const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>('WALKING');
@@ -492,6 +493,9 @@ const Buscar = () => {
           // Show on click and select pharmacy
           marker.addListener('click', async () => {
             console.log('Pharmacy clicked:', pharmacy.nome);
+            
+            // Mark as not from search (clicking on map icon directly)
+            setIsFromSearch(false);
             
             // Fetch complete pharmacy data and available medications
             try {
@@ -917,6 +921,7 @@ const Buscar = () => {
           });
 
           marker.addListener('click', () => {
+            setIsFromSearch(true);
             showRouteToPharmacy(item, 'walking');
           });
 
@@ -1151,6 +1156,7 @@ const Buscar = () => {
           });
 
           marker.addListener('click', () => {
+            setIsFromSearch(true);
             showRouteToPharmacy(item, 'walking');
           });
 
@@ -1732,6 +1738,7 @@ const Buscar = () => {
         });
 
         marker.addListener('click', () => {
+          setIsFromSearch(true);
           showRouteToPharmacy(item, 'walking');
         });
 
@@ -2285,12 +2292,14 @@ const Buscar = () => {
             </button>
 
             <div className="p-6 space-y-4">
-              {/* Medicamento e Preço */}
+              {/* Medicamento e Preço - apenas se veio de uma busca */}
               {selectedMedicamento && (
                 <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-primary">
-                    {selectedMedicamento.medicamento_nome} - {selectedMedicamento.medicamento_preco.toFixed(2)} MT
-                  </h3>
+                  {isFromSearch && (
+                    <h3 className="text-lg font-semibold text-primary">
+                      {selectedMedicamento.medicamento_nome} - {selectedMedicamento.medicamento_preco.toFixed(2)} MT
+                    </h3>
+                  )}
 
                   {/* Nome da Farmácia com borda verde */}
                   <div className="border-l-4 border-green-600 pl-3 py-1">
