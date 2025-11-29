@@ -1421,7 +1421,7 @@ const Buscar = () => {
 
         {/* Search Box - Hidden when pharmacy selected or during navigation */}
         {!selectedMedicamento && !isNavigating && (
-          <div className="absolute top-2 left-2 right-2 md:left-auto md:w-96 bg-card rounded-lg shadow-lg p-3 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
+          <div className="absolute top-2 left-2 right-2 md:left-auto md:right-2 md:w-96 bg-card rounded-lg shadow-lg p-3 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
             <h2 className="text-base md:text-lg lg:text-xl font-bold mb-3 text-primary">Encontre ONDTem!</h2>
             
             {/* Medication Tags */}
