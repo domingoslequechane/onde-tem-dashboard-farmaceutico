@@ -1610,7 +1610,7 @@ const Buscar = () => {
             <div className="space-y-2">
               {/* Header with medication name and close button */}
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base md:text-lg font-bold text-primary flex-1">{selectedMedicamento.medicamento_nome}</h3>
+                <h3 className="text-base md:text-lg lg:text-xl font-bold text-primary flex-1">{selectedMedicamento.medicamento_nome}</h3>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1623,7 +1623,7 @@ const Buscar = () => {
 
               {/* Pharmacy Name with Border */}
               <div className="border-l-4 border-l-green-500 pl-2">
-                <p className="text-sm md:text-base font-semibold text-foreground">{selectedMedicamento.farmacia_nome}</p>
+                <p className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{selectedMedicamento.farmacia_nome}</p>
               </div>
 
               {/* Star Rating and Operating Hours - Combined */}
@@ -1634,7 +1634,7 @@ const Buscar = () => {
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`h-3.5 w-3.5 ${
+                          className={`h-3.5 w-3.5 md:h-4 md:w-4 ${
                             i < Math.round(selectedMedicamento.media_avaliacoes!)
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300'
@@ -1642,8 +1642,8 @@ const Buscar = () => {
                         />
                       ))}
                     </div>
-                    <span className="text-xs font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
-                    <span className="text-[10px] text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
+                    <span className="text-xs md:text-sm font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
+                    <span className="text-[10px] md:text-xs text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
                   </div>
                 )}
                 
@@ -1652,8 +1652,8 @@ const Buscar = () => {
                   const { isOpen, label } = isPharmacyOpen();
                   return (
                     <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-muted-foreground" />
-                      <span className={`text-xs font-semibold ${isOpen ? 'text-green-600' : 'text-red-600'}`}>
+                      <Clock className="h-3 w-3 md:h-3.5 md:w-3.5 text-muted-foreground" />
+                      <span className={`text-xs md:text-sm font-semibold ${isOpen ? 'text-green-600' : 'text-red-600'}`}>
                         {label}
                       </span>
                     </div>
@@ -1663,12 +1663,12 @@ const Buscar = () => {
 
               {/* Travel Metrics in One Line */}
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-sm font-bold text-primary">📍 {routeInfo ? routeInfo.distance.toFixed(1) : selectedMedicamento.distancia_km.toFixed(1)} km</span>
+                <span className="text-sm md:text-base font-bold text-primary">📍 {routeInfo ? routeInfo.distance.toFixed(1) : selectedMedicamento.distancia_km.toFixed(1)} km</span>
                 <Button
                   variant={travelModePreview === 'WALKING' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => handleTravelModePreview('WALKING')}
-                  className="text-xs h-7 px-2"
+                  className="text-xs md:text-sm h-7 md:h-8 px-2"
                 >
                   🚶 {walkingDuration > 0 ? `${Math.round(walkingDuration)}min` : 'A pé'}
                 </Button>
@@ -1676,7 +1676,7 @@ const Buscar = () => {
                   variant={travelModePreview === 'DRIVING' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => handleTravelModePreview('DRIVING')}
-                  className="text-xs h-7 px-2"
+                  className="text-xs md:text-sm h-7 md:h-8 px-2"
                 >
                   🚗 {drivingDuration > 0 ? `${Math.round(drivingDuration)}min` : 'Viatura'}
                 </Button>
@@ -1684,9 +1684,9 @@ const Buscar = () => {
                   variant="default"
                   size="sm"
                   onClick={() => setShowTravelModeDialog(true)}
-                  className="text-xs h-7 px-3 ml-auto bg-green-600 hover:bg-green-700 flex items-center gap-1"
+                  className="text-xs md:text-sm h-7 md:h-8 px-3 ml-auto bg-green-600 hover:bg-green-700 flex items-center gap-1"
                 >
-                  <Compass className="h-3 w-3" />
+                  <Compass className="h-3 w-3 md:h-3.5 md:w-3.5" />
                   Iniciar
                 </Button>
               </div>
@@ -1696,7 +1696,7 @@ const Buscar = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs"
+                  className="h-7 md:h-8 text-xs md:text-sm"
                   onClick={() => setShowLeaveReview(true)}
                 >
                   Avaliar
@@ -1704,7 +1704,7 @@ const Buscar = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs"
+                  className="h-7 md:h-8 text-xs md:text-sm"
                   onClick={() => setShowViewReviews(true)}
                 >
                   Avaliações
@@ -1712,7 +1712,7 @@ const Buscar = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs"
+                  className="h-7 md:h-8 text-xs md:text-sm"
                   onClick={() => {
                     if (selectedMedicamento?.farmacia_telefone) {
                       window.location.href = `tel:${selectedMedicamento.farmacia_telefone}`;
@@ -1726,7 +1726,7 @@ const Buscar = () => {
                     }
                   }}
                 >
-                  <Phone className="h-3 w-3 mr-1" />
+                  <Phone className="h-3 w-3 md:h-3.5 md:w-3.5 mr-1" />
                   Ligar
                 </Button>
               </div>
