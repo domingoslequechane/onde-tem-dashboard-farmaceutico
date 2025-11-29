@@ -1681,8 +1681,86 @@ const Buscar = () => {
     if (directionsRenderer.current) {
       directionsRenderer.current.setDirections({ routes: [] } as any);
     }
-    // Reload all pharmacies on map
-    loadAllPharmacies();
+    
+    // Reset map view to show radius circle
+    if (map.current && userLocation) {
+      const zoomLevels: { [key: number]: number } = {
+        1: 15,
+        2: 14,
+        4: 13,
+        8: 12,
+        16: 11
+      };
+      
+      const targetZoom = zoomLevels[raioKm] || 13;
+      map.current.setCenter(userLocation);
+      map.current.setZoom(targetZoom);
+      map.current.setTilt(0); // Reset tilt
+    }
+    
+    // Reload markers based on current search state
+    if (medicamentos.length > 0) {
+      // If there are search results, reload those markers
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current = [];
+      infoWindowsRef.current.forEach(infoWindow => infoWindow.close());
+      infoWindowsRef.current = [];
+      
+      // Re-add search result markers
+      medicamentos.forEach(item => {
+        const marker = new google.maps.Marker({
+          position: {
+            lat: item.farmacia_latitude,
+            lng: item.farmacia_longitude
+          },
+          map: map.current!,
+          icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
+                <path fill="#10b981" stroke="#ffffff" stroke-width="2" d="M16,0 C24.8,0 32,7.2 32,16 C32,28 16,42 16,42 C16,42 0,28 0,16 C0,7.2 7.2,0 16,0 Z"/>
+                <rect x="10.4" y="9.6" width="11.2" height="12.8" fill="#ffffff" rx="1"/>
+                <rect x="14.4" y="11.2" width="3.2" height="9.6" fill="#10b981"/>
+                <rect x="12" y="14.4" width="8" height="3.2" fill="#10b981"/>
+              </svg>
+            `),
+            scaledSize: new google.maps.Size(32, 42),
+            anchor: new google.maps.Point(16, 42),
+          },
+          title: item.farmacia_nome,
+          animation: google.maps.Animation.DROP
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+          content: createInfoWindowContent({
+            nome: item.farmacia_nome,
+            horario_abertura: item.farmacia_horario_abertura,
+            horario_fechamento: item.farmacia_horario_fechamento,
+            media_avaliacoes: item.media_avaliacoes,
+            total_avaliacoes: item.total_avaliacoes
+          })
+        });
+
+        infoWindowsRef.current.push(infoWindow);
+
+        marker.addListener('mouseover', () => {
+          infoWindowsRef.current.forEach(iw => iw.close());
+          infoWindow.open(map.current!, marker);
+        });
+
+        marker.addListener('mouseout', () => {
+          infoWindow.close();
+        });
+
+        marker.addListener('click', () => {
+          showRouteToPharmacy(item, 'walking');
+        });
+
+        markersRef.current.push(marker);
+      });
+    } else {
+      // No search results, reload all pharmacies
+      loadAllPharmacies();
+    }
   };
 
   const handleAddMedicamento = () => {
