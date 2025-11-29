@@ -99,6 +99,8 @@ const Buscar = () => {
   const [distanceToDestination, setDistanceToDestination] = useState<number>(0);
   const [distanceToNextStep, setDistanceToNextStep] = useState<number>(0);
   const [isFromSearch, setIsFromSearch] = useState(false);
+  const [userInteracting, setUserInteracting] = useState(false);
+  const userInteractionTimeout = useRef<NodeJS.Timeout | null>(null);
   const [arrivalTime, setArrivalTime] = useState<string>('');
   const [selectedTravelMode, setSelectedTravelMode] = useState<'WALKING' | 'DRIVING'>('WALKING');
   const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>('WALKING');
@@ -218,6 +220,36 @@ const Buscar = () => {
       });
 
       map.current = mapInstance;
+      
+      // Add listeners for user interaction to stop auto-centering during navigation
+      mapInstance.addListener('dragstart', () => {
+        setUserInteracting(true);
+        if (userInteractionTimeout.current) {
+          clearTimeout(userInteractionTimeout.current);
+        }
+      });
+
+      mapInstance.addListener('zoom_changed', () => {
+        setUserInteracting(true);
+        if (userInteractionTimeout.current) {
+          clearTimeout(userInteractionTimeout.current);
+        }
+        // Resume auto-centering after 5 seconds of no interaction
+        userInteractionTimeout.current = setTimeout(() => {
+          setUserInteracting(false);
+        }, 5000);
+      });
+
+      mapInstance.addListener('dragend', () => {
+        // Resume auto-centering after 5 seconds of no interaction
+        if (userInteractionTimeout.current) {
+          clearTimeout(userInteractionTimeout.current);
+        }
+        userInteractionTimeout.current = setTimeout(() => {
+          setUserInteracting(false);
+        }, 5000);
+      });
+      
       directionsService.current = new google.maps.DirectionsService();
       directionsRenderer.current = new google.maps.DirectionsRenderer({
         map: mapInstance,
@@ -1494,8 +1526,8 @@ const Buscar = () => {
                   userMarkerRef.current.setPosition(newPos);
                 }
 
-                // Smoothly pan map to follow user
-                if (map.current) {
+                // Only auto-center/pan if user is not interacting with the map
+                if (map.current && !userInteracting) {
                   map.current.panTo(newPos);
                   
                   // Update heading/bearing if available
@@ -1638,6 +1670,13 @@ const Buscar = () => {
       navigationWatchId.current = null;
     }
     
+    // Clear user interaction timeout
+    if (userInteractionTimeout.current) {
+      clearTimeout(userInteractionTimeout.current);
+      userInteractionTimeout.current = null;
+    }
+    setUserInteracting(false);
+    
     // Cancel any ongoing speech
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -1664,6 +1703,12 @@ const Buscar = () => {
 
   const recenterMap = () => {
     if (map.current && userLocation) {
+      // Reset user interaction flag to resume auto-centering
+      setUserInteracting(false);
+      if (userInteractionTimeout.current) {
+        clearTimeout(userInteractionTimeout.current);
+      }
+      
       map.current.setCenter(userLocation);
       map.current.setZoom(18);
     }
