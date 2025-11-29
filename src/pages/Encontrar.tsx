@@ -1605,7 +1605,9 @@ const Buscar = () => {
             <div className="space-y-2">
               {/* Header with medication name and close button */}
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base md:text-lg lg:text-xl font-bold text-primary flex-1">{selectedMedicamento.medicamento_nome}</h3>
+                <h3 className="text-base md:text-lg lg:text-xl font-bold text-primary flex-1">
+                  {selectedMedicamento.medicamento_nome} - {selectedMedicamento.medicamento_preco.toFixed(2)} MT
+                </h3>
                 <Button
                   variant="ghost"
                   size="icon"
