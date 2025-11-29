@@ -101,7 +101,7 @@ const Buscar = () => {
   const [medicamentosComprar, setMedicamentosComprar] = useState<string[]>([]);
   const [novoMedicamento, setNovoMedicamento] = useState('');
   const [showAddMedicationModal, setShowAddMedicationModal] = useState(false);
-  const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>(null);
+  const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>('WALKING');
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
