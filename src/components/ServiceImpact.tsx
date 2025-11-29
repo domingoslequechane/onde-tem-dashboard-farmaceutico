@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Eye, Search } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 
 const ServiceImpact = () => {
@@ -102,6 +103,11 @@ const ServiceImpact = () => {
 
   const impressionRate = todaysSearches > 0 ? Math.round((myPharmacyImpressions / todaysSearches) * 100) : 0;
 
+  const pieData = [
+    { name: 'Minhas Impressões', value: myPharmacyImpressions, color: '#10b981' },
+    { name: 'Outras Farmácias', value: Math.max(0, todaysSearches - myPharmacyImpressions), color: '#e5e7eb' },
+  ];
+
   return (
     <Card className="h-fit">
       <CardHeader className="pb-2 px-4 sm:px-6">
@@ -123,16 +129,37 @@ const ServiceImpact = () => {
           </div>
         </div>
 
-        {/* Daily Impressions */}
-        <div className="grid grid-cols-1 gap-3">
-          <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
-            <div className="flex items-center justify-center mb-1">
-              <Eye className="text-green-600 mr-1 h-4 w-4" />
-            </div>
-            <div className="text-2xl sm:text-3xl font-bold text-green-700 mb-1">{myPharmacyImpressions}</div>
-            <div className="text-sm sm:text-base text-green-600 mb-1">Impressões Hoje</div>
-            <div className="text-xs sm:text-sm text-gray-500 px-1">
-              de {todaysSearches} buscas totais ({impressionRate}%)
+        {/* Pie Chart */}
+        <div className="bg-green-50 rounded-lg p-3">
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb'
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="text-center mt-2">
+            <div className="text-2xl sm:text-3xl font-bold text-green-700">{myPharmacyImpressions}</div>
+            <div className="text-sm sm:text-base text-green-600">Impressões Hoje</div>
+            <div className="text-xs sm:text-sm text-gray-500">
+              {impressionRate}% de {todaysSearches} buscas totais
             </div>
           </div>
         </div>

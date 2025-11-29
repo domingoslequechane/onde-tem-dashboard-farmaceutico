@@ -3,7 +3,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart3, MapPin, TrendingUp, Users } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import RegionDetailModal from '@/components/RegionDetailModal';
+import DemandHeatmap from '@/components/DemandHeatmap';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DemandAnalysisProps {
@@ -132,37 +134,54 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
-          {/* Demand Chart */}
+          {/* Modern Bar Chart */}
           <div className="space-y-2">
             <h4 className="font-medium text-gray-900 text-sm sm:text-base">Top 5 Medicamentos Mais Procurados</h4>
-            {demandData.slice(0, expanded ? 5 : 3).map((item) => (
-              <div key={item.name} className="space-y-1.5">
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-gray-700 truncate mr-2">{item.name}</span>
-                  <div className="flex space-x-1.5 sm:space-x-3 flex-shrink-0">
-                    <span className="font-medium text-green-600">✓ {item.found}</span>
-                    <span className="font-medium text-red-600">✗ {item.notFound}</span>
-                    <span className="font-medium hidden sm:inline">{item.searches}</span>
+            <ResponsiveContainer width="100%" height={expanded ? 300 : 200}>
+              <BarChart data={demandData.slice(0, expanded ? 5 : 3)} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 11 }} 
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb',
+                    padding: '8px'
+                  }}
+                  formatter={(value: any, name: string) => {
+                    if (name === 'found') return [value, 'Encontrados'];
+                    if (name === 'notFound') return [value, 'Não Encontrados'];
+                    return [value, name];
+                  }}
+                />
+                <Bar dataKey="found" fill="#10b981" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="notFound" fill="#ef4444" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+            {expanded && (
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                {demandData.slice(0, 5).map((item) => (
+                  <div key={item.name} className="text-xs p-2 bg-gray-50 rounded">
+                    <div className="font-medium truncate">{item.name}</div>
+                    <div className="text-gray-600">
+                      Taxa: {Math.round((item.found / item.searches) * 100)}%
+                    </div>
                   </div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
-                  <div 
-                    className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000"
-                    style={{ width: `${(item.searches / 50) * 100}%` }}
-                  />
-                </div>
-                {expanded && (
-                  <div className="text-xs text-gray-500">
-                    Taxa: {Math.round((item.found / item.searches) * 100)}%
-                  </div>
-                )}
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Heat Map */}
+      {/* Heat Map with Mapbox */}
       <Card>
         <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
           <CardTitle className="flex items-center text-sm sm:text-base">
@@ -171,21 +190,7 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="px-4 sm:px-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2 mb-3">
-            {neighborhoods.map((area) => (
-              <div 
-                key={area.name}
-                className={`${area.color} text-white p-2 rounded cursor-pointer hover:opacity-90 transition-opacity`}
-                onClick={() => handleRegionClick(area)}
-              >
-                <div className="font-medium text-xs sm:text-sm truncate">{area.name}</div>
-                <div className="text-xs opacity-90 truncate">{area.level}</div>
-                <div className="text-xs mt-0.5">
-                  {area.searches} buscas
-                </div>
-              </div>
-            ))}
-          </div>
+          <DemandHeatmap neighborhoods={neighborhoods} />
         </CardContent>
       </Card>
 
