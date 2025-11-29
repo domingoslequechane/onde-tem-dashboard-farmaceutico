@@ -4,7 +4,7 @@ import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X, Clock, Star, Navigation, Plus, Compass } from 'lucide-react';
+import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
@@ -1844,16 +1844,16 @@ const Buscar = () => {
       {/* Header - Always visible */}
       <div className="flex items-center justify-between p-3 md:p-4 bg-card border-b border-border shadow-sm transition-all duration-300">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/')}
-            className="flex-shrink-0 h-9 w-9 md:h-10 md:w-10"
-          >
-            <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
-          </Button>
           <img src={logo} alt="ONDTem" className="h-8 md:h-10 flex-shrink-0" />
         </div>
+        
+        <Button
+          variant="outline"
+          onClick={() => navigate('/home')}
+          className="flex-shrink-0 text-sm md:text-base font-semibold"
+        >
+          Sou Farmacia
+        </Button>
       </div>
 
       {/* Main Content */}
