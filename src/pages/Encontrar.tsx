@@ -816,7 +816,7 @@ const Buscar = () => {
       };
 
       directionsService.current.route(request, (result, status) => {
-        if (status === 'OK' && result && directionsRenderer.current) {
+        if (status === 'OK' && result && directionsRenderer.current && map.current) {
           // Set route color based on mode
           directionsRenderer.current.setOptions({
             polylineOptions: {
@@ -848,6 +848,20 @@ const Buscar = () => {
               farmacia_horario_fechamento: farmaciaData.horario_fechamento,
             });
             setRouteMode(mode);
+
+            // Adjust map to show route with pharmacy in visible area (top portion)
+            // Add padding at bottom to account for info card
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(origin);
+            bounds.extend(destination);
+            
+            // Fit bounds with extra bottom padding to position markers in visible top area
+            map.current.fitBounds(bounds, {
+              top: 50,
+              bottom: 320, // Account for info card height (~280px) + margin
+              left: 50,
+              right: 50
+            });
           }
         }
       });
@@ -1447,70 +1461,72 @@ const Buscar = () => {
 
         {/* Pharmacy Info Card - Hidden during navigation */}
         {selectedMedicamento && !isNavigating && (
-          <Card className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card p-4 md:p-5 shadow-xl z-10 animate-in slide-in-from-bottom-5 duration-300">
-            <div className="space-y-3">
+          <Card className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card p-3 shadow-xl z-10 animate-in slide-in-from-bottom-5 duration-300">
+            <div className="space-y-2">
               {/* Header with medication name and close button */}
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-lg md:text-xl font-bold text-primary flex-1">{selectedMedicamento.medicamento_nome}</h3>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base md:text-lg font-bold text-primary flex-1">{selectedMedicamento.medicamento_nome}</h3>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleDeselectPharmacy}
-                  className="h-8 w-8 hover:bg-accent shrink-0"
+                  className="h-7 w-7 hover:bg-accent shrink-0"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
 
               {/* Pharmacy Name with Border */}
-              <div className="border-l-4 border-l-green-500 pl-3">
-                <p className="text-base md:text-lg font-semibold text-foreground">{selectedMedicamento.farmacia_nome}</p>
+              <div className="border-l-4 border-l-green-500 pl-2">
+                <p className="text-sm md:text-base font-semibold text-foreground">{selectedMedicamento.farmacia_nome}</p>
               </div>
 
-              {/* Star Rating */}
-              {selectedMedicamento.media_avaliacoes !== undefined && (
-                <div className="flex items-center gap-2">
+              {/* Star Rating and Operating Hours - Combined */}
+              <div className="flex items-center justify-between gap-2">
+                {selectedMedicamento.media_avaliacoes !== undefined && (
                   <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-6 w-6 ${
-                          i < Math.round(selectedMedicamento.media_avaliacoes!)
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
+                    <div className="flex items-center gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < Math.round(selectedMedicamento.media_avaliacoes!)
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
+                    <span className="text-xs text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
                   </div>
-                  <span className="text-xl font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
-                  <span className="text-sm text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
-                </div>
-              )}
-
-              {/* Operating Hours */}
-              {(() => {
-                const { isOpen, label } = isPharmacyOpen();
-                return (
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-muted-foreground" />
-                    <span className={`text-base font-semibold ${isOpen ? 'text-green-600' : 'text-red-600'}`}>
-                      {label}
-                    </span>
-                  </div>
-                );
-              })()}
+                )}
+                
+                {/* Operating Hours */}
+                {(() => {
+                  const { isOpen, label } = isPharmacyOpen();
+                  return (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className={`text-sm font-semibold ${isOpen ? 'text-green-600' : 'text-red-600'}`}>
+                        {label}
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
 
               {/* Distance and Duration */}
               {routeInfo && (
-                <div className="flex items-center justify-between text-sm border-t border-border pt-3">
+                <div className="flex items-center justify-between text-xs border-t border-border pt-2">
                   <span className="font-medium">{routeInfo.distance.toFixed(1)} km</span>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
-                      <span className="text-muted-foreground">🚶</span>
+                      <span>🚶</span>
                       <span className="font-bold">{walkingDuration.toFixed(0)} min</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-muted-foreground">🚗</span>
+                      <span>🚗</span>
                       <span className="font-bold">{drivingDuration.toFixed(0)} min</span>
                     </div>
                   </div>
@@ -1519,34 +1535,35 @@ const Buscar = () => {
 
               {/* Travel Mode Selection Buttons */}
               <div className="pt-2 border-t border-border">
-                <label className="text-sm font-semibold mb-2 block text-muted-foreground">Como vai se dirigir?</label>
+                <label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Como vai se dirigir?</label>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 h-10"
+                    className="flex-1 h-8 text-xs"
                     onClick={() => handleStartNavigationWithMode('WALKING')}
                   >
-                    <span className="text-lg mr-2">🚶</span>
+                    <span className="mr-1.5">🚶</span>
                     A pé
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 h-10"
+                    className="flex-1 h-8 text-xs"
                     onClick={() => handleStartNavigationWithMode('DRIVING')}
                   >
-                    <span className="text-lg mr-2">🚗</span>
+                    <span className="mr-1.5">🚗</span>
                     Veículo
                   </Button>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-3 gap-2 pt-2">
+              <div className="grid grid-cols-3 gap-1.5 pt-1.5">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-8 text-xs"
                   onClick={() => setShowLeaveReview(true)}
                 >
                   Avaliar
@@ -1554,6 +1571,7 @@ const Buscar = () => {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-8 text-xs"
                   onClick={() => setShowViewReviews(true)}
                 >
                   Avaliações
@@ -1561,10 +1579,11 @@ const Buscar = () => {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-8 text-xs"
                   onClick={handleCallPharmacy}
                   disabled={!selectedMedicamento?.farmacia_telefone}
                 >
-                  <Phone className="h-4 w-4 mr-1" />
+                  <Phone className="h-3 w-3 mr-1" />
                   Ligar
                 </Button>
               </div>
