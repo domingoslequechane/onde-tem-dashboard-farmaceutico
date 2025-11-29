@@ -336,48 +336,53 @@ const Buscar = () => {
 
   // Audio system for navigation feedback
   const playNavigationSound = (type: 'start' | 'turn' | 'arrival') => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Different sounds for different events
-    if (type === 'start') {
-      // Rising tone for start
-      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.2);
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
-    } else if (type === 'turn') {
-      // Quick beep for turn
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.15);
-    } else if (type === 'arrival') {
-      // Two-tone arrival sound
-      oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
-      oscillator.frequency.setValueAtTime(700, audioContext.currentTime + 0.15);
-      oscillator.frequency.setValueAtTime(500, audioContext.currentTime + 0.3);
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Different sounds for different events
+      if (type === 'start') {
+        // Rising tone for start
+        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } else if (type === 'turn') {
+        // Quick beep for turn
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.15);
+      } else if (type === 'arrival') {
+        // Two-tone arrival sound
+        oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(700, audioContext.currentTime + 0.15);
+        oscillator.frequency.setValueAtTime(500, audioContext.currentTime + 0.3);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      }
+    } catch (error) {
+      console.error('Error playing sound:', error);
     }
   };
 
   const recenterMap = () => {
-    if (map.current && userLocation) {
-      map.current.flyTo({
+    if (map.current && userLocation && isNavigating) {
+      map.current.easeTo({
         center: [userLocation.lng, userLocation.lat],
-        zoom: 16,
-        duration: 1000,
+        zoom: 17,
+        bearing: map.current.getBearing(),
         pitch: 45,
+        duration: 800,
       });
     }
   };
@@ -411,6 +416,9 @@ const Buscar = () => {
         if (map.current.getLayer('route')) {
           map.current.removeLayer('route');
         }
+        if (map.current.getLayer('route-casing')) {
+          map.current.removeLayer('route-casing');
+        }
         if (map.current.getSource('route')) {
           map.current.removeSource('route');
         }
@@ -424,6 +432,23 @@ const Buscar = () => {
           },
         });
 
+        // Add route casing first (appears below)
+        map.current.addLayer({
+          id: 'route-casing',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#1E1B4B',
+            'line-width': 12,
+            'line-opacity': 0.4,
+          },
+        });
+
+        // Add main route line
         map.current.addLayer({
           id: 'route',
           type: 'line',
@@ -439,35 +464,14 @@ const Buscar = () => {
           },
         });
 
-        // Add route casing for better visibility
-        map.current.addLayer({
-          id: 'route-casing',
-          type: 'line',
-          source: 'route',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#1E1B4B',
-            'line-width': 12,
-            'line-opacity': 0.4,
-          },
-        }, 'route');
-
-        // Change map style for navigation mode
-        map.current.setPitch(45);
-        map.current.flyTo({
+        // Smoothly transition to navigation view
+        const currentBearing = map.current.getBearing();
+        map.current.easeTo({
           center: [userLocation.lng, userLocation.lat],
           zoom: 17,
-          bearing: 0,
-          duration: 1000,
-        });
-
-        toast({
-          title: 'Navegação iniciada',
-          description: 'Acompanhando sua posição em tempo real',
-          duration: 3000,
+          bearing: currentBearing,
+          pitch: 45,
+          duration: 1500,
         });
 
         // Track current step for turn detection
@@ -495,14 +499,13 @@ const Buscar = () => {
                 newPos.lng
               );
               
-              // Only update if significant movement (reduces flickering)
-              // Update every 1 second OR if moved more than 5 meters
-              if (timeSinceLastUpdate > 1000 || movementDistance > 0.005) {
+              // Only update if moved at least 3 meters or 1 second passed
+              if (movementDistance > 0.003 || timeSinceLastUpdate > 1000) {
                 
-                // Update user location state
+                // Update user location state (batched with other updates)
                 setUserLocation(newPos);
                 
-                // Update user marker position smoothly
+                // Update user marker position smoothly without recreating
                 if (userMarkerRef.current) {
                   userMarkerRef.current.setLngLat([newPos.lng, newPos.lat]);
                 }
@@ -547,17 +550,19 @@ const Buscar = () => {
                   setCurrentInstruction(instruction);
                 }
                 
-                // Center map on user with smooth animation
+                // Smoothly update map center and bearing without recreating
                 if (map.current) {
-                  // Calculate bearing if heading is available
-                  const bearing = position.coords.heading ?? map.current.getBearing();
+                  const bearing = position.coords.heading !== null && position.coords.heading !== undefined 
+                    ? position.coords.heading 
+                    : map.current.getBearing();
                   
+                  // Use easeTo for smooth continuous updates
                   map.current.easeTo({
                     center: [newPos.lng, newPos.lat],
                     bearing: bearing,
                     zoom: 17,
-                    duration: 1000,
                     pitch: 45,
+                    duration: 800,
                   });
                 }
                 
@@ -581,17 +586,11 @@ const Buscar = () => {
             },
             (error) => {
               console.error('Navigation error:', error);
-              toast({
-                title: 'Erro na navegação',
-                description: 'Não foi possível atualizar localização',
-                variant: 'destructive',
-                duration: 3000,
-              });
             },
             {
               enableHighAccuracy: true,
               maximumAge: 0,
-              timeout: 10000
+              timeout: 10000,
             }
           );
         }
