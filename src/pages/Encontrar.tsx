@@ -96,10 +96,10 @@ const Buscar = () => {
   const [distanceToDestination, setDistanceToDestination] = useState<number>(0);
   const [distanceToNextStep, setDistanceToNextStep] = useState<number>(0);
   const [arrivalTime, setArrivalTime] = useState<string>('');
-  const [showTravelModeDialog, setShowTravelModeDialog] = useState(false);
   const [selectedTravelMode, setSelectedTravelMode] = useState<'WALKING' | 'DRIVING'>('WALKING');
   const [medicamentosComprar, setMedicamentosComprar] = useState<string[]>([]);
   const [novoMedicamento, setNovoMedicamento] = useState('');
+  const [showAddMedicationModal, setShowAddMedicationModal] = useState(false);
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
@@ -397,19 +397,19 @@ const Buscar = () => {
       radiusCircleRef.current.setMap(null);
     }
 
-    // Create new circle
+    // Create new circle with green color
     radiusCircleRef.current = new google.maps.Circle({
-      strokeColor: '#1565c0',
+      strokeColor: '#10b981',
       strokeOpacity: 0.8,
-      strokeWeight: 2,
-      fillColor: '#42a5f5',
-      fillOpacity: 0.2,
+      strokeWeight: 3,
+      fillColor: '#10b981',
+      fillOpacity: 0.15,
       map: map.current,
       center: location,
       radius: raioKm * 1000
     });
 
-    // Fit bounds to circle
+    // Fit bounds to circle with animation
     const bounds = radiusCircleRef.current.getBounds();
     if (bounds) {
       map.current.fitBounds(bounds);
@@ -816,6 +816,14 @@ const Buscar = () => {
 
       directionsService.current.route(request, (result, status) => {
         if (status === 'OK' && result && directionsRenderer.current) {
+          // Set route color based on mode
+          directionsRenderer.current.setOptions({
+            polylineOptions: {
+              strokeColor: mode === 'walking' ? '#4F46E5' : '#10b981',
+              strokeWeight: 6,
+              strokeOpacity: 0.8
+            }
+          });
           directionsRenderer.current.setDirections(result);
 
           const route = result.routes[0];
@@ -942,6 +950,11 @@ const Buscar = () => {
   const startNavigationWithMode = async (mode: 'WALKING' | 'DRIVING') => {
     if (!selectedMedicamento || !userLocation || !directionsService.current || !map.current) return;
     
+    // Add current medication to list if not already there
+    if (selectedMedicamento && !medicamentosComprar.includes(selectedMedicamento.medicamento_nome)) {
+      setMedicamentosComprar([...medicamentosComprar, selectedMedicamento.medicamento_nome]);
+    }
+    
     setSelectedTravelMode(mode);
     setIsNavigating(true);
     setCurrentInstruction('Preparando navegação...');
@@ -962,11 +975,11 @@ const Buscar = () => {
 
       directionsService.current.route(request, (result, status) => {
         if (status === 'OK' && result && directionsRenderer.current && map.current) {
-          // Configure renderer for navigation mode with thick blue route
+          // Configure renderer for navigation mode with colored route based on mode
           directionsRenderer.current.setOptions({
             suppressMarkers: true,
             polylineOptions: {
-              strokeColor: '#4F46E5',
+              strokeColor: mode === 'WALKING' ? '#4F46E5' : '#10b981',
               strokeWeight: 8,
               strokeOpacity: 0.9
             }
@@ -1222,12 +1235,18 @@ const Buscar = () => {
     }
   };
 
-  const handleStartNavigation = () => {
-    // Add current medication to list if not already there
-    if (selectedMedicamento && !medicamentosComprar.includes(selectedMedicamento.medicamento_nome)) {
-      setMedicamentosComprar([selectedMedicamento.medicamento_nome]);
+  const handleStartNavigationWithMode = (mode: 'WALKING' | 'DRIVING') => {
+    startNavigationWithMode(mode);
+  };
+
+  const handleDeselectPharmacy = () => {
+    setSelectedMedicamento(null);
+    setRouteInfo(null);
+    if (directionsRenderer.current) {
+      directionsRenderer.current.setDirections({ routes: [] } as any);
     }
-    setShowTravelModeDialog(true);
+    // Reload all pharmacies on map
+    loadAllPharmacies();
   };
 
   const handleAddMedicamento = () => {
@@ -1334,13 +1353,22 @@ const Buscar = () => {
               )}
             </div>
 
-            <Button 
-              onClick={handleBuscar} 
-              disabled={searching || !userLocation}
-              className="w-full text-base md:text-sm h-10 md:h-9"
-            >
-              {searching ? 'Buscando...' : 'Buscar'}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleBuscar} 
+                disabled={searching || !userLocation}
+                className="flex-1 text-base md:text-sm h-10 md:h-9"
+              >
+                {searching ? 'Buscando...' : 'Buscar'}
+              </Button>
+              <Button 
+                onClick={() => setShowAddMedicationModal(true)}
+                variant="outline"
+                className="text-base md:text-sm h-10 md:h-9 px-3"
+              >
+                + Medicamentos
+              </Button>
+            </div>
 
             {/* Search Results */}
             {medicamentos.length > 0 && (
@@ -1420,9 +1448,19 @@ const Buscar = () => {
         {selectedMedicamento && !isNavigating && (
           <Card className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card p-4 md:p-5 shadow-xl z-10 animate-in slide-in-from-bottom-5 duration-300">
             <div className="space-y-3">
-              {/* Medication Name */}
-              <div>
-                <h3 className="text-lg md:text-xl font-bold text-primary">{selectedMedicamento.medicamento_nome}</h3>
+              {/* Close/Hide Button */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <h3 className="text-lg md:text-xl font-bold text-primary">{selectedMedicamento.medicamento_nome}</h3>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDeselectPharmacy}
+                  className="h-8 px-2 hover:bg-accent"
+                >
+                  Ocultar
+                </Button>
               </div>
 
               {/* Pharmacy Name with Border */}
@@ -1480,8 +1518,33 @@ const Buscar = () => {
                 </div>
               )}
 
+              {/* Travel Mode Selection Buttons */}
+              <div className="pt-2 border-t border-border">
+                <label className="text-sm font-semibold mb-2 block text-muted-foreground">Como vai se dirigir?</label>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-10"
+                    onClick={() => handleStartNavigationWithMode('WALKING')}
+                  >
+                    <span className="text-lg mr-2">🚶</span>
+                    A pé
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-10"
+                    onClick={() => handleStartNavigationWithMode('DRIVING')}
+                  >
+                    <span className="text-lg mr-2">🚗</span>
+                    Veículo
+                  </Button>
+                </div>
+              </div>
+
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-2 pt-2">
+              <div className="grid grid-cols-3 gap-2 pt-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -1504,14 +1567,6 @@ const Buscar = () => {
                 >
                   <Phone className="h-4 w-4 mr-1" />
                   Ligar
-                </Button>
-                <Button
-                  size="sm"
-                  className="bg-primary hover:bg-primary/90"
-                  onClick={handleStartNavigation}
-                >
-                  <Navigation className="h-4 w-4 mr-1" />
-                  Iniciar Viagem
                 </Button>
               </div>
             </div>
@@ -1686,44 +1741,49 @@ const Buscar = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Travel Mode Selection Dialog */}
-      <AlertDialog open={showTravelModeDialog} onOpenChange={setShowTravelModeDialog}>
+      {/* Add Medications Modal */}
+      <AlertDialog open={showAddMedicationModal} onOpenChange={setShowAddMedicationModal}>
         <AlertDialogContent className="rounded-lg max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl">Preparar Viagem</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl">Adicionar Medicamentos</AlertDialogTitle>
             <AlertDialogDescription className="text-base">
-              Adicione os medicamentos que pretende comprar e escolha como vai se dirigir à farmácia
+              Adicione os medicamentos que pretende comprar durante a viagem
             </AlertDialogDescription>
           </AlertDialogHeader>
           
           <div className="space-y-4 py-4">
-            {/* Medications List Section */}
-            <div>
-              <label className="text-sm font-semibold mb-2 block">Medicamentos a comprar:</label>
-              <div className="space-y-2">
-                {medicamentosComprar.map((med, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 bg-accent rounded-md">
-                    <span className="text-sm">{med}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveMedicamento(med)}
-                      className="h-6 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      Remover
-                    </Button>
-                  </div>
-                ))}
+            {/* Medications List */}
+            {medicamentosComprar.length > 0 && (
+              <div>
+                <label className="text-sm font-semibold mb-2 block">Medicamentos na lista:</label>
+                <div className="space-y-2">
+                  {medicamentosComprar.map((med, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-accent rounded-md animate-in fade-in slide-in-from-left-2">
+                      <span className="text-sm">{med}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveMedicamento(med)}
+                        className="h-6 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        Remover
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              
-              {/* Add Medication Input */}
-              <div className="flex gap-2 mt-3">
+            )}
+            
+            {/* Add Medication Input */}
+            <div>
+              <label className="text-sm font-semibold mb-2 block">Adicionar novo medicamento:</label>
+              <div className="flex gap-2">
                 <Input
-                  placeholder="Adicionar medicamento..."
+                  placeholder="Nome do medicamento..."
                   value={novoMedicamento}
                   onChange={(e) => setNovoMedicamento(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleAddMedicamento()}
-                  className="flex-1 text-sm"
+                  className="flex-1 text-base md:text-sm"
                 />
                 <Button
                   size="sm"
@@ -1734,46 +1794,14 @@ const Buscar = () => {
                 </Button>
               </div>
             </div>
-
-            {/* Travel Mode Selection */}
-            <div>
-              <label className="text-sm font-semibold mb-2 block">Como vai se dirigir?</label>
-              <div className="flex flex-col gap-2">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-14 text-base justify-start gap-3"
-                  onClick={() => {
-                    setShowTravelModeDialog(false);
-                    startNavigationWithMode('WALKING');
-                  }}
-                >
-                  <span className="text-2xl">🚶</span>
-                  <span>A pé</span>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-14 text-base justify-start gap-3"
-                  onClick={() => {
-                    setShowTravelModeDialog(false);
-                    startNavigationWithMode('DRIVING');
-                  }}
-                >
-                  <span className="text-2xl">🚗</span>
-                  <span>Veículo</span>
-                </Button>
-              </div>
-            </div>
           </div>
           
           <AlertDialogFooter>
             <Button
-              variant="ghost"
-              onClick={() => setShowTravelModeDialog(false)}
+              onClick={() => setShowAddMedicationModal(false)}
               className="w-full"
             >
-              Cancelar
+              Concluído
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
