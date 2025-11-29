@@ -8,6 +8,7 @@ import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, C
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
+import pharmacyMarkerIcon from '@/assets/pharmacy-marker-icon.svg';
 import { LeaveReviewModal } from '@/components/LeaveReviewModal';
 import { ViewReviewsModal } from '@/components/ViewReviewsModal';
 import Fuse from 'fuse.js';
@@ -1133,7 +1134,7 @@ const Buscar = () => {
             },
             map: map.current!,
             icon: {
-              url: logo,
+              url: pharmacyMarkerIcon,
               scaledSize: new google.maps.Size(40, 40),
               anchor: new google.maps.Point(20, 40),
             },
