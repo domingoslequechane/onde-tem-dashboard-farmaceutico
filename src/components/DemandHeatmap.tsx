@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DemandHeatmapProps {
@@ -14,204 +13,152 @@ interface DemandHeatmapProps {
 
 const DemandHeatmap = ({ neighborhoods }: DemandHeatmapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
+  const map = useRef<google.maps.Map | null>(null);
+  const heatmap = useRef<google.maps.visualization.HeatmapLayer | null>(null);
+  const [googleMapsKey, setGoogleMapsKey] = useState<string>('');
 
   useEffect(() => {
-    fetchMapboxToken();
+    fetchGoogleMapsKey();
   }, []);
 
-  const fetchMapboxToken = async () => {
+  const fetchGoogleMapsKey = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+      const { data, error } = await supabase.functions.invoke('get-google-maps-key');
       if (error) throw error;
-      setMapboxToken(data.token);
+      setGoogleMapsKey(data.key);
     } catch (error) {
-      console.error('Error fetching Mapbox token:', error);
+      console.error('Error fetching Google Maps key:', error);
     }
   };
 
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken || map.current) return;
+    if (!mapContainer.current || !googleMapsKey || map.current) return;
 
-    mapboxgl.accessToken = mapboxToken;
+    const initMap = async () => {
+      try {
+        setOptions({
+          key: googleMapsKey,
+          v: 'weekly',
+        });
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
-      center: [32.5892, -25.9655], // Mozambique center
-      zoom: 10,
-    });
+        await importLibrary('maps');
+        await importLibrary('visualization');
 
-    map.current.on('load', () => {
-      if (!map.current) return;
-
-      // Create heatmap data from neighborhoods
-      const features = neighborhoods.map((area, index) => {
-        // Generate approximate coordinates if not provided
-        const baseLat = -25.9655;
-        const baseLng = 32.5892;
-        const lat = area.latitude || baseLat + (Math.random() - 0.5) * 0.2;
-        const lng = area.longitude || baseLng + (Math.random() - 0.5) * 0.2;
-
-        return {
-          type: 'Feature' as const,
-          properties: {
-            name: area.name,
-            searches: area.searches,
-          },
-          geometry: {
-            type: 'Point' as const,
-            coordinates: [lng, lat],
-          },
-        };
-      });
-
-      const geojsonData: GeoJSON.FeatureCollection = {
-        type: 'FeatureCollection',
-        features: features,
-      };
-
-      // Add heatmap source
-      map.current!.addSource('demand-heatmap', {
-        type: 'geojson',
-        data: geojsonData,
-      });
-
-      // Add heatmap layer
-      map.current!.addLayer({
-        id: 'demand-heat',
-        type: 'heatmap',
-        source: 'demand-heatmap',
-        maxzoom: 15,
-        paint: {
-          // Increase weight based on searches
-          'heatmap-weight': [
-            'interpolate',
-            ['linear'],
-            ['get', 'searches'],
-            0, 0,
-            100, 1
+        const mapInstance = new google.maps.Map(mapContainer.current!, {
+          center: { lat: -25.9655, lng: 32.5892 }, // Mozambique center
+          zoom: 10,
+          mapTypeId: 'roadmap',
+          styles: [
+            { elementType: "geometry", stylers: [{ color: "#212121" }] },
+            { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+            { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+            { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+            {
+              featureType: "administrative",
+              elementType: "geometry",
+              stylers: [{ color: "#757575" }],
+            },
+            {
+              featureType: "poi",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#757575" }],
+            },
+            {
+              featureType: "water",
+              elementType: "geometry",
+              stylers: [{ color: "#000000" }],
+            },
+            {
+              featureType: "water",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#3d3d3d" }],
+            },
           ],
-          // Increase intensity as zoom level increases
-          'heatmap-intensity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            0, 1,
-            15, 3
+        });
+
+        map.current = mapInstance;
+
+        // Create heatmap data from neighborhoods
+        const heatmapData = neighborhoods.map((area) => {
+          const baseLat = -25.9655;
+          const baseLng = 32.5892;
+          const lat = area.latitude || baseLat + (Math.random() - 0.5) * 0.2;
+          const lng = area.longitude || baseLng + (Math.random() - 0.5) * 0.2;
+
+          return {
+            location: new google.maps.LatLng(lat, lng),
+            weight: area.searches,
+          };
+        });
+
+        // Create heatmap layer
+        const heatmapLayer = new google.maps.visualization.HeatmapLayer({
+          data: heatmapData,
+          map: mapInstance,
+          radius: 30,
+          opacity: 0.8,
+          gradient: [
+            'rgba(33,102,172,0)',
+            'rgb(103,169,207)',
+            'rgb(209,229,240)',
+            'rgb(253,219,199)',
+            'rgb(239,138,98)',
+            'rgb(178,24,43)'
           ],
-          // Color ramp for heatmap
-          'heatmap-color': [
-            'interpolate',
-            ['linear'],
-            ['heatmap-density'],
-            0, 'rgba(33,102,172,0)',
-            0.2, 'rgb(103,169,207)',
-            0.4, 'rgb(209,229,240)',
-            0.6, 'rgb(253,219,199)',
-            0.8, 'rgb(239,138,98)',
-            1, 'rgb(178,24,43)'
-          ],
-          // Adjust radius by zoom level
-          'heatmap-radius': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            0, 15,
-            15, 30
-          ],
-          // Transition from heatmap to circle layer
-          'heatmap-opacity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            7, 1,
-            15, 0
-          ],
-        }
-      });
+        });
 
-      // Add circle layer for individual points at higher zoom
-      map.current!.addLayer({
-        id: 'demand-points',
-        type: 'circle',
-        source: 'demand-heatmap',
-        minzoom: 12,
-        paint: {
-          'circle-radius': [
-            'interpolate',
-            ['linear'],
-            ['get', 'searches'],
-            0, 5,
-            100, 25
-          ],
-          'circle-color': [
-            'interpolate',
-            ['linear'],
-            ['get', 'searches'],
-            0, '#3b82f6',
-            50, '#f59e0b',
-            100, '#ef4444'
-          ],
-          'circle-opacity': 0.8,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#fff'
-        }
-      });
+        heatmap.current = heatmapLayer;
 
-      // Add labels
-      map.current!.addLayer({
-        id: 'demand-labels',
-        type: 'symbol',
-        source: 'demand-heatmap',
-        minzoom: 13,
-        layout: {
-          'text-field': ['get', 'name'],
-          'text-size': 12,
-          'text-offset': [0, 1.5],
-          'text-anchor': 'top'
-        },
-        paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': '#000000',
-          'text-halo-width': 1
-        }
-      });
+        // Add markers for individual points
+        neighborhoods.forEach((area) => {
+          const baseLat = -25.9655;
+          const baseLng = 32.5892;
+          const lat = area.latitude || baseLat + (Math.random() - 0.5) * 0.2;
+          const lng = area.longitude || baseLng + (Math.random() - 0.5) * 0.2;
 
-      // Add popup on hover
-      const popup = new mapboxgl.Popup({
-        closeButton: false,
-        closeOnClick: false
-      });
+          // Determine color based on searches
+          let color = '#3b82f6'; // blue
+          if (area.searches >= 100) color = '#ef4444'; // red
+          else if (area.searches >= 50) color = '#f59e0b'; // orange
 
-      map.current!.on('mouseenter', 'demand-points', (e) => {
-        if (!map.current || !e.features || e.features.length === 0) return;
-        map.current.getCanvas().style.cursor = 'pointer';
+          const marker = new google.maps.Marker({
+            position: { lat, lng },
+            map: mapInstance,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: Math.min(5 + (area.searches / 100) * 20, 25),
+              fillColor: color,
+              fillOpacity: 0.8,
+              strokeColor: '#fff',
+              strokeWeight: 2,
+            },
+          });
 
-        const coordinates = (e.features[0].geometry as any).coordinates.slice();
-        const { name, searches } = e.features[0].properties as any;
+          const infoWindow = new google.maps.InfoWindow({
+            content: `<div style="color: #000;"><strong>${area.name}</strong><br/>${area.searches} buscas</div>`,
+          });
 
-        popup
-          .setLngLat(coordinates)
-          .setHTML(`<strong>${name}</strong><br/>${searches} buscas`)
-          .addTo(map.current);
-      });
+          marker.addListener('mouseover', () => {
+            infoWindow.open(mapInstance, marker);
+          });
 
-      map.current!.on('mouseleave', 'demand-points', () => {
-        if (!map.current) return;
-        map.current.getCanvas().style.cursor = '';
-        popup.remove();
-      });
-    });
+          marker.addListener('mouseout', () => {
+            infoWindow.close();
+          });
+        });
+      } catch (error) {
+        console.error('Error initializing Google Maps:', error);
+      }
+    };
 
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    initMap();
 
     return () => {
-      map.current?.remove();
+      if (heatmap.current) {
+        heatmap.current.setMap(null);
+      }
     };
-  }, [mapboxToken, neighborhoods]);
+  }, [googleMapsKey, neighborhoods]);
 
   return (
     <div className="relative w-full h-64 sm:h-80 md:h-96 rounded-lg overflow-hidden">
