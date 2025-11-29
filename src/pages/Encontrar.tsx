@@ -299,7 +299,8 @@ const Buscar = () => {
     
     let isOpen = false;
     let statusLabel = 'Horário não disponível';
-    let statusColor = '#6b7280';
+    let statusColor = '#9ca3af';
+    let statusBgColor = '#f3f4f6';
     
     if (pharmacy.horario_abertura && pharmacy.horario_fechamento) {
       const [openHour, openMin] = pharmacy.horario_abertura.split(':').map(Number);
@@ -310,30 +311,97 @@ const Buscar = () => {
       isOpen = currentTime >= openTime && currentTime < closeTime;
       statusLabel = isOpen ? 'Aberto' : 'Fechado';
       statusColor = isOpen ? '#10b981' : '#ef4444';
+      statusBgColor = isOpen ? '#d1fae5' : '#fee2e2';
     }
 
     const rating = pharmacy.media_avaliacoes || 0;
-    const stars = '⭐'.repeat(Math.round(rating));
     const reviewCount = pharmacy.total_avaliacoes || 0;
 
     return `
-      <div style="padding: 12px; min-width: 220px; font-family: system-ui, -apple-system, sans-serif;">
-        <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #1f2937;">
+      <div style="
+        padding: 16px; 
+        min-width: 260px;
+        max-width: 280px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: linear-gradient(to bottom, #ffffff, #fafafa);
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      ">
+        <h3 style="
+          margin: 0 0 12px 0; 
+          font-size: 15px; 
+          font-weight: 700; 
+          color: #111827;
+          line-height: 1.4;
+          letter-spacing: -0.01em;
+        ">
           ${pharmacy.nome}
         </h3>
+        
         ${rating > 0 ? `
-          <div style="margin-bottom: 6px; font-size: 14px;">
-            <span style="color: #f59e0b;">${stars}</span>
-            <span style="color: #6b7280; margin-left: 4px;">${rating.toFixed(1)} (${reviewCount})</span>
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+            padding: 6px 10px;
+            background: #fffbeb;
+            border-radius: 8px;
+            border: 1px solid #fef3c7;
+          ">
+            <div style="display: flex; gap: 2px;">
+              ${Array(5).fill(0).map((_, i) => 
+                `<span style="color: ${i < Math.round(rating) ? '#f59e0b' : '#e5e7eb'}; font-size: 14px;">★</span>`
+              ).join('')}
+            </div>
+            <span style="
+              font-size: 13px; 
+              font-weight: 700; 
+              color: #78350f;
+              margin-left: 2px;
+            ">
+              ${rating.toFixed(1)}
+            </span>
+            <span style="
+              font-size: 12px; 
+              color: #92400e;
+            ">(${reviewCount})</span>
           </div>
         ` : ''}
+        
         ${pharmacy.horario_abertura && pharmacy.horario_fechamento ? `
-          <div style="margin-bottom: 4px; font-size: 13px; color: #4b5563;">
-            🕒 ${pharmacy.horario_abertura.slice(0, 5)} - ${pharmacy.horario_fechamento.slice(0, 5)}
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #4b5563;
+            padding: 4px 0;
+          ">
+            <span style="font-size: 14px;">🕒</span>
+            <span style="font-weight: 500;">
+              ${pharmacy.horario_abertura.slice(0, 5)} - ${pharmacy.horario_fechamento.slice(0, 5)}
+            </span>
           </div>
         ` : ''}
-        <div style="font-size: 13px; font-weight: 600; color: ${statusColor};">
-          ${statusLabel}
+        
+        <div style="
+          display: inline-flex;
+          align-items: center;
+          padding: 6px 12px;
+          border-radius: 6px;
+          background: ${statusBgColor};
+          border: 1.5px solid ${statusColor}33;
+        ">
+          <span style="
+            font-size: 13px; 
+            font-weight: 700; 
+            color: ${statusColor};
+            letter-spacing: 0.01em;
+          ">
+            ${statusLabel}
+          </span>
         </div>
       </div>
     `;
