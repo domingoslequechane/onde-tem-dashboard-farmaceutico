@@ -338,9 +338,9 @@ const Buscar = () => {
     if (map.current && userLocation) {
       map.current.flyTo({
         center: [userLocation.lng, userLocation.lat],
-        zoom: 16,
+        zoom: isNavigating ? 17.5 : 16,
         duration: 1000,
-        pitch: 45,
+        pitch: isNavigating ? 60 : 45,
       });
     }
   };
@@ -354,28 +354,30 @@ const Buscar = () => {
     // Fetch detailed route with steps
     try {
       const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${selectedMedicamento.farmacia_longitude},${selectedMedicamento.farmacia_latitude}?steps=true&banner_instructions=true&geometries=geojson&access_token=${mapboxToken}`
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${selectedMedicamento.farmacia_longitude},${selectedMedicamento.farmacia_latitude}?geometries=geojson&steps=true&banner_instructions=true&access_token=${mapboxToken}`
       );
+      
+      if (!response.ok) throw new Error('Failed to fetch route');
+      
       const data = await response.json();
-
-      if (data.routes && data.routes.length > 0 && map.current) {
+      
+      if (data.routes && data.routes.length > 0) {
         const route = data.routes[0];
-        const steps = route.legs[0]?.steps || [];
-        
-        // Set initial instruction
-        if (steps.length > 0) {
-          setCurrentInstruction(steps[0].maneuver?.instruction || 'Siga em frente');
-        }
-        
-        // Draw route with navigation styling
-        if (map.current.getLayer('route')) {
+        const steps = route.legs[0].steps;
+
+        // Remove existing route layers if any
+        if (map.current?.getLayer('route')) {
           map.current.removeLayer('route');
         }
-        if (map.current.getSource('route')) {
+        if (map.current?.getLayer('route-casing')) {
+          map.current.removeLayer('route-casing');
+        }
+        if (map.current?.getSource('route')) {
           map.current.removeSource('route');
         }
 
-        map.current.addSource('route', {
+        // Add route source and layer
+        map.current?.addSource('route', {
           type: 'geojson',
           data: {
             type: 'Feature',
@@ -384,7 +386,7 @@ const Buscar = () => {
           },
         });
 
-        map.current.addLayer({
+        map.current?.addLayer({
           id: 'route',
           type: 'line',
           source: 'route',
@@ -400,7 +402,7 @@ const Buscar = () => {
         });
 
         // Add route casing for better visibility
-        map.current.addLayer({
+        map.current?.addLayer({
           id: 'route-casing',
           type: 'line',
           source: 'route',
@@ -415,12 +417,22 @@ const Buscar = () => {
           },
         }, 'route');
 
-        // Change map style for navigation mode
-        map.current.setPitch(45);
-        map.current.flyTo({
+        // Change map style for navigation mode with higher pitch for 3D effect
+        map.current?.setPitch(60);
+        
+        // Calculate initial bearing
+        const initialBearing = calculateBearing(
+          userLocation.lat,
+          userLocation.lng,
+          selectedMedicamento.farmacia_latitude,
+          selectedMedicamento.farmacia_longitude
+        );
+        
+        map.current?.flyTo({
           center: [userLocation.lng, userLocation.lat],
-          zoom: 16,
-          duration: 1000,
+          zoom: 17.5,
+          bearing: initialBearing,
+          duration: 1500,
         });
 
         toast({
@@ -455,6 +467,14 @@ const Buscar = () => {
               );
               setDistanceToDestination(distToDest);
               
+              // Calculate bearing to destination for camera direction
+              const bearing = calculateBearing(
+                newPos.lat,
+                newPos.lng,
+                selectedMedicamento.farmacia_latitude,
+                selectedMedicamento.farmacia_longitude
+              );
+              
               // Update instruction based on current position
               let closestStep = steps[0];
               let minDist = 9999;
@@ -474,11 +494,12 @@ const Buscar = () => {
                 setCurrentInstruction(closestStep.maneuver.instruction);
               }
               
-              // Keep map centered on user
+              // Keep map centered on user with bearing following direction
               if (map.current) {
                 map.current.easeTo({
                   center: [newPos.lng, newPos.lat],
-                  duration: 500,
+                  bearing: bearing,
+                  duration: 1000,
                 });
               }
               
@@ -515,6 +536,16 @@ const Buscar = () => {
         duration: 3000,
       });
     }
+  };
+
+  // Calculate bearing between two points
+  const calculateBearing = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
+    const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+              Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
+    const bearing = Math.atan2(y, x) * 180 / Math.PI;
+    return (bearing + 360) % 360;
   };
 
   const stopNavigation = () => {
@@ -1316,48 +1347,63 @@ const Buscar = () => {
         <div className="flex-1 relative h-96 md:h-auto overflow-hidden">
           <div ref={mapContainer} className="absolute inset-0" />
           
-          {/* Navigation Mode UI */}
+          {/* Navigation Mode UI - Mapbox Style */}
           {isNavigating && selectedMedicamento && (
-            <div className="absolute top-0 left-0 right-0 z-20 p-3 animate-slide-in-right">
-              <Card className="bg-primary text-primary-foreground shadow-xl">
-                <div className="p-4 space-y-2">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-primary-foreground/20 rounded-full p-2 flex-shrink-0">
-                      <Navigation className="h-6 w-6" />
-                    </div>
+            <>
+              {/* Top Compact Instruction Card */}
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-sm animate-fade-in">
+                <Card className="bg-background/95 backdrop-blur-sm shadow-2xl border-2">
+                  <div className="p-3 flex items-center gap-3">
+                    <div className="text-3xl font-bold text-primary flex-shrink-0">↑</div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-lg font-bold mb-1">{currentInstruction}</p>
-                      <p className="text-sm opacity-90">Para {selectedMedicamento.farmacia_nome}</p>
+                      <p className="text-sm font-semibold truncate leading-tight">{currentInstruction}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{(distanceToDestination * 1000).toFixed(0)} m</p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between pt-2 border-t border-primary-foreground/20">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span className="font-bold">{(distanceToDestination * 1000).toFixed(0)} m</span>
+                </Card>
+              </div>
+
+              {/* Right Side Floating Circular Buttons */}
+              <div className="absolute top-1/2 -translate-y-1/2 right-4 z-20 flex flex-col gap-3 animate-fade-in">
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  onClick={recenterMap}
+                  className="h-12 w-12 rounded-full shadow-2xl bg-background hover:bg-background/90 border-2"
+                >
+                  <Navigation className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  onClick={stopNavigation}
+                  className="h-12 w-12 rounded-full shadow-2xl bg-background hover:bg-background/90 border-2"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* Bottom ETA Card */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-sm animate-fade-in">
+                <Card className="bg-background/95 backdrop-blur-sm shadow-2xl">
+                  <div className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tempo estimado</p>
+                      <p className="text-2xl font-bold">
+                        {Math.ceil(distanceToDestination * 60)} min
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={recenterMap}
-                        className="h-8"
-                      >
-                        Recentrar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={stopNavigation}
-                        className="h-8"
-                      >
-                        Parar
-                      </Button>
-                    </div>
+                    <Button
+                      variant="destructive"
+                      onClick={stopNavigation}
+                      className="rounded-full px-6 h-10"
+                    >
+                      Terminar
+                    </Button>
                   </div>
-                </div>
-              </Card>
-            </div>
+                </Card>
+              </div>
+            </>
           )}
           
           {/* Route Info - Desktop Only */}
