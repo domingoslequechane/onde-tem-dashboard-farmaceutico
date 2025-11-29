@@ -1399,8 +1399,8 @@ const Buscar = () => {
 
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
-      {/* Header - Hidden during navigation on mobile */}
-      <div className={`${isNavigating ? 'hidden md:flex' : 'flex'} items-center justify-between p-3 md:p-4 bg-card border-b border-border shadow-sm transition-all duration-300`}>
+      {/* Header - Always visible */}
+      <div className="flex items-center justify-between p-3 md:p-4 bg-card border-b border-border shadow-sm transition-all duration-300">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
           <Button
             variant="ghost"
@@ -1729,54 +1729,55 @@ const Buscar = () => {
           </Card>
         )}
 
-        {/* Navigation UI - Google Maps style */}
+        {/* Navigation UI - Improved layout */}
         {isNavigating && (
           <>
-            {/* Navigation Instructions Card */}
-            <Card className="absolute top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-lg bg-green-700 text-white p-4 shadow-xl z-20 animate-in fade-in slide-in-from-top-2 rounded-lg">
-              <div className="space-y-2">
+            {/* Navigation Instructions Card - Top */}
+            <Card className="absolute top-4 left-4 right-4 lg:left-1/2 lg:-translate-x-1/2 lg:max-w-2xl bg-green-700 text-white p-4 md:p-5 shadow-xl z-20 animate-in fade-in slide-in-from-top-2 rounded-xl">
+              <div className="space-y-3">
                 {/* Current Direction */}
                 <div className="flex items-start gap-3">
-                  <div className="text-4xl mt-1">↑</div>
+                  <div className="text-3xl md:text-4xl mt-1">↑</div>
                   <div className="flex-1">
-                    <div className="text-2xl font-bold leading-tight">{currentInstruction}</div>
+                    <div className="text-lg md:text-xl lg:text-2xl font-bold leading-tight">{currentInstruction}</div>
                   </div>
                 </div>
                 
                 {/* Next Direction */}
                 {nextInstruction && (
                   <div className="flex items-center gap-2 pt-2 border-t border-white/20">
-                    <span className="text-sm opacity-80">Depois</span>
-                    <span className="text-sm">↪</span>
-                    <span className="text-sm opacity-90">{nextInstruction}</span>
+                    <span className="text-xs md:text-sm opacity-80">Depois</span>
+                    <span className="text-sm md:text-base">↪</span>
+                    <span className="text-xs md:text-sm opacity-90">{nextInstruction}</span>
                   </div>
                 )}
               </div>
             </Card>
 
             {/* Control Buttons - Right side */}
-            <div className="absolute right-4 bottom-60 md:bottom-72 flex flex-col gap-3 z-30">
+            <div className="absolute right-4 bottom-60 md:bottom-64 lg:bottom-32 flex flex-col gap-3 z-30">
               {/* Recenter Button */}
               <Button
                 size="icon"
                 variant="secondary"
-                className="h-14 w-14 rounded-full shadow-lg bg-white hover:bg-gray-100"
+                className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-white hover:bg-gray-100"
                 onClick={recenterMap}
               >
-                <MapPin className="h-6 w-6 text-primary" />
+                <MapPin className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </Button>
             </div>
 
-            {/* Navigation Footer - Bottom with Trip Info and Pharmacy Details */}
-            <Card className="absolute bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-4 shadow-2xl z-30 rounded-t-2xl">
+            {/* Navigation Footer - Bottom card (mobile) / Side card (tablet/desktop) */}
+            <Card className="absolute bottom-0 left-0 right-0 lg:bottom-4 lg:left-auto lg:right-4 lg:w-96 lg:rounded-xl bg-white border-t-2 lg:border-2 border-gray-200 p-4 md:p-5 shadow-2xl z-30 rounded-t-2xl lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
               <div className="space-y-4">
-                {/* Close Button - Top Right */}
-                <div className="flex justify-end">
+                {/* Header with Close Button */}
+                <div className="flex justify-between items-center">
+                  <h3 className="text-base md:text-lg font-bold text-foreground">Navegação</h3>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={stopNavigation}
-                    className="text-sm font-medium"
+                    className="text-sm font-medium hover:bg-destructive/10 hover:text-destructive"
                   >
                     Fechar
                   </Button>
@@ -1784,35 +1785,39 @@ const Buscar = () => {
 
                 {/* Trip Info Section */}
                 <div className="space-y-3 pb-3 border-b border-border">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2">
-                      <div>
-                        <div className="text-xs font-semibold text-primary mb-1">A comprar:</div>
-                        <div className="flex flex-wrap gap-1">
-                          {medicamentosComprar.map((med, idx) => (
-                            <span key={idx} className="inline-block px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">
-                              {med}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-xs font-semibold text-foreground">Destino: </span>
-                        <span className="text-xs text-muted-foreground">{selectedMedicamento?.farmacia_nome}</span>
+                  {/* Medications to buy */}
+                  {medicamentosComprar.length > 0 && (
+                    <div>
+                      <div className="text-xs md:text-sm font-semibold text-primary mb-2">A comprar:</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {medicamentosComprar.map((med, idx) => (
+                          <span key={idx} className="inline-block px-2.5 py-1.5 bg-primary/10 text-primary rounded-lg text-xs md:text-sm font-medium">
+                            {med}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                    
-                    {/* Travel Time and Distance */}
-                    <div className="flex flex-col items-end shrink-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl md:text-3xl font-bold">{Math.round(distanceToDestination * 1000 / (selectedTravelMode === 'WALKING' ? 80 : 800))} min</span>
-                        <span className="text-xl">{selectedTravelMode === 'WALKING' ? '🚶' : '🚗'}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {Math.round(distanceToDestination * 1000)} m
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {arrivalTime}
+                  )}
+                  
+                  {/* Destination */}
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <div className="text-xs md:text-sm font-semibold text-muted-foreground mb-1">Destino:</div>
+                    <div className="text-sm md:text-base font-semibold text-foreground">{selectedMedicamento?.farmacia_nome}</div>
+                  </div>
+                </div>
+
+                {/* Travel Time and Distance - Prominent Display */}
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl md:text-5xl">{selectedTravelMode === 'WALKING' ? '🚶' : '🚗'}</span>
+                      <div>
+                        <div className="text-3xl md:text-4xl font-bold text-green-700">
+                          {Math.round(distanceToDestination * 1000 / (selectedTravelMode === 'WALKING' ? 80 : 800))} min
+                        </div>
+                        <div className="text-xs md:text-sm text-green-600 font-medium mt-1">
+                          {Math.round(distanceToDestination * 1000)} m • Chegada: {arrivalTime}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1823,8 +1828,8 @@ const Buscar = () => {
         )}
       </div>
 
-      {/* Footer - Hidden during navigation on mobile */}
-      <footer className={`${isNavigating ? 'hidden md:block' : 'block'} bg-card border-t border-border py-3 px-4 text-center text-xs md:text-sm text-muted-foreground transition-all duration-300`}>
+      {/* Footer - Always visible */}
+      <footer className="bg-card border-t border-border py-3 px-4 text-center text-xs md:text-sm text-muted-foreground transition-all duration-300">
         © {new Date().getFullYear()} ONDTem. by <a href="https://onixagence.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 font-medium transition-colors">Onix Agence</a>
       </footer>
 
