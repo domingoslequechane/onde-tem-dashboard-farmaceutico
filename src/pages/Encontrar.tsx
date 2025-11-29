@@ -1854,7 +1854,7 @@ const Buscar = () => {
         {/* Search Box - Hidden when pharmacy selected or during navigation */}
         {!selectedMedicamento && !isNavigating && (
           <div className="absolute top-2 left-2 right-2 md:left-auto md:top-2 md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card rounded-lg shadow-lg p-3 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
-            <h2 className="text-base md:text-lg font-bold mb-3 text-primary">Encontre ONDTem!</h2>
+            <h2 className="text-base md:text-lg font-bold mb-3 text-foreground">Encontre ONDTem!</h2>
             
             <div className="relative mb-3">
               <Input
