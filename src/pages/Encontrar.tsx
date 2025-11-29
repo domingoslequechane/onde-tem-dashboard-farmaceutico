@@ -103,12 +103,14 @@ const Buscar = () => {
   const [novoMedicamento, setNovoMedicamento] = useState('');
   const [showAddMedicationModal, setShowAddMedicationModal] = useState(false);
   const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>('WALKING');
+  const [searchStatus, setSearchStatus] = useState<'idle' | 'searching' | 'found' | 'not-found'>('idle');
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
   const destinationLocation = useRef<{ lat: number; lng: number } | null>(null);
   const lastAnnouncedDistance = useRef<number>(0);
   const hasAnnouncedTurn = useRef<boolean>(false);
+  const searchDebounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     checkLocationPermission();
@@ -638,30 +640,233 @@ const Buscar = () => {
     }
   };
 
+  // Real-time search with debounce
   useEffect(() => {
-    if (medicamento.trim().length > 0) {
-      const filtered = allMedicamentos.filter(med =>
-        med.nome.toLowerCase().includes(medicamento.toLowerCase())
-      );
-      
-      const uniqueNames = new Map<string, Medicamento>();
-      filtered.forEach(med => {
-        if (!uniqueNames.has(med.nome.toLowerCase())) {
-          uniqueNames.set(med.nome.toLowerCase(), med);
-        }
-      });
-      
-      setFilteredMedicamentos(Array.from(uniqueNames.values()));
-    } else {
-      const uniqueNames = new Map<string, Medicamento>();
-      allMedicamentos.forEach(med => {
-        if (!uniqueNames.has(med.nome.toLowerCase())) {
-          uniqueNames.set(med.nome.toLowerCase(), med);
-        }
-      });
-      setFilteredMedicamentos(Array.from(uniqueNames.values()));
+    // Clear previous timer
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current);
     }
-  }, [medicamento, allMedicamentos]);
+
+    // Reset if field is empty
+    if (medicamento.trim().length === 0) {
+      setMedicamentos([]);
+      setSearchStatus('idle');
+      setFilteredMedicamentos([]);
+      // Reload all pharmacies on map
+      if (map.current) {
+        loadAllPharmacies();
+      }
+      return;
+    }
+
+    // Filter suggestions
+    const filtered = allMedicamentos.filter(med =>
+      med.nome.toLowerCase().includes(medicamento.toLowerCase())
+    );
+    
+    const uniqueNames = new Map<string, Medicamento>();
+    filtered.forEach(med => {
+      if (!uniqueNames.has(med.nome.toLowerCase())) {
+        uniqueNames.set(med.nome.toLowerCase(), med);
+      }
+    });
+    
+    setFilteredMedicamentos(Array.from(uniqueNames.values()));
+
+    // Debounced search
+    searchDebounceTimer.current = setTimeout(() => {
+      handleAutoSearch();
+    }, 800);
+
+    return () => {
+      if (searchDebounceTimer.current) {
+        clearTimeout(searchDebounceTimer.current);
+      }
+    };
+  }, [medicamento, allMedicamentos, userLocation, raioKm]);
+
+  const handleAutoSearch = async () => {
+    if (!medicamento.trim() || !userLocation) return;
+
+    setSearchStatus('searching');
+
+    try {
+      // Clear existing markers
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current = [];
+
+      // Fetch medications matching the search
+      const { data: medData, error: medError } = await supabase
+        .from('medicamentos')
+        .select('id, nome')
+        .ilike('nome', `%${medicamento}%`);
+
+      if (medError) throw medError;
+
+      if (!medData || medData.length === 0) {
+        setMedicamentos([]);
+        setSearchStatus('not-found');
+        return;
+      }
+
+      // Fetch stock information with pharmacy details
+      const medicamentoIds = medData.map(m => m.id);
+      
+      const { data: stockData, error: stockError } = await supabase
+        .from('estoque')
+        .select(`
+          medicamento_id,
+          preco,
+          farmacias!inner (
+            id,
+            nome,
+            latitude,
+            longitude,
+            telefone,
+            whatsapp,
+            horario_abertura,
+            horario_fechamento,
+            bairro,
+            cidade
+          ),
+          medicamentos!inner (
+            id,
+            nome,
+            categoria
+          )
+        `)
+        .in('medicamento_id', medicamentoIds)
+        .eq('disponivel', true);
+
+      if (stockError) throw stockError;
+
+      // Process and calculate distances
+      const results: MedicamentoFarmacia[] = [];
+      
+      stockData?.forEach((item: any) => {
+        const farmacia = item.farmacias;
+        if (!farmacia.latitude || !farmacia.longitude) return;
+
+        const distance = calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          farmacia.latitude,
+          farmacia.longitude
+        );
+
+        if (distance <= raioKm) {
+          results.push({
+            medicamento_id: item.medicamento_id,
+            medicamento_nome: item.medicamentos.nome,
+            medicamento_categoria: item.medicamentos.categoria,
+            medicamento_preco: item.preco,
+            farmacia_id: farmacia.id,
+            farmacia_nome: farmacia.nome,
+            farmacia_endereco: `${farmacia.bairro || ''}, ${farmacia.cidade || ''}`.trim(),
+            farmacia_telefone: farmacia.telefone,
+            farmacia_whatsapp: farmacia.whatsapp,
+            farmacia_latitude: farmacia.latitude,
+            farmacia_longitude: farmacia.longitude,
+            farmacia_horario_abertura: farmacia.horario_abertura,
+            farmacia_horario_fechamento: farmacia.horario_fechamento,
+            distancia_km: distance,
+          });
+        }
+      });
+
+      // Fetch reviews for pharmacies
+      const farmaciaIds = results.map(r => r.farmacia_id);
+      if (farmaciaIds.length > 0) {
+        const { data: reviewsData } = await supabase
+          .from('avaliacoes')
+          .select('farmacia_id, avaliacao')
+          .in('farmacia_id', farmaciaIds);
+
+        if (reviewsData) {
+          const reviewsByFarmacia: Record<string, { sum: number; count: number }> = {};
+          
+          reviewsData.forEach(review => {
+            if (!reviewsByFarmacia[review.farmacia_id]) {
+              reviewsByFarmacia[review.farmacia_id] = { sum: 0, count: 0 };
+            }
+            reviewsByFarmacia[review.farmacia_id].sum += review.avaliacao;
+            reviewsByFarmacia[review.farmacia_id].count += 1;
+          });
+
+          results.forEach(result => {
+            const reviewInfo = reviewsByFarmacia[result.farmacia_id];
+            if (reviewInfo) {
+              result.media_avaliacoes = reviewInfo.sum / reviewInfo.count;
+              result.total_avaliacoes = reviewInfo.count;
+            }
+          });
+        }
+      }
+
+      // Sort by distance
+      results.sort((a, b) => a.distancia_km - b.distancia_km);
+
+      setMedicamentos(results);
+      setSearchStatus(results.length > 0 ? 'found' : 'not-found');
+
+      // Add pharmacy markers to map
+      if (map.current) {
+        results.forEach(item => {
+          const marker = new google.maps.Marker({
+            position: {
+              lat: item.farmacia_latitude,
+              lng: item.farmacia_longitude
+            },
+            map: map.current!,
+            icon: {
+              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
+                  <path fill="#10b981" stroke="#ffffff" stroke-width="2" d="M16,0 C24.8,0 32,7.2 32,16 C32,28 16,42 16,42 C16,42 0,28 0,16 C0,7.2 7.2,0 16,0 Z"/>
+                  <rect x="10.4" y="9.6" width="11.2" height="12.8" fill="#ffffff" rx="1"/>
+                  <rect x="14.4" y="11.2" width="3.2" height="9.6" fill="#10b981"/>
+                  <rect x="12" y="14.4" width="8" height="3.2" fill="#10b981"/>
+                </svg>
+              `),
+              scaledSize: new google.maps.Size(32, 42),
+              anchor: new google.maps.Point(16, 42),
+            },
+            title: item.farmacia_nome,
+            animation: google.maps.Animation.DROP
+          });
+
+          const infoWindow = new google.maps.InfoWindow({
+            content: createInfoWindowContent({
+              nome: item.farmacia_nome,
+              horario_abertura: item.farmacia_horario_abertura,
+              horario_fechamento: item.farmacia_horario_fechamento,
+              media_avaliacoes: item.media_avaliacoes,
+              total_avaliacoes: item.total_avaliacoes
+            })
+          });
+
+          infoWindowsRef.current.push(infoWindow);
+
+          marker.addListener('mouseover', () => {
+            infoWindowsRef.current.forEach(iw => iw.close());
+            infoWindow.open(map.current!, marker);
+          });
+
+          marker.addListener('mouseout', () => {
+            infoWindow.close();
+          });
+
+          marker.addListener('click', () => {
+            showRouteToPharmacy(item, 'walking');
+          });
+
+          markersRef.current.push(marker);
+        });
+      }
+    } catch (error) {
+      console.error('Error in auto search:', error);
+      setSearchStatus('idle');
+    }
+  };
 
   const checkLocationPermission = async () => {
     if ('permissions' in navigator) {
@@ -1653,10 +1858,10 @@ const Buscar = () => {
                   <button
                     key={radius}
                     onClick={() => setRaioKm(radius)}
-                    className={`px-2 py-1 rounded-md text-xs md:text-sm transition-colors ${
+                    className={`px-2 py-1 rounded-md text-xs md:text-sm font-medium transition-all duration-200 ${
                       raioKm === radius
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-white text-foreground hover:bg-gray-50 border border-border'
                     }`}
                   >
                     {radius}km
@@ -1664,6 +1869,43 @@ const Buscar = () => {
                 ))}
               </div>
             </div>
+
+            {/* Search Status Feedback */}
+            {medicamento.trim().length > 0 && searchStatus !== 'idle' && (
+              <div className={`mt-3 p-3 rounded-lg animate-in fade-in slide-in-from-top-2 ${
+                searchStatus === 'searching' ? 'bg-blue-50 border border-blue-200' :
+                searchStatus === 'found' ? 'bg-green-50 border border-green-200' :
+                'bg-red-50 border border-red-200'
+              }`}>
+                {searchStatus === 'searching' && (
+                  <div className="flex items-center gap-2 text-blue-700">
+                    <div className="h-4 w-4 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm font-medium">Buscando medicamentos...</span>
+                  </div>
+                )}
+                {searchStatus === 'found' && (
+                  <div className="flex items-center gap-2 text-green-700">
+                    <Search className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      {medicamentos.length} {medicamentos.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
+                    </span>
+                  </div>
+                )}
+                {searchStatus === 'not-found' && (
+                  <div className="text-center space-y-2">
+                    <div className="flex justify-center">
+                      <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
+                        <Search className="h-6 w-6 text-red-600" />
+                      </div>
+                    </div>
+                    <h4 className="font-bold text-red-900 text-sm md:text-base">Nenhum medicamento encontrado</h4>
+                    <p className="text-xs md:text-sm text-red-700">
+                      Não encontramos "{medicamento}" em farmácias próximas.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Search Results */}
             {medicamentos.length > 0 && (
