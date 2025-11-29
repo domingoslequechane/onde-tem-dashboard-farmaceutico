@@ -92,8 +92,12 @@ const Buscar = () => {
   const [walkingDuration, setWalkingDuration] = useState(0);
   const [drivingDuration, setDrivingDuration] = useState(0);
   const [currentInstruction, setCurrentInstruction] = useState<string>('');
+  const [nextInstruction, setNextInstruction] = useState<string>('');
   const [distanceToDestination, setDistanceToDestination] = useState<number>(0);
   const [distanceToNextStep, setDistanceToNextStep] = useState<number>(0);
+  const [arrivalTime, setArrivalTime] = useState<string>('');
+  const [showTravelModeDialog, setShowTravelModeDialog] = useState(false);
+  const [selectedTravelMode, setSelectedTravelMode] = useState<'WALKING' | 'DRIVING'>('WALKING');
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
@@ -902,11 +906,13 @@ const Buscar = () => {
     }
   };
 
-  const startNavigation = async () => {
+  const startNavigationWithMode = async (mode: 'WALKING' | 'DRIVING') => {
     if (!selectedMedicamento || !userLocation || !directionsService.current || !map.current) return;
     
+    setSelectedTravelMode(mode);
     setIsNavigating(true);
     setCurrentInstruction('Preparando navegação...');
+    setNextInstruction('');
     destinationLocation.current = {
       lat: selectedMedicamento.farmacia_latitude,
       lng: selectedMedicamento.farmacia_longitude
@@ -917,7 +923,7 @@ const Buscar = () => {
       const request: google.maps.DirectionsRequest = {
         origin: new google.maps.LatLng(userLocation.lat, userLocation.lng),
         destination: new google.maps.LatLng(selectedMedicamento.farmacia_latitude, selectedMedicamento.farmacia_longitude),
-        travelMode: google.maps.TravelMode.DRIVING,
+        travelMode: mode === 'WALKING' ? google.maps.TravelMode.WALKING : google.maps.TravelMode.DRIVING,
         provideRouteAlternatives: false
       };
 
@@ -942,10 +948,22 @@ const Buscar = () => {
             const firstStep = currentRouteSteps.current[0];
             setCurrentInstruction(firstStep.instructions?.replace(/<[^>]*>/g, '') || 'Siga em frente');
             
+            // Set next instruction
+            if (currentRouteSteps.current.length > 1) {
+              const secondStep = currentRouteSteps.current[1];
+              setNextInstruction(secondStep.instructions?.replace(/<[^>]*>/g, '') || '');
+            }
+            
             // Calculate distance to first step
             if (firstStep.distance) {
               setDistanceToNextStep(firstStep.distance.value);
             }
+          }
+
+          // Calculate arrival time
+          if (route.legs[0]?.duration) {
+            const arrivalDate = new Date(Date.now() + route.legs[0].duration.value * 1000);
+            setArrivalTime(arrivalDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
           }
 
           // Set navigation view - tilted and zoomed in
@@ -1042,6 +1060,14 @@ const Buscar = () => {
                           setCurrentInstruction(nextStep.instructions?.replace(/<[^>]*>/g, '') || 'Siga em frente');
                           playNavigationSound('turn');
                           
+                          // Update next instruction
+                          if (currentStepIndex.current < currentRouteSteps.current.length - 1) {
+                            const followingStep = currentRouteSteps.current[currentStepIndex.current + 1];
+                            setNextInstruction(followingStep.instructions?.replace(/<[^>]*>/g, '') || '');
+                          } else {
+                            setNextInstruction('');
+                          }
+                          
                           if (nextStep.distance) {
                             setDistanceToNextStep(nextStep.distance.value);
                           }
@@ -1095,7 +1121,10 @@ const Buscar = () => {
     
     setIsNavigating(false);
     setCurrentInstruction('');
+    setNextInstruction('');
     setDistanceToNextStep(0);
+    setDistanceToDestination(0);
+    setArrivalTime('');
     currentStepIndex.current = 0;
     currentRouteSteps.current = [];
     destinationLocation.current = null;
@@ -1105,6 +1134,17 @@ const Buscar = () => {
       map.current.setHeading(0);
       map.current.setZoom(14);
     }
+  };
+
+  const recenterMap = () => {
+    if (map.current && userLocation) {
+      map.current.setCenter(userLocation);
+      map.current.setZoom(18);
+    }
+  };
+
+  const handleStartNavigation = () => {
+    setShowTravelModeDialog(true);
   };
 
   const handleCallPharmacy = () => {
@@ -1282,15 +1322,9 @@ const Buscar = () => {
           </div>
         )}
 
-        {/* Pharmacy Info Card - Center positioned on mobile during navigation */}
-        {selectedMedicamento && (
-          <Card className={`
-            ${isNavigating 
-              ? 'fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96' 
-              : 'absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96'
-            } 
-            bg-card p-4 md:p-5 shadow-xl z-20 animate-in slide-in-from-bottom-5 duration-300
-          `}>
+        {/* Pharmacy Info Card - Hidden during navigation */}
+        {selectedMedicamento && !isNavigating && (
+          <Card className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card p-4 md:p-5 shadow-xl z-20 animate-in slide-in-from-bottom-5 duration-300">
             <div className="space-y-3">
               {/* Medication Name */}
               <div>
@@ -1353,82 +1387,118 @@ const Buscar = () => {
               )}
 
               {/* Action Buttons */}
-              {!isNavigating ? (
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowLeaveReview(true)}
-                  >
-                    Avaliar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowViewReviews(true)}
-                  >
-                    Avaliações
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCallPharmacy}
-                    disabled={!selectedMedicamento?.farmacia_telefone}
-                  >
-                    <Phone className="h-4 w-4 mr-1" />
-                    Ligar
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-primary hover:bg-primary/90"
-                    onClick={startNavigation}
-                  >
-                    <Navigation className="h-4 w-4 mr-1" />
-                    Iniciar Viagem
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3 pt-2">
-                  {/* Next Turn Instruction */}
-                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
-                    <div className="text-base font-bold text-primary mb-1">
-                      {currentInstruction}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Distância: {distanceToNextStep >= 1000 
-                        ? `${(distanceToNextStep / 1000).toFixed(2)} km` 
-                        : `${Math.round(distanceToNextStep)} m`}
-                    </div>
-                  </div>
-
-                  {/* Stop Navigation Button */}
-                  <Button
-                    variant="destructive"
-                    className="w-full"
-                    onClick={stopNavigation}
-                  >
-                    Parar Navegação
-                  </Button>
-                </div>
-              )}
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLeaveReview(true)}
+                >
+                  Avaliar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowViewReviews(true)}
+                >
+                  Avaliações
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCallPharmacy}
+                  disabled={!selectedMedicamento?.farmacia_telefone}
+                >
+                  <Phone className="h-4 w-4 mr-1" />
+                  Ligar
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90"
+                  onClick={handleStartNavigation}
+                >
+                  <Navigation className="h-4 w-4 mr-1" />
+                  Iniciar Viagem
+                </Button>
+              </div>
             </div>
           </Card>
         )}
 
-        {/* Navigation Instructions Card - Top center during navigation */}
-        {isNavigating && currentInstruction && (
-          <Card className="absolute top-4 left-1/2 -translate-x-1/2 bg-card/95 backdrop-blur-sm p-4 shadow-xl z-20 min-w-[280px] md:min-w-[350px] animate-in fade-in slide-in-from-top-2">
-            <div className="space-y-2">
-              <div className="text-lg md:text-xl font-bold text-primary">{currentInstruction}</div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span className="font-medium">
-                  {distanceToNextStep >= 1000 
-                    ? `${(distanceToNextStep / 1000).toFixed(2)} km` 
-                    : `${Math.round(distanceToNextStep)} m`}
-                </span>
+        {/* Navigation UI - Google Maps style */}
+        {isNavigating && (
+          <>
+            {/* Navigation Instructions Card - Top */}
+            <Card className="absolute top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-lg bg-green-700 text-white p-4 shadow-xl z-20 animate-in fade-in slide-in-from-top-2 rounded-lg">
+              <div className="space-y-2">
+                {/* Current Direction */}
+                <div className="flex items-start gap-3">
+                  <div className="text-4xl mt-1">↑</div>
+                  <div className="flex-1">
+                    <div className="text-2xl font-bold leading-tight">{currentInstruction}</div>
+                  </div>
+                </div>
+                
+                {/* Next Direction */}
+                {nextInstruction && (
+                  <div className="flex items-center gap-2 pt-2 border-t border-white/20">
+                    <span className="text-sm opacity-80">Depois</span>
+                    <span className="text-sm">↪</span>
+                    <span className="text-sm opacity-90">{nextInstruction}</span>
+                  </div>
+                )}
               </div>
+            </Card>
+
+            {/* Control Buttons - Right side */}
+            <div className="absolute right-4 bottom-32 flex flex-col gap-3 z-20">
+              {/* Recenter Button */}
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-14 w-14 rounded-full shadow-lg bg-white hover:bg-gray-100"
+                onClick={recenterMap}
+              >
+                <MapPin className="h-6 w-6 text-primary" />
+              </Button>
             </div>
-          </Card>
+
+            {/* Navigation Footer - Bottom */}
+            <Card className="absolute bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-4 shadow-2xl z-20 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                {/* Close Button */}
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-12 w-12 rounded-full"
+                  onClick={stopNavigation}
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+
+                {/* Travel Time and Distance */}
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl font-bold">{Math.round(distanceToDestination * 1000 / (selectedTravelMode === 'WALKING' ? 80 : 800))} min</span>
+                    <span className="text-xl">{selectedTravelMode === 'WALKING' ? '🚶' : '🚗'}</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {Math.round(distanceToDestination * 1000)} m • {arrivalTime}
+                  </div>
+                </div>
+
+                {/* Routes/Options Button */}
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-12 w-12 rounded-full"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                </Button>
+              </div>
+            </Card>
+          </>
         )}
       </div>
 
@@ -1508,6 +1578,53 @@ const Buscar = () => {
             >
               Ok
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Travel Mode Selection Dialog */}
+      <AlertDialog open={showTravelModeDialog} onOpenChange={setShowTravelModeDialog}>
+        <AlertDialogContent className="rounded-lg max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl text-center">Como você vai se dirigir?</AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-center">
+              Escolha o modo de transporte para traçar a melhor rota
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-16 text-lg justify-start gap-3"
+              onClick={() => {
+                setShowTravelModeDialog(false);
+                startNavigationWithMode('WALKING');
+              }}
+            >
+              <span className="text-3xl">🚶</span>
+              <span>A pé</span>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-16 text-lg justify-start gap-3"
+              onClick={() => {
+                setShowTravelModeDialog(false);
+                startNavigationWithMode('DRIVING');
+              }}
+            >
+              <span className="text-3xl">🚗</span>
+              <span>Veículo</span>
+            </Button>
+          </div>
+          <AlertDialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setShowTravelModeDialog(false)}
+              className="w-full"
+            >
+              Cancelar
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
