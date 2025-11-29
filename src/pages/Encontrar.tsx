@@ -1142,8 +1142,9 @@ const Buscar = () => {
             </div>
           )}
 
-          {/* Search Panel - Hidden on Mobile/Tablet when route is selected */}
-          <div className={`flex-1 flex flex-col transition-all duration-300 ${(selectedMedicamento && !isNavigating) ? 'hidden md:flex' : 'flex animate-fade-in'}`}>
+          {/* Search Panel - Hidden when navigation is active */}
+          {!isNavigating && (
+          <div className={`flex-1 flex flex-col transition-all duration-300 ${selectedMedicamento ? 'hidden md:flex' : 'flex animate-fade-in'}`}>
           {/* Search Header */}
           <div className="p-3 border-b border-border space-y-2">
             <h1 className="text-lg sm:text-xl font-bold truncate">Encontre ONDTem!</h1>
@@ -1350,6 +1351,7 @@ const Buscar = () => {
             ))}
           </div>
           </div>
+          )}
         </div>
 
         {/* Map */}
