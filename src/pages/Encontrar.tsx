@@ -66,7 +66,6 @@ const Buscar = () => {
   
   const [googleMapsKey, setGoogleMapsKey] = useState('');
   const [medicamento, setMedicamento] = useState('');
-  const [medicamentoTags, setMedicamentoTags] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [medicamentos, setMedicamentos] = useState<MedicamentoFarmacia[]>([]);
   const [searching, setSearching] = useState(false);
@@ -99,9 +98,6 @@ const Buscar = () => {
   const [distanceToNextStep, setDistanceToNextStep] = useState<number>(0);
   const [arrivalTime, setArrivalTime] = useState<string>('');
   const [selectedTravelMode, setSelectedTravelMode] = useState<'WALKING' | 'DRIVING'>('WALKING');
-  const [medicamentosComprar, setMedicamentosComprar] = useState<string[]>([]);
-  const [novoMedicamento, setNovoMedicamento] = useState('');
-  const [showAddMedicationModal, setShowAddMedicationModal] = useState(false);
   const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>('WALKING');
   const [searchStatus, setSearchStatus] = useState<'idle' | 'searching' | 'found' | 'not-found'>('idle');
   const navigationWatchId = useRef<number | null>(null);
@@ -1390,11 +1386,6 @@ const Buscar = () => {
   const startNavigationWithMode = async (mode: 'WALKING' | 'DRIVING') => {
     if (!selectedMedicamento || !userLocation || !directionsService.current || !map.current) return;
     
-    // Add current medication to list if not already there
-    if (selectedMedicamento && !medicamentosComprar.includes(selectedMedicamento.medicamento_nome)) {
-      setMedicamentosComprar([...medicamentosComprar, selectedMedicamento.medicamento_nome]);
-    }
-    
     setSelectedTravelMode(mode);
     setIsNavigating(true);
     setCurrentInstruction('Preparando navegação...');
@@ -1763,26 +1754,8 @@ const Buscar = () => {
     }
   };
 
-  const handleAddMedicamento = () => {
-    if (novoMedicamento.trim() && !medicamentosComprar.includes(novoMedicamento.trim())) {
-      setMedicamentosComprar([...medicamentosComprar, novoMedicamento.trim()]);
-      setNovoMedicamento('');
-    }
-  };
-
-  const handleRemoveMedicamento = (med: string) => {
-    setMedicamentosComprar(medicamentosComprar.filter(m => m !== med));
-  };
-
-  const handleAddMedicamentoTag = () => {
-    if (medicamento.trim() && !medicamentoTags.includes(medicamento.trim())) {
-      setMedicamentoTags([...medicamentoTags, medicamento.trim()]);
-      setMedicamento('');
-    }
-  };
-
-  const handleRemoveMedicamentoTag = (med: string) => {
-    setMedicamentoTags(medicamentoTags.filter(m => m !== med));
+  const handleClearSearch = () => {
+    setMedicamento('');
   };
 
   const handleTravelModePreview = async (mode: 'WALKING' | 'DRIVING') => {
@@ -1842,10 +1815,6 @@ const Buscar = () => {
     }
   };
 
-  const handleClearSearch = () => {
-    setMedicamento('');
-  };
-
   const handleCallPharmacy = () => {
     if (selectedMedicamento?.farmacia_telefone) {
       window.location.href = `tel:${selectedMedicamento.farmacia_telefone}`;
@@ -1887,51 +1856,24 @@ const Buscar = () => {
           <div className="absolute top-2 left-2 right-2 md:left-auto md:top-2 md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card rounded-lg shadow-lg p-3 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
             <h2 className="text-base md:text-lg font-bold mb-3 text-primary">Encontre ONDTem!</h2>
             
-            {/* Medication Tags */}
-            {medicamentoTags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-3">
-                {medicamentoTags.map((tag, idx) => (
-                  <div key={idx} className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs md:text-sm animate-in fade-in slide-in-from-left-2">
-                    <span>{tag}</span>
-                    <button
-                      onClick={() => handleRemoveMedicamentoTag(tag)}
-                      className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
             <div className="relative mb-3">
               <Input
                 type="text"
                 placeholder="Digite o medicamento..."
                 value={medicamento}
                 onChange={(e) => setMedicamento(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleBuscar()}
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
-                className="pr-16 text-sm md:text-base h-9 md:h-10"
+                className="pr-10 text-sm md:text-base h-9 md:h-10"
               />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                {medicamento && (
-                  <button
-                    onClick={handleClearSearch}
-                    className="hover:bg-accent rounded-full p-1 transition-colors"
-                  >
-                    <X className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                )}
+              {medicamento && (
                 <button
-                  onClick={handleAddMedicamentoTag}
-                  disabled={!medicamento.trim()}
-                  className="hover:bg-accent rounded-full p-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleClearSearch}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1 transition-colors"
                 >
-                  <Plus className="h-4 w-4 text-primary" />
+                  <X className="h-4 w-4 text-muted-foreground" />
                 </button>
-              </div>
+              )}
 
               {/* Autocomplete Suggestions */}
               {isInputFocused && medicamento.trim().length > 0 && filteredMedicamentos.length > 0 && (
@@ -1954,23 +1896,6 @@ const Buscar = () => {
                   ))}
                 </Card>
               )}
-            </div>
-
-            <div className="flex gap-2 items-center flex-wrap mb-3">
-              <Button 
-                onClick={handleBuscar} 
-                disabled={searching || !userLocation}
-                className="flex-1 min-w-[100px] text-sm md:text-base h-9 md:h-10"
-              >
-                {searching ? 'Buscando...' : 'Buscar'}
-              </Button>
-              <Button 
-                onClick={() => setShowAddMedicationModal(true)}
-                variant="outline"
-                className="text-sm md:text-base h-9 md:h-10 px-3"
-              >
-                + Medicamentos
-              </Button>
             </div>
 
             {/* Radius Filter Buttons */}
@@ -2062,7 +1987,7 @@ const Buscar = () => {
             )}
 
             {/* Recent Searches */}
-            {searchHistory.length > 0 && medicamento.trim().length === 0 && medicamentos.length === 0 && medicamentoTags.length === 0 && (
+            {searchHistory.length > 0 && medicamento.trim().length === 0 && medicamentos.length === 0 && (
               <div className="mt-2">
                 <h3 className="text-xs md:text-sm font-semibold mb-1 text-muted-foreground">Buscas Recentes</h3>
                 <div className="space-y-1">
@@ -2287,20 +2212,6 @@ const Buscar = () => {
 
                 {/* Trip Info Section */}
                 <div className="space-y-3 pb-3 border-b border-border">
-                  {/* Medications to buy */}
-                  {medicamentosComprar.length > 0 && (
-                    <div>
-                      <div className="text-xs md:text-sm font-semibold text-primary mb-2">A comprar:</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {medicamentosComprar.map((med, idx) => (
-                          <span key={idx} className="inline-block px-2.5 py-1.5 bg-primary/10 text-primary rounded-lg text-xs md:text-sm font-medium">
-                            {med}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
                   {/* Destination */}
                   <div className="bg-muted/50 rounded-lg p-3">
                     <div className="text-xs md:text-sm font-semibold text-muted-foreground mb-1">Destino:</div>
@@ -2409,74 +2320,6 @@ const Buscar = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Add Medications Modal */}
-      <AlertDialog open={showAddMedicationModal} onOpenChange={setShowAddMedicationModal}>
-        <AlertDialogContent className="rounded-lg max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl">Adicionar Medicamentos</AlertDialogTitle>
-            <AlertDialogDescription className="text-base">
-              Adicione os medicamentos que pretende comprar durante a viagem
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {/* Medications List */}
-            {medicamentosComprar.length > 0 && (
-              <div>
-                <label className="text-sm font-semibold mb-2 block">Medicamentos na lista:</label>
-                <div className="space-y-2">
-                  {medicamentosComprar.map((med, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 bg-accent rounded-md animate-in fade-in slide-in-from-left-2">
-                      <span className="text-sm">{med}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveMedicamento(med)}
-                        className="h-6 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        Remover
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Add Medication Input */}
-            <div>
-              <label className="text-sm font-semibold mb-2 block">Adicionar novo medicamento:</label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Nome do medicamento..."
-                  value={novoMedicamento}
-                  onChange={(e) => setNovoMedicamento(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddMedicamento()}
-                  className="flex-1 text-base md:text-sm"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleAddMedicamento}
-                  disabled={!novoMedicamento.trim()}
-                >
-                  Adicionar
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          <AlertDialogFooter>
-            <Button
-              onClick={() => setShowAddMedicationModal(false)}
-              className="w-full"
-            >
-              Concluído
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Travel Mode Selection Dialog - Removed, now using preview selection */}
     </div>
   );
 };
