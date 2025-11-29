@@ -11,17 +11,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const mapboxToken = Deno.env.get('MAPBOX_PUBLIC_TOKEN');
-    
-    if (!mapboxToken) {
-      return new Response(
-        JSON.stringify({ error: 'Mapbox token not configured' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    // Use the new Mapbox public token
+    const mapboxToken = 'pk.eyJ1Ijoib25peGFnZW5jZSIsImEiOiJjbWlqcjlodmYwaTV0M2ZzNDNwbzRibXF0In0.JDfeFv2UkDd5wdXCrwmW9w';
 
     return new Response(
       JSON.stringify({ token: mapboxToken }),
