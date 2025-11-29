@@ -1516,8 +1516,8 @@ const Buscar = () => {
             </div>
 
             {/* Radius Filter Buttons */}
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground">Raio de Busca:</label>
+            <div className="flex items-center gap-2 flex-wrap">
+              <label className="text-xs font-semibold text-muted-foreground whitespace-nowrap">Raio de Busca:</label>
               <div className="flex gap-1 flex-wrap">
                 {[1, 2, 4, 8, 16].map((radius) => (
                   <button
