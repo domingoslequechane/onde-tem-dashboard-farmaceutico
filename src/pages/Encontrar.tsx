@@ -2078,14 +2078,24 @@ const Buscar = () => {
         {selectedMedicamento && !isNavigating && (
           <Card className="absolute bottom-4 left-4 right-4 md:bottom-auto md:top-2 md:left-auto md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card p-3 shadow-xl z-10 animate-in slide-in-from-bottom-5 md:slide-in-from-right-5 duration-300">
             <div className="space-y-2">
-              {/* Medication name */}
-              <h3 className="text-base md:text-lg lg:text-xl font-bold text-primary">
-                {selectedMedicamento.medicamento_nome} - {selectedMedicamento.medicamento_preco.toFixed(2)} MT
-              </h3>
+              {/* Header with medication name and close button */}
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base md:text-lg lg:text-xl font-bold text-primary flex-1">
+                  {selectedMedicamento.medicamento_nome} - {selectedMedicamento.medicamento_preco.toFixed(2)} MT
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDeselectPharmacy}
+                  className="h-7 w-7 hover:bg-accent shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
 
-              {/* Pharmacy Name with Border - Single line */}
+              {/* Pharmacy Name with Border */}
               <div className="border-l-4 border-l-green-500 pl-2">
-                <p className="text-sm md:text-base lg:text-lg font-semibold text-foreground truncate">{selectedMedicamento.farmacia_nome}</p>
+                <p className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{selectedMedicamento.farmacia_nome}</p>
               </div>
 
               {/* Star Rating - No background */}
@@ -2341,6 +2351,13 @@ const Buscar = () => {
       <AlertDialog open={showArrivalModal} onOpenChange={handleCloseArrivalModal}>
         <AlertDialogContent className="sm:max-w-md w-[calc(100%-2rem)] mx-auto rounded-lg p-0 gap-0 overflow-hidden">
           <div className="relative">
+            <button
+              onClick={handleCloseArrivalModal}
+              className="absolute top-3 right-3 z-10 p-1 rounded-full bg-background/80 hover:bg-background transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
             <div className="p-6 space-y-4">
               {/* Medicamento e Preço - apenas se veio de uma busca */}
               {selectedMedicamento && (
@@ -2351,9 +2368,9 @@ const Buscar = () => {
                     </h3>
                   )}
 
-                  {/* Nome da Farmácia com borda verde - Single line */}
+                  {/* Nome da Farmácia com borda verde */}
                   <div className="border-l-4 border-green-600 pl-3 py-1">
-                    <p className="font-medium text-foreground text-base uppercase truncate">
+                    <p className="font-medium text-foreground text-base uppercase">
                       {selectedMedicamento.farmacia_nome}
                     </p>
                   </div>
