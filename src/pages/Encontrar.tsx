@@ -1427,13 +1427,13 @@ const Buscar = () => {
         {/* Search Box - Hidden when pharmacy selected or during navigation */}
         {!selectedMedicamento && !isNavigating && (
           <div className="absolute top-2 left-2 right-2 md:left-auto md:w-96 bg-card rounded-lg shadow-lg p-3 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
-            <h2 className="text-lg md:text-xl font-bold mb-3 text-primary">Encontre ONDTem!</h2>
+            <h2 className="text-base md:text-lg lg:text-xl font-bold mb-3 text-primary">Encontre ONDTem!</h2>
             
             {/* Medication Tags */}
             {medicamentoTags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">
                 {medicamentoTags.map((tag, idx) => (
-                  <div key={idx} className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs animate-in fade-in slide-in-from-left-2">
+                  <div key={idx} className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs md:text-sm animate-in fade-in slide-in-from-left-2">
                     <span>{tag}</span>
                     <button
                       onClick={() => handleRemoveMedicamentoTag(tag)}
@@ -1455,7 +1455,7 @@ const Buscar = () => {
                 onKeyPress={(e) => e.key === 'Enter' && handleBuscar()}
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
-                className="pr-16 text-sm h-9"
+                className="pr-16 text-sm md:text-base h-9 md:h-10"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 {medicamento && (
@@ -1488,9 +1488,9 @@ const Buscar = () => {
                         setTimeout(() => handleBuscar(), 100);
                       }}
                     >
-                      <div className="font-medium text-sm">{med.nome}</div>
+                      <div className="font-medium text-sm md:text-base">{med.nome}</div>
                       {med.categoria && (
-                        <div className="text-xs text-muted-foreground">{med.categoria}</div>
+                        <div className="text-xs md:text-sm text-muted-foreground">{med.categoria}</div>
                       )}
                     </div>
                   ))}
@@ -1502,14 +1502,14 @@ const Buscar = () => {
               <Button 
                 onClick={handleBuscar} 
                 disabled={searching || !userLocation}
-                className="flex-1 min-w-[100px] text-sm h-9"
+                className="flex-1 min-w-[100px] text-sm md:text-base h-9 md:h-10"
               >
                 {searching ? 'Buscando...' : 'Buscar'}
               </Button>
               <Button 
                 onClick={() => setShowAddMedicationModal(true)}
                 variant="outline"
-                className="text-sm h-9 px-3"
+                className="text-sm md:text-base h-9 md:h-10 px-3"
               >
                 + Medicamentos
               </Button>
@@ -1517,13 +1517,13 @@ const Buscar = () => {
 
             {/* Radius Filter Buttons */}
             <div className="flex items-center gap-2 flex-wrap">
-              <label className="text-xs font-semibold text-muted-foreground whitespace-nowrap">Raio de Busca:</label>
+              <label className="text-xs md:text-sm font-semibold text-muted-foreground whitespace-nowrap">Raio de Busca:</label>
               <div className="flex gap-1 flex-wrap">
                 {[1, 2, 4, 8, 16].map((radius) => (
                   <button
                     key={radius}
                     onClick={() => setRaioKm(radius)}
-                    className={`px-2 py-1 rounded-md text-xs transition-colors ${
+                    className={`px-2 py-1 rounded-md text-xs md:text-sm transition-colors ${
                       raioKm === radius
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
@@ -1546,19 +1546,19 @@ const Buscar = () => {
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm text-foreground truncate">{item.medicamento_nome}</h3>
-                        <p className="text-xs text-muted-foreground truncate">{item.farmacia_nome}</p>
+                        <h3 className="font-semibold text-sm md:text-base text-foreground truncate">{item.medicamento_nome}</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground truncate">{item.farmacia_nome}</p>
                       </div>
                       <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                        <span className="text-sm font-bold text-green-600">{item.medicamento_preco.toFixed(2)} MT</span>
-                        <span className="text-xs text-green-600 font-medium">{item.distancia_km.toFixed(1)}km</span>
+                        <span className="text-sm md:text-base font-bold text-green-600">{item.medicamento_preco.toFixed(2)} MT</span>
+                        <span className="text-xs md:text-sm text-green-600 font-medium">{item.distancia_km.toFixed(1)}km</span>
                       </div>
                     </div>
                     {item.media_avaliacoes !== undefined && (
                       <div className="flex items-center gap-0.5 mt-1">
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs font-medium">{item.media_avaliacoes.toFixed(1)}</span>
-                        <span className="text-xs text-muted-foreground">({item.total_avaliacoes})</span>
+                        <span className="text-xs md:text-sm font-medium">{item.media_avaliacoes.toFixed(1)}</span>
+                        <span className="text-xs md:text-sm text-muted-foreground">({item.total_avaliacoes})</span>
                       </div>
                     )}
                   </Card>
@@ -1569,7 +1569,7 @@ const Buscar = () => {
             {/* Recent Searches */}
             {searchHistory.length > 0 && medicamento.trim().length === 0 && medicamentos.length === 0 && medicamentoTags.length === 0 && (
               <div className="mt-2">
-                <h3 className="text-xs font-semibold mb-1 text-muted-foreground">Buscas Recentes</h3>
+                <h3 className="text-xs md:text-sm font-semibold mb-1 text-muted-foreground">Buscas Recentes</h3>
                 <div className="space-y-1">
                   {searchHistory.slice(0, 3).map((item, index) => (
                     <div
@@ -1577,7 +1577,7 @@ const Buscar = () => {
                       className="flex items-center justify-between p-1.5 hover:bg-accent rounded-md cursor-pointer group transition-colors"
                     >
                       <span
-                        className="flex-1 text-xs"
+                        className="flex-1 text-xs md:text-sm"
                         onClick={() => {
                           setMedicamento(item);
                           setTimeout(() => handleBuscar(), 100);
