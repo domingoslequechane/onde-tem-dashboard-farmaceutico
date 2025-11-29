@@ -155,7 +155,7 @@ const Buscar = () => {
       const mapInstance = new google.maps.Map(mapContainer.current, {
         center: { lat: -25.9655, lng: 32.5892 },
         zoom: 13,
-        mapTypeId: 'hybrid', // Satellite view with labels
+        mapTypeId: 'roadmap', // Standard Maps view
         mapTypeControl: true, // Allow switching between map types
         fullscreenControl: true, // Allow fullscreen
         streetViewControl: true, // Allow street view
@@ -278,9 +278,90 @@ const Buscar = () => {
             animation: google.maps.Animation.DROP
           });
 
-          marker.addListener('click', () => {
+          marker.addListener('click', async () => {
             console.log('Pharmacy clicked:', pharmacy.nome);
-            // You can add click functionality here if needed
+            
+            // Fetch complete pharmacy data and available medications
+            try {
+              const { data: farmaciaData, error: farmaciaError } = await supabase
+                .from('farmacias')
+                .select('*')
+                .eq('id', pharmacy.id)
+                .single();
+
+              if (farmaciaError) throw farmaciaError;
+
+              // Fetch available medications at this pharmacy
+              const { data: stockData, error: stockError } = await supabase
+                .from('estoque')
+                .select(`
+                  medicamento_id,
+                  preco,
+                  medicamentos!inner (
+                    id,
+                    nome,
+                    categoria
+                  )
+                `)
+                .eq('farmacia_id', pharmacy.id)
+                .eq('disponivel', true)
+                .limit(1);
+
+              if (stockError) throw stockError;
+
+              if (stockData && stockData.length > 0 && userLocation) {
+                const medication = stockData[0];
+                const distance = calculateDistance(
+                  userLocation.lat,
+                  userLocation.lng,
+                  farmaciaData.latitude,
+                  farmaciaData.longitude
+                );
+
+                // Fetch reviews
+                const { data: reviewsData } = await supabase
+                  .from('avaliacoes')
+                  .select('avaliacao')
+                  .eq('farmacia_id', pharmacy.id);
+
+                let mediaAvaliacoes: number | undefined;
+                let totalAvaliacoes: number | undefined;
+
+                if (reviewsData && reviewsData.length > 0) {
+                  const sum = reviewsData.reduce((acc, r) => acc + r.avaliacao, 0);
+                  mediaAvaliacoes = sum / reviewsData.length;
+                  totalAvaliacoes = reviewsData.length;
+                }
+
+                const item: MedicamentoFarmacia = {
+                  medicamento_id: medication.medicamento_id,
+                  medicamento_nome: medication.medicamentos.nome,
+                  medicamento_categoria: medication.medicamentos.categoria,
+                  medicamento_preco: medication.preco,
+                  farmacia_id: farmaciaData.id,
+                  farmacia_nome: farmaciaData.nome,
+                  farmacia_endereco: `${farmaciaData.bairro || ''}, ${farmaciaData.cidade || ''}`.trim(),
+                  farmacia_telefone: farmaciaData.telefone,
+                  farmacia_whatsapp: farmaciaData.whatsapp,
+                  farmacia_latitude: farmaciaData.latitude,
+                  farmacia_longitude: farmaciaData.longitude,
+                  farmacia_horario_abertura: farmaciaData.horario_abertura,
+                  farmacia_horario_fechamento: farmaciaData.horario_fechamento,
+                  distancia_km: distance,
+                  media_avaliacoes: mediaAvaliacoes,
+                  total_avaliacoes: totalAvaliacoes,
+                };
+
+                showRouteToPharmacy(item, 'walking');
+              }
+            } catch (error) {
+              console.error('Error fetching pharmacy details:', error);
+              toast({
+                title: 'Erro',
+                description: 'Não foi possível carregar os detalhes da farmácia',
+                variant: 'destructive',
+              });
+            }
           });
 
           markersRef.current.push(marker);
@@ -1223,11 +1304,10 @@ const Buscar = () => {
 
               {/* Action Buttons */}
               {!isNavigating ? (
-                <div className="flex gap-2 pt-2">
+                <div className="grid grid-cols-2 gap-2 pt-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
                     onClick={() => setShowLeaveReview(true)}
                   >
                     Avaliar
@@ -1235,14 +1315,22 @@ const Buscar = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
                     onClick={() => setShowViewReviews(true)}
                   >
                     Avaliações
                   </Button>
                   <Button
+                    variant="outline"
                     size="sm"
-                    className="flex-1 bg-primary hover:bg-primary/90"
+                    onClick={handleCallPharmacy}
+                    disabled={!selectedMedicamento?.farmacia_telefone}
+                  >
+                    <Phone className="h-4 w-4 mr-1" />
+                    Ligar
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90"
                     onClick={startNavigation}
                   >
                     <Navigation className="h-4 w-4 mr-1" />
