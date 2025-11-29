@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader } from '@googlemaps/js-api-loader';
+import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -134,14 +134,14 @@ const Buscar = () => {
     if (!googleMapsKey || !mapContainer.current) return;
 
     try {
-      const loader = new Loader({
-        apiKey: googleMapsKey,
-        version: 'weekly',
-        libraries: ['geometry', 'places']
+      // Configure Google Maps options
+      setOptions({
+        key: googleMapsKey,
+        v: 'weekly',
       });
 
-      // Load the Google Maps script
-      await loader.load();
+      // Load the maps library
+      await importLibrary('maps');
 
       // Now google.maps is available globally
       const mapInstance = new google.maps.Map(mapContainer.current, {
