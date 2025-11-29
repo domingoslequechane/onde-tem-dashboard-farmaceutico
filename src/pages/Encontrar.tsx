@@ -4,7 +4,7 @@ import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X, Clock, Star, Navigation, Plus } from 'lucide-react';
+import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X, Clock, Star, Navigation, Plus, Compass } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
@@ -142,14 +142,23 @@ const Buscar = () => {
 
   // Adjust map zoom when radius changes
   useEffect(() => {
-    if (!map.current || !userLocation || !radiusCircleRef.current) return;
+    if (!map.current || !userLocation) return;
 
-    const bounds = new google.maps.LatLngBounds();
-    const circleBounds = radiusCircleRef.current.getBounds();
-    if (circleBounds) {
-      bounds.union(circleBounds);
-      map.current.fitBounds(bounds);
-    }
+    // Adjust zoom based on radius
+    const zoomLevels: { [key: number]: number } = {
+      1: 15,
+      2: 14,
+      4: 13,
+      8: 12,
+      16: 11
+    };
+    
+    const targetZoom = zoomLevels[raioKm] || 13;
+    map.current.setZoom(targetZoom);
+    map.current.panTo(userLocation);
+    
+    // Update circle
+    updateRadiusCircle(userLocation);
   }, [raioKm]);
 
   const initializeMap = async () => {
@@ -433,12 +442,6 @@ const Buscar = () => {
       center: location,
       radius: raioKm * 1000
     });
-
-    // Fit bounds to circle with animation
-    const bounds = radiusCircleRef.current.getBounds();
-    if (bounds) {
-      map.current.fitBounds(bounds);
-    }
   };
 
   const fetchGoogleMapsKey = async () => {
@@ -1510,8 +1513,11 @@ const Buscar = () => {
               >
                 + Medicamentos
               </Button>
-              
-              {/* Radius Filter Buttons */}
+            </div>
+
+            {/* Radius Filter Buttons */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-muted-foreground">Raio de Busca:</label>
               <div className="flex gap-1 flex-wrap">
                 {[1, 2, 4, 8, 16].map((radius) => (
                   <button
@@ -1678,14 +1684,15 @@ const Buscar = () => {
                   variant="default"
                   size="sm"
                   onClick={() => setShowTravelModeDialog(true)}
-                  className="text-xs h-7 px-3 ml-auto bg-green-600 hover:bg-green-700"
+                  className="text-xs h-7 px-3 ml-auto bg-green-600 hover:bg-green-700 flex items-center gap-1"
                 >
+                  <Compass className="h-3 w-3" />
                   Iniciar
                 </Button>
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-1.5 pt-1">
+              <div className="grid grid-cols-3 gap-1.5 pt-1">
                 <Button
                   variant="outline"
                   size="sm"
@@ -1701,6 +1708,26 @@ const Buscar = () => {
                   onClick={() => setShowViewReviews(true)}
                 >
                   Avaliações
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    if (selectedMedicamento?.farmacia_telefone) {
+                      window.location.href = `tel:${selectedMedicamento.farmacia_telefone}`;
+                    } else {
+                      toast({
+                        title: 'Telefone indisponível',
+                        description: 'Esta farmácia não tem número de telefone cadastrado.',
+                        variant: 'destructive',
+                        duration: 3000,
+                      });
+                    }
+                  }}
+                >
+                  <Phone className="h-3 w-3 mr-1" />
+                  Ligar
                 </Button>
               </div>
             </div>
