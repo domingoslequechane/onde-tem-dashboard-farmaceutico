@@ -319,7 +319,6 @@ const Buscar = () => {
     updateRadiusCircle(location);
   };
 
-  // Create InfoWindow content for pharmacy
   const createInfoWindowContent = (pharmacy: { 
     nome: string; 
     horario_abertura?: string | null; 
@@ -375,66 +374,76 @@ const Buscar = () => {
           <div style="
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin-bottom: 10px;
-            padding: 6px 10px;
-            background: #fffbeb;
-            border-radius: 8px;
-            border: 1px solid #fef3c7;
+            gap: 8px;
+            margin-bottom: 12px;
           ">
             <div style="display: flex; gap: 2px;">
               ${Array(5).fill(0).map((_, i) => 
-                `<span style="color: ${i < Math.round(rating) ? '#f59e0b' : '#e5e7eb'}; font-size: 14px;">★</span>`
+                `<span style="color: ${i < Math.round(rating) ? '#f59e0b' : '#e5e7eb'}; font-size: 18px;">★</span>`
               ).join('')}
             </div>
             <span style="
-              font-size: 13px; 
+              font-size: 15px; 
               font-weight: 700; 
-              color: #78350f;
-              margin-left: 2px;
+              color: #111827;
             ">
               ${rating.toFixed(1)}
             </span>
             <span style="
-              font-size: 12px; 
-              color: #92400e;
+              font-size: 13px; 
+              color: #6b7280;
             ">(${reviewCount})</span>
           </div>
         ` : ''}
         
-        ${pharmacy.horario_abertura && pharmacy.horario_fechamento ? `
+        <div style="margin-bottom: 8px;">
           <div style="
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: #4b5563;
-            padding: 4px 0;
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
           ">
             <span style="font-size: 14px;">🕒</span>
-            <span style="font-weight: 500;">
-              ${pharmacy.horario_abertura.slice(0, 5)} - ${pharmacy.horario_fechamento.slice(0, 5)}
-            </span>
+            <span style="font-weight: 500;">Horário de funcionamento</span>
           </div>
-        ` : ''}
-        
-        <div style="
-          display: inline-flex;
-          align-items: center;
-          padding: 6px 12px;
-          border-radius: 6px;
-          background: ${statusBgColor};
-          border: 1.5px solid ${statusColor}33;
-        ">
-          <span style="
-            font-size: 13px; 
-            font-weight: 700; 
-            color: ${statusColor};
-            letter-spacing: 0.01em;
-          ">
-            ${statusLabel}
-          </span>
+          
+          ${pharmacy.horario_abertura && pharmacy.horario_fechamento ? `
+            <div style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 8px;
+            ">
+              <span style="
+                font-size: 14px;
+                font-weight: 600;
+                color: #111827;
+              ">
+                ${pharmacy.horario_abertura.slice(0, 5)} - ${pharmacy.horario_fechamento.slice(0, 5)}
+              </span>
+              <span style="
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 10px;
+                border-radius: 9999px;
+                background: ${statusBgColor};
+                font-size: 12px; 
+                font-weight: 700; 
+                color: ${statusColor};
+              ">
+                ${isOpen ? '✓' : '✕'} ${statusLabel}
+              </span>
+            </div>
+          ` : `
+            <span style="
+              font-size: 13px;
+              color: #9ca3af;
+              font-style: italic;
+            ">Não disponível</span>
+          `}
         </div>
       </div>
     `;
@@ -2091,12 +2100,12 @@ const Buscar = () => {
 
               {/* Star Rating - No background */}
               {selectedMedicamento.media_avaliacoes !== undefined && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   <div className="flex items-center gap-0.5">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-3.5 w-3.5 md:h-4 md:w-4 ${
+                        className={`h-5 w-5 ${
                           i < Math.round(selectedMedicamento.media_avaliacoes!)
                             ? 'fill-yellow-400 text-yellow-400'
                             : 'text-gray-300'
@@ -2104,37 +2113,37 @@ const Buscar = () => {
                       />
                     ))}
                   </div>
-                  <span className="text-xs md:text-sm font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
-                  <span className="text-[10px] md:text-xs text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
+                  <span className="text-base md:text-lg font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
                 </div>
               )}
               
               {/* Operating Hours with status on same line */}
-              <div className="space-y-0.5">
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-xs md:text-sm font-medium">Horário de funcionamento</span>
+                </div>
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <Clock className="h-3 w-3 md:h-3.5 md:w-3.5" />
-                    <span className="text-[10px] md:text-xs">Horário de funcionamento:</span>
-                  </div>
+                  <p className="text-sm md:text-base font-semibold text-foreground">
+                    {selectedMedicamento.farmacia_horario_abertura && selectedMedicamento.farmacia_horario_fechamento
+                      ? `${selectedMedicamento.farmacia_horario_abertura.slice(0, 5)} - ${selectedMedicamento.farmacia_horario_fechamento.slice(0, 5)}`
+                      : 'Não disponível'}
+                  </p>
                   {(() => {
                     const { isOpen, label } = isPharmacyOpen();
                     return (
-                      <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] md:text-xs font-medium ${
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
                         isOpen 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-red-100 text-red-700'
                       }`}>
-                        {isOpen ? <Check className="h-2.5 w-2.5 md:h-3 md:w-3" /> : <X className="h-2.5 w-2.5 md:h-3 md:w-3" />}
+                        {isOpen ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                         {label}
                       </span>
                     );
                   })()}
                 </div>
-                <p className="text-xs md:text-sm font-medium text-foreground ml-4 md:ml-5">
-                  {selectedMedicamento.farmacia_horario_abertura && selectedMedicamento.farmacia_horario_fechamento
-                    ? `${selectedMedicamento.farmacia_horario_abertura} - ${selectedMedicamento.farmacia_horario_fechamento}`
-                    : 'Não disponível'}
-                </p>
               </div>
 
               {/* Travel Metrics in One Line */}
@@ -2369,7 +2378,7 @@ const Buscar = () => {
                   {/* Rating (se disponível) */}
                   {selectedMedicamento.media_avaliacoes !== undefined && selectedMedicamento.media_avaliacoes > 0 && (
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
                             key={star}
