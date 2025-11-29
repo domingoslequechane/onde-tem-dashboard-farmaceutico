@@ -923,11 +923,6 @@ const Buscar = () => {
 
   const handleBuscar = async () => {
     if (!medicamento.trim() || !userLocation) {
-      toast({
-        title: 'Atenção',
-        description: 'Por favor, insira o nome do medicamento e permita o acesso à localização',
-        variant: 'destructive',
-      });
       return;
     }
 
@@ -948,11 +943,6 @@ const Buscar = () => {
       if (medError) throw medError;
 
       if (!medData || medData.length === 0) {
-        toast({
-          title: 'Medicamento não encontrado',
-          description: 'Não foram encontradas farmácias com este medicamento',
-          variant: 'destructive',
-        });
         setMedicamentos([]);
         setSearching(false);
         return;
@@ -1116,21 +1106,8 @@ const Buscar = () => {
         
         console.log(`Added ${results.length} pharmacy markers to map`);
       }
-
-      if (results.length === 0) {
-        toast({
-          title: 'Nenhuma farmácia encontrada',
-          description: `Não há farmácias com ${medicamento} em um raio de ${raioKm}km`,
-          variant: 'destructive',
-        });
-      }
     } catch (error) {
       console.error('Error searching medications:', error);
-      toast({
-        title: 'Erro na busca',
-        description: 'Ocorreu um erro ao buscar medicamentos',
-        variant: 'destructive',
-      });
     } finally {
       setSearching(false);
     }
