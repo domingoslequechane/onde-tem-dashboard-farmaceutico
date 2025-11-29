@@ -4,7 +4,7 @@ import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X, Clock, Star, Navigation } from 'lucide-react';
+import { Search, MapPin, Phone, ArrowLeft, AlertCircle, X, Clock, Star, Navigation, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
@@ -65,6 +65,7 @@ const Buscar = () => {
   
   const [googleMapsKey, setGoogleMapsKey] = useState('');
   const [medicamento, setMedicamento] = useState('');
+  const [medicamentoTags, setMedicamentoTags] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [medicamentos, setMedicamentos] = useState<MedicamentoFarmacia[]>([]);
   const [searching, setSearching] = useState(false);
@@ -168,8 +169,8 @@ const Buscar = () => {
         mapTypeId: 'roadmap', // Standard Maps view
         mapTypeControl: true, // Allow switching between map types
         fullscreenControl: true, // Allow fullscreen
-        streetViewControl: true, // Allow street view
-        zoomControl: true,
+        streetViewControl: false, // Hide street view control
+        zoomControl: false, // Hide zoom controls
         scaleControl: true, // Show scale information
         gestureHandling: 'greedy', // Enable single-finger panning
         styles: [
@@ -1275,6 +1276,21 @@ const Buscar = () => {
     setMedicamentosComprar(medicamentosComprar.filter(m => m !== med));
   };
 
+  const handleAddMedicamentoTag = () => {
+    if (medicamento.trim() && !medicamentoTags.includes(medicamento.trim())) {
+      setMedicamentoTags([...medicamentoTags, medicamento.trim()]);
+      setMedicamento('');
+    }
+  };
+
+  const handleRemoveMedicamentoTag = (med: string) => {
+    setMedicamentoTags(medicamentoTags.filter(m => m !== med));
+  };
+
+  const handleClearSearch = () => {
+    setMedicamento('');
+  };
+
   const handleCallPharmacy = () => {
     if (selectedMedicamento?.farmacia_telefone) {
       window.location.href = `tel:${selectedMedicamento.farmacia_telefone}`;
@@ -1329,10 +1345,27 @@ const Buscar = () => {
 
         {/* Search Box - Hidden when pharmacy selected or during navigation */}
         {!selectedMedicamento && !isNavigating && (
-          <div className="absolute top-4 left-4 right-4 md:left-auto md:w-96 bg-card rounded-lg shadow-lg p-3 md:p-4 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
-            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-primary">Encontre ONDTem!</h2>
+          <div className="absolute top-2 left-2 right-2 md:left-auto md:w-96 bg-card rounded-lg shadow-lg p-2 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
+            <h2 className="text-lg md:text-xl font-bold mb-2 text-primary">Encontre ONDTem!</h2>
             
-            <div className="relative mb-3">
+            {/* Medication Tags */}
+            {medicamentoTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {medicamentoTags.map((tag, idx) => (
+                  <div key={idx} className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs animate-in fade-in slide-in-from-left-2">
+                    <span>{tag}</span>
+                    <button
+                      onClick={() => handleRemoveMedicamentoTag(tag)}
+                      className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="relative mb-2">
               <Input
                 type="text"
                 placeholder="Digite o medicamento..."
@@ -1341,26 +1374,42 @@ const Buscar = () => {
                 onKeyPress={(e) => e.key === 'Enter' && handleBuscar()}
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
-                className="pr-10 text-base md:text-sm"
+                className="pr-16 text-sm h-9"
               />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {medicamento && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="hover:bg-accent rounded-full p-1 transition-colors"
+                  >
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                )}
+                <button
+                  onClick={handleAddMedicamentoTag}
+                  disabled={!medicamento.trim()}
+                  className="hover:bg-accent rounded-full p-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="h-4 w-4 text-primary" />
+                </button>
+              </div>
 
               {/* Autocomplete Suggestions */}
               {isInputFocused && medicamento.trim().length > 0 && filteredMedicamentos.length > 0 && (
-                <Card className="absolute top-full left-0 right-0 mt-2 max-h-60 overflow-y-auto z-20 animate-in fade-in slide-in-from-top-2">
+                <Card className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto z-20 animate-in fade-in slide-in-from-top-2">
                   {filteredMedicamentos.slice(0, 5).map((med) => (
                     <div
                       key={med.id}
-                      className="p-3 hover:bg-accent cursor-pointer transition-colors"
+                      className="p-2 hover:bg-accent cursor-pointer transition-colors"
                       onClick={() => {
                         setMedicamento(med.nome);
                         setIsInputFocused(false);
                         setTimeout(() => handleBuscar(), 100);
                       }}
                     >
-                      <div className="font-medium text-sm md:text-base">{med.nome}</div>
+                      <div className="font-medium text-sm">{med.nome}</div>
                       {med.categoria && (
-                        <div className="text-xs text-muted-foreground mt-1">{med.categoria}</div>
+                        <div className="text-xs text-muted-foreground">{med.categoria}</div>
                       )}
                     </div>
                   ))}
@@ -1372,14 +1421,14 @@ const Buscar = () => {
               <Button 
                 onClick={handleBuscar} 
                 disabled={searching || !userLocation}
-                className="flex-1 text-base md:text-sm h-10 md:h-9"
+                className="flex-1 text-sm h-8"
               >
                 {searching ? 'Buscando...' : 'Buscar'}
               </Button>
               <Button 
                 onClick={() => setShowAddMedicationModal(true)}
                 variant="outline"
-                className="text-base md:text-sm h-10 md:h-9 px-3"
+                className="text-sm h-8 px-2"
               >
                 + Medicamentos
               </Button>
@@ -1387,32 +1436,27 @@ const Buscar = () => {
 
             {/* Search Results */}
             {medicamentos.length > 0 && (
-              <div className="mt-4 max-h-80 overflow-y-auto space-y-2">
+              <div className="mt-2 max-h-60 overflow-y-auto space-y-1.5">
                 {medicamentos.map((item, index) => (
                   <Card
                     key={`${item.farmacia_id}-${index}`}
-                    className="p-3 cursor-pointer hover:shadow-md transition-all duration-200 bg-green-50 border-l-4 border-l-green-500"
+                    className="p-2 cursor-pointer hover:shadow-md transition-all duration-200 bg-green-50 border-l-2 border-l-green-500"
                     onClick={() => showRouteToPharmacy(item, 'walking')}
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-base text-foreground truncate">{item.medicamento_nome}</h3>
-                        <p className="text-sm text-muted-foreground truncate">{item.farmacia_nome}</p>
+                        <h3 className="font-semibold text-sm text-foreground truncate">{item.medicamento_nome}</h3>
+                        <p className="text-xs text-muted-foreground truncate">{item.farmacia_nome}</p>
                       </div>
-                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                        <span className="text-lg font-bold text-green-600">{item.medicamento_preco.toFixed(2)} MT</span>
-                        <span className="text-sm text-green-600 font-medium">{item.distancia_km.toFixed(1)}km</span>
+                      <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                        <span className="text-sm font-bold text-green-600">{item.medicamento_preco.toFixed(2)} MT</span>
+                        <span className="text-xs text-green-600 font-medium">{item.distancia_km.toFixed(1)}km</span>
                       </div>
                     </div>
-                    {item.medicamento_categoria && (
-                      <span className="inline-block mt-2 px-2 py-1 text-xs bg-accent text-accent-foreground rounded-md">
-                        {item.medicamento_categoria}
-                      </span>
-                    )}
                     {item.media_avaliacoes !== undefined && (
-                      <div className="flex items-center gap-1 mt-2">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{item.media_avaliacoes.toFixed(1)}</span>
+                      <div className="flex items-center gap-0.5 mt-1">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        <span className="text-xs font-medium">{item.media_avaliacoes.toFixed(1)}</span>
                         <span className="text-xs text-muted-foreground">({item.total_avaliacoes})</span>
                       </div>
                     )}
@@ -1422,17 +1466,17 @@ const Buscar = () => {
             )}
 
             {/* Recent Searches */}
-            {searchHistory.length > 0 && medicamento.trim().length === 0 && medicamentos.length === 0 && (
-              <div className="mt-4">
-                <h3 className="text-sm font-semibold mb-2 text-muted-foreground">Buscas Recentes</h3>
+            {searchHistory.length > 0 && medicamento.trim().length === 0 && medicamentos.length === 0 && medicamentoTags.length === 0 && (
+              <div className="mt-2">
+                <h3 className="text-xs font-semibold mb-1 text-muted-foreground">Buscas Recentes</h3>
                 <div className="space-y-1">
-                  {searchHistory.map((item, index) => (
+                  {searchHistory.slice(0, 3).map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-2 hover:bg-accent rounded-md cursor-pointer group transition-colors"
+                      className="flex items-center justify-between p-1.5 hover:bg-accent rounded-md cursor-pointer group transition-colors"
                     >
                       <span
-                        className="flex-1 text-sm"
+                        className="flex-1 text-xs"
                         onClick={() => {
                           setMedicamento(item);
                           setTimeout(() => handleBuscar(), 100);
@@ -1443,13 +1487,13 @@ const Buscar = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 px-2 text-xs"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-5 px-1 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
                           removeFromSearchHistory(item);
                         }}
                       >
-                        Remover
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   ))}
