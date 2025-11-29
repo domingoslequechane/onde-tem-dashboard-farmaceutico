@@ -62,6 +62,7 @@ const Buscar = () => {
   const radiusCircleRef = useRef<google.maps.Circle | null>(null);
   const directionsRenderer = useRef<google.maps.DirectionsRenderer | null>(null);
   const directionsService = useRef<google.maps.DirectionsService | null>(null);
+  const infoWindowsRef = useRef<google.maps.InfoWindow[]>([]);
   
   const [googleMapsKey, setGoogleMapsKey] = useState('');
   const [medicamento, setMedicamento] = useState('');
@@ -272,6 +273,59 @@ const Buscar = () => {
     updateRadiusCircle(location);
   };
 
+  // Create InfoWindow content for pharmacy
+  const createInfoWindowContent = (pharmacy: { 
+    nome: string; 
+    horario_abertura?: string | null; 
+    horario_fechamento?: string | null;
+    media_avaliacoes?: number;
+    total_avaliacoes?: number;
+  }) => {
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    let isOpen = false;
+    let statusLabel = 'Horário não disponível';
+    let statusColor = '#6b7280';
+    
+    if (pharmacy.horario_abertura && pharmacy.horario_fechamento) {
+      const [openHour, openMin] = pharmacy.horario_abertura.split(':').map(Number);
+      const [closeHour, closeMin] = pharmacy.horario_fechamento.split(':').map(Number);
+      const openTime = openHour * 60 + openMin;
+      const closeTime = closeHour * 60 + closeMin;
+      
+      isOpen = currentTime >= openTime && currentTime < closeTime;
+      statusLabel = isOpen ? 'Aberto' : 'Fechado';
+      statusColor = isOpen ? '#10b981' : '#ef4444';
+    }
+
+    const rating = pharmacy.media_avaliacoes || 0;
+    const stars = '⭐'.repeat(Math.round(rating));
+    const reviewCount = pharmacy.total_avaliacoes || 0;
+
+    return `
+      <div style="padding: 12px; min-width: 220px; font-family: system-ui, -apple-system, sans-serif;">
+        <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #1f2937;">
+          ${pharmacy.nome}
+        </h3>
+        ${rating > 0 ? `
+          <div style="margin-bottom: 6px; font-size: 14px;">
+            <span style="color: #f59e0b;">${stars}</span>
+            <span style="color: #6b7280; margin-left: 4px;">${rating.toFixed(1)} (${reviewCount})</span>
+          </div>
+        ` : ''}
+        ${pharmacy.horario_abertura && pharmacy.horario_fechamento ? `
+          <div style="margin-bottom: 4px; font-size: 13px; color: #4b5563;">
+            🕒 ${pharmacy.horario_abertura.slice(0, 5)} - ${pharmacy.horario_fechamento.slice(0, 5)}
+          </div>
+        ` : ''}
+        <div style="font-size: 13px; font-weight: 600; color: ${statusColor};">
+          ${statusLabel}
+        </div>
+      </div>
+    `;
+  };
+
   const loadAllPharmacies = async () => {
     if (!map.current) return;
 
@@ -289,13 +343,32 @@ const Buscar = () => {
 
       console.log(`Found ${pharmacies?.length || 0} pharmacies in database`);
 
-      // Clear existing markers
+      // Clear existing markers and info windows
       markersRef.current.forEach(marker => marker.setMap(null));
       markersRef.current = [];
+      infoWindowsRef.current.forEach(infoWindow => infoWindow.close());
+      infoWindowsRef.current = [];
 
       // Add markers for all pharmacies
       if (pharmacies && pharmacies.length > 0) {
-        pharmacies.forEach(pharmacy => {
+        pharmacies.forEach(async (pharmacy) => {
+          // Fetch complete pharmacy data for info window
+          const { data: fullData } = await supabase
+            .from('farmacias')
+            .select('*')
+            .eq('id', pharmacy.id)
+            .single();
+
+          // Fetch ratings
+          const { data: avaliacoes } = await supabase
+            .from('avaliacoes')
+            .select('avaliacao')
+            .eq('farmacia_id', pharmacy.id);
+
+          const media_avaliacoes = avaliacoes && avaliacoes.length > 0
+            ? avaliacoes.reduce((sum, a) => sum + a.avaliacao, 0) / avaliacoes.length
+            : 0;
+
           const marker = new google.maps.Marker({
             position: {
               lat: Number(pharmacy.latitude),
@@ -304,20 +377,54 @@ const Buscar = () => {
             map: map.current!,
             icon: {
               url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
-                  <path fill="#10b981" stroke="#ffffff" stroke-width="2" d="M20,0 C31,0 40,9 40,20 C40,35 20,52 20,52 C20,52 0,35 0,20 C0,9 9,0 20,0 Z"/>
-                  <rect x="13" y="12" width="14" height="16" fill="#ffffff" rx="1"/>
-                  <rect x="18" y="14" width="4" height="12" fill="#10b981"/>
-                  <rect x="15" y="18" width="10" height="4" fill="#10b981"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="78" viewBox="0 0 60 78">
+                  <path fill="#10b981" stroke="#ffffff" stroke-width="3" d="M30,0 C46.5,0 60,13.5 60,30 C60,52.5 30,78 30,78 C30,78 0,52.5 0,30 C0,13.5 13.5,0 30,0 Z"/>
+                  <rect x="19.5" y="18" width="21" height="24" fill="#ffffff" rx="2"/>
+                  <rect x="27" y="21" width="6" height="18" fill="#10b981"/>
+                  <rect x="22.5" y="27" width="15" height="6" fill="#10b981"/>
                 </svg>
               `),
-              scaledSize: new google.maps.Size(40, 52),
-              anchor: new google.maps.Point(20, 52),
+              scaledSize: new google.maps.Size(60, 78),
+              anchor: new google.maps.Point(30, 78),
+              labelOrigin: new google.maps.Point(30, 85),
             },
             title: pharmacy.nome,
+            label: {
+              text: pharmacy.nome,
+              color: '#1f2937',
+              fontSize: '12px',
+              fontWeight: '600',
+              className: 'pharmacy-marker-label'
+            },
             animation: google.maps.Animation.DROP
           });
 
+          // Create InfoWindow
+          const infoWindow = new google.maps.InfoWindow({
+            content: createInfoWindowContent({
+              nome: pharmacy.nome,
+              horario_abertura: fullData?.horario_abertura,
+              horario_fechamento: fullData?.horario_fechamento,
+              media_avaliacoes: media_avaliacoes,
+              total_avaliacoes: avaliacoes?.length || 0
+            })
+          });
+
+          infoWindowsRef.current.push(infoWindow);
+
+          // Show InfoWindow on hover
+          marker.addListener('mouseover', () => {
+            // Close all other info windows
+            infoWindowsRef.current.forEach(iw => iw.close());
+            infoWindow.open(map.current!, marker);
+          });
+
+          // Close InfoWindow on mouseout
+          marker.addListener('mouseout', () => {
+            infoWindow.close();
+          });
+
+          // Show on click and select pharmacy
           marker.addListener('click', async () => {
             console.log('Pharmacy clicked:', pharmacy.nome);
             
@@ -753,18 +860,51 @@ const Buscar = () => {
             map: map.current!,
             icon: {
               url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
-                  <path fill="#26a74d" stroke="#ffffff" stroke-width="2" d="M20,0 C31,0 40,9 40,20 C40,35 20,52 20,52 C20,52 0,35 0,20 C0,9 9,0 20,0 Z"/>
-                  <rect x="13" y="12" width="14" height="16" fill="#ffffff" rx="1"/>
-                  <rect x="18" y="14" width="4" height="12" fill="#26a74d"/>
-                  <rect x="15" y="18" width="10" height="4" fill="#26a74d"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="78" viewBox="0 0 60 78">
+                  <path fill="#10b981" stroke="#ffffff" stroke-width="3" d="M30,0 C46.5,0 60,13.5 60,30 C60,52.5 30,78 30,78 C30,78 0,52.5 0,30 C0,13.5 13.5,0 30,0 Z"/>
+                  <rect x="19.5" y="18" width="21" height="24" fill="#ffffff" rx="2"/>
+                  <rect x="27" y="21" width="6" height="18" fill="#10b981"/>
+                  <rect x="22.5" y="27" width="15" height="6" fill="#10b981"/>
                 </svg>
               `),
-              scaledSize: new google.maps.Size(40, 52),
-              anchor: new google.maps.Point(20, 52),
+              scaledSize: new google.maps.Size(60, 78),
+              anchor: new google.maps.Point(30, 78),
+              labelOrigin: new google.maps.Point(30, 85),
             },
             title: item.farmacia_nome,
+            label: {
+              text: item.farmacia_nome,
+              color: '#1f2937',
+              fontSize: '12px',
+              fontWeight: '600',
+              className: 'pharmacy-marker-label'
+            },
             animation: google.maps.Animation.DROP
+          });
+
+          // Create InfoWindow
+          const infoWindow = new google.maps.InfoWindow({
+            content: createInfoWindowContent({
+              nome: item.farmacia_nome,
+              horario_abertura: item.farmacia_horario_abertura,
+              horario_fechamento: item.farmacia_horario_fechamento,
+              media_avaliacoes: item.media_avaliacoes,
+              total_avaliacoes: item.total_avaliacoes
+            })
+          });
+
+          infoWindowsRef.current.push(infoWindow);
+
+          // Show InfoWindow on hover
+          marker.addListener('mouseover', () => {
+            // Close all other info windows
+            infoWindowsRef.current.forEach(iw => iw.close());
+            infoWindow.open(map.current!, marker);
+          });
+
+          // Close InfoWindow on mouseout
+          marker.addListener('mouseout', () => {
+            infoWindow.close();
           });
 
           marker.addListener('click', () => {
