@@ -2341,13 +2341,6 @@ const Buscar = () => {
       <AlertDialog open={showArrivalModal} onOpenChange={handleCloseArrivalModal}>
         <AlertDialogContent className="sm:max-w-md w-[calc(100%-2rem)] mx-auto rounded-lg p-0 gap-0 overflow-hidden">
           <div className="relative">
-            <button
-              onClick={handleCloseArrivalModal}
-              className="absolute top-3 right-3 z-10 p-1 rounded-full bg-background/80 hover:bg-background transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-
             <div className="p-6 space-y-4">
               {/* Medicamento e Preço - apenas se veio de uma busca */}
               {selectedMedicamento && (
@@ -2358,9 +2351,9 @@ const Buscar = () => {
                     </h3>
                   )}
 
-                  {/* Nome da Farmácia com borda verde */}
+                  {/* Nome da Farmácia com borda verde - Single line */}
                   <div className="border-l-4 border-green-600 pl-3 py-1">
-                    <p className="font-medium text-foreground text-base uppercase">
+                    <p className="font-medium text-foreground text-base uppercase truncate">
                       {selectedMedicamento.farmacia_nome}
                     </p>
                   </div>
