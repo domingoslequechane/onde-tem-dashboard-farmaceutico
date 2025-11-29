@@ -124,10 +124,19 @@ const Buscar = () => {
   }, [locationPermission]);
 
   useEffect(() => {
-    if (googleMapsKey && mapContainer.current && !map.current) {
+    // Only initialize if we have a valid API key (non-empty string)
+    if (googleMapsKey && googleMapsKey.trim().length > 0 && mapContainer.current && !map.current) {
+      console.log('Valid Google Maps key detected, initializing map...');
       initializeMap();
+    } else if (googleMapsKey === '' && !loadingToken) {
+      console.error('Google Maps key is empty after loading');
+      toast({
+        title: 'Erro de Configuração',
+        description: 'Chave do Google Maps não está configurada corretamente.',
+        variant: 'destructive',
+      });
     }
-  }, [googleMapsKey]);
+  }, [googleMapsKey, loadingToken]);
 
   // Adjust map zoom when radius changes
   useEffect(() => {
@@ -142,14 +151,23 @@ const Buscar = () => {
   }, [raioKm]);
 
   const initializeMap = async () => {
-    if (!googleMapsKey || !mapContainer.current) return;
+    // Strict validation before initialization
+    if (!googleMapsKey || googleMapsKey.trim().length === 0) {
+      console.error('Cannot initialize map: Google Maps key is missing or empty');
+      return;
+    }
+    
+    if (!mapContainer.current) {
+      console.error('Cannot initialize map: Map container ref is null');
+      return;
+    }
 
     try {
-      console.log('Initializing Google Maps with key:', googleMapsKey?.substring(0, 10) + '...');
+      console.log('Initializing Google Maps with key:', googleMapsKey.substring(0, 10) + '...');
       
-      // Configure Google Maps options
+      // Configure Google Maps options with validated key
       setOptions({
-        key: googleMapsKey,
+        key: googleMapsKey.trim(),
         v: 'weekly',
       });
 
@@ -387,7 +405,10 @@ const Buscar = () => {
         title: 'Erro ao carregar farmácias',
         description: 'Não foi possível carregar as farmácias no mapa.',
         variant: 'destructive',
+        duration: 5000,
       });
+    } finally {
+      setLoadingToken(false);
     }
   };
 
@@ -419,15 +440,29 @@ const Buscar = () => {
   };
 
   const fetchGoogleMapsKey = async () => {
+    setLoadingToken(true);
     try {
+      console.log('Fetching Google Maps API key...');
       const { data, error } = await supabase.functions.invoke('get-google-maps-key');
-      if (error) throw error;
-      setGoogleMapsKey(data.key);
+      
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
+      if (!data || !data.key || data.key.trim().length === 0) {
+        console.error('Received empty or invalid API key from server');
+        throw new Error('API key inválida ou vazia');
+      }
+      
+      console.log('Google Maps API key received successfully');
+      setGoogleMapsKey(data.key.trim());
     } catch (error) {
       console.error('Error fetching Google Maps key:', error);
+      setGoogleMapsKey(''); // Set empty to trigger error handling
       toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar a chave do Google Maps',
+        title: 'Erro de Configuração',
+        description: 'Não foi possível carregar a chave do Google Maps. Contacte o suporte.',
         variant: 'destructive',
       });
     } finally {
