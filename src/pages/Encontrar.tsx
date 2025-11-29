@@ -4,7 +4,7 @@ import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass } from 'lucide-react';
+import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.svg';
@@ -2089,39 +2089,52 @@ const Buscar = () => {
                 <p className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{selectedMedicamento.farmacia_nome}</p>
               </div>
 
-              {/* Star Rating and Operating Hours - Combined */}
-              <div className="flex items-center justify-between gap-2">
-                {selectedMedicamento.media_avaliacoes !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <div className="flex items-center gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3.5 w-3.5 md:h-4 md:w-4 ${
-                            i < Math.round(selectedMedicamento.media_avaliacoes!)
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs md:text-sm font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
-                    <span className="text-[10px] md:text-xs text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
+              {/* Star Rating - No background */}
+              {selectedMedicamento.media_avaliacoes !== undefined && (
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-3.5 w-3.5 md:h-4 md:w-4 ${
+                          i < Math.round(selectedMedicamento.media_avaliacoes!)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
                   </div>
-                )}
-                
-                {/* Operating Hours */}
-                {(() => {
-                  const { isOpen, label } = isPharmacyOpen();
-                  return (
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3 md:h-3.5 md:w-3.5 text-muted-foreground" />
-                      <span className={`text-xs md:text-sm font-semibold ${isOpen ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className="text-xs md:text-sm font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
+                  <span className="text-[10px] md:text-xs text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
+                </div>
+              )}
+              
+              {/* Operating Hours with status on same line */}
+              <div className="space-y-0.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Clock className="h-3 w-3 md:h-3.5 md:w-3.5" />
+                    <span className="text-[10px] md:text-xs">Horário de funcionamento:</span>
+                  </div>
+                  {(() => {
+                    const { isOpen, label } = isPharmacyOpen();
+                    return (
+                      <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] md:text-xs font-medium ${
+                        isOpen 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {isOpen ? <Check className="h-2.5 w-2.5 md:h-3 md:w-3" /> : <X className="h-2.5 w-2.5 md:h-3 md:w-3" />}
                         {label}
                       </span>
-                    </div>
-                  );
-                })()}
+                    );
+                  })()}
+                </div>
+                <p className="text-xs md:text-sm font-medium text-foreground ml-4 md:ml-5">
+                  {selectedMedicamento.farmacia_horario_abertura && selectedMedicamento.farmacia_horario_fechamento
+                    ? `${selectedMedicamento.farmacia_horario_abertura} - ${selectedMedicamento.farmacia_horario_fechamento}`
+                    : 'Não disponível'}
+                </p>
               </div>
 
               {/* Travel Metrics in One Line */}
