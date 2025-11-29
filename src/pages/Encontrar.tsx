@@ -247,9 +247,20 @@ const Buscar = () => {
   const updateMapWithUserLocation = (location: { lat: number; lng: number }) => {
     if (!map.current) return;
 
+    // Adjust zoom based on radius (default 1km = zoom 15)
+    const zoomLevels: { [key: number]: number } = {
+      1: 15,
+      2: 14,
+      4: 13,
+      8: 12,
+      16: 11
+    };
+    
+    const targetZoom = zoomLevels[raioKm] || 15;
+    
     // Center map on user location
     map.current.setCenter(location);
-    map.current.setZoom(14);
+    map.current.setZoom(targetZoom);
 
     // Create or update user marker
     if (!userMarkerRef.current) {
