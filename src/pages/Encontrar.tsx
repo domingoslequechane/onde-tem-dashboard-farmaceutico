@@ -365,57 +365,80 @@ const Buscar = () => {
         const route = data.routes[0];
         const steps = route.legs[0].steps;
 
-        // Remove existing route layers if any
-        if (map.current?.getLayer('route')) {
-          map.current.removeLayer('route');
+        console.log('Route data received:', route);
+
+        if (!map.current) {
+          console.error('Map not initialized');
+          throw new Error('Map not initialized');
         }
-        if (map.current?.getLayer('route-casing')) {
+
+        // Remove existing route layers if any
+        if (map.current.getLayer('route-casing')) {
           map.current.removeLayer('route-casing');
         }
-        if (map.current?.getSource('route')) {
+        if (map.current.getLayer('route')) {
+          map.current.removeLayer('route');
+        }
+        if (map.current.getSource('route')) {
           map.current.removeSource('route');
         }
 
-        // Add route source and layer
-        map.current?.addSource('route', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: route.geometry,
-          },
-        });
+        // Wait for map to be loaded
+        const addRouteToMap = () => {
+          if (!map.current) return;
 
-        map.current?.addLayer({
-          id: 'route',
-          type: 'line',
-          source: 'route',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#4F46E5',
-            'line-width': 8,
-            'line-opacity': 0.9,
-          },
-        });
+          // Add route source
+          map.current.addSource('route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: route.geometry,
+            },
+          });
 
-        // Add route casing for better visibility
-        map.current?.addLayer({
-          id: 'route-casing',
-          type: 'line',
-          source: 'route',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#1E1B4B',
-            'line-width': 12,
-            'line-opacity': 0.4,
-          },
-        }, 'route');
+          // Add route casing (border) first - this goes underneath
+          map.current.addLayer({
+            id: 'route-casing',
+            type: 'line',
+            source: 'route',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round',
+            },
+            paint: {
+              'line-color': '#1a1a1a',
+              'line-width': 10,
+              'line-opacity': 0.5,
+            },
+          });
+
+          // Add main route line on top
+          map.current.addLayer({
+            id: 'route',
+            type: 'line',
+            source: 'route',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round',
+            },
+            paint: {
+              'line-color': '#3b82f6',
+              'line-width': 6,
+              'line-opacity': 1,
+            },
+          });
+
+          console.log('Route layers added successfully');
+        };
+
+        // Check if map is already loaded
+        if (map.current.isStyleLoaded()) {
+          addRouteToMap();
+        } else {
+          // Wait for style to load
+          map.current.once('styledata', addRouteToMap);
+        }
 
         // Change map style for navigation mode with higher pitch for 3D effect
         map.current?.setPitch(60);
@@ -557,14 +580,22 @@ const Buscar = () => {
     setCurrentInstruction('');
     setDistanceToDestination(0);
     
-    // Reset map view
+    // Reset map view and remove route
     if (map.current) {
       map.current.setPitch(0);
       
-      // Remove route casing if exists
+      // Remove all route layers and source
+      if (map.current.getLayer('route')) {
+        map.current.removeLayer('route');
+      }
       if (map.current.getLayer('route-casing')) {
         map.current.removeLayer('route-casing');
       }
+      if (map.current.getSource('route')) {
+        map.current.removeSource('route');
+      }
+
+      console.log('Route layers removed');
     }
     
     toast({
