@@ -338,9 +338,9 @@ const Buscar = () => {
     if (map.current && userLocation) {
       map.current.flyTo({
         center: [userLocation.lng, userLocation.lat],
-        zoom: isNavigating ? 17.5 : 16,
+        zoom: 16,
         duration: 1000,
-        pitch: isNavigating ? 60 : 45,
+        pitch: 45,
       });
     }
   };
@@ -354,28 +354,20 @@ const Buscar = () => {
     // Fetch detailed route with steps
     try {
       const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${selectedMedicamento.farmacia_longitude},${selectedMedicamento.farmacia_latitude}?geometries=geojson&steps=true&banner_instructions=true&access_token=${mapboxToken}`
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.lng},${userLocation.lat};${selectedMedicamento.farmacia_longitude},${selectedMedicamento.farmacia_latitude}?steps=true&banner_instructions=true&geometries=geojson&access_token=${mapboxToken}`
       );
-      
-      if (!response.ok) throw new Error('Failed to fetch route');
-      
       const data = await response.json();
-      
-      if (data.routes && data.routes.length > 0) {
+
+      if (data.routes && data.routes.length > 0 && map.current) {
         const route = data.routes[0];
-        const steps = route.legs[0].steps;
-
-        console.log('Route data received:', route);
-
-        if (!map.current) {
-          console.error('Map not initialized');
-          throw new Error('Map not initialized');
+        const steps = route.legs[0]?.steps || [];
+        
+        // Set initial instruction
+        if (steps.length > 0) {
+          setCurrentInstruction(steps[0].maneuver?.instruction || 'Siga em frente');
         }
-
-        // Remove existing route layers if any
-        if (map.current.getLayer('route-casing')) {
-          map.current.removeLayer('route-casing');
-        }
+        
+        // Draw route with navigation styling
         if (map.current.getLayer('route')) {
           map.current.removeLayer('route');
         }
@@ -383,79 +375,52 @@ const Buscar = () => {
           map.current.removeSource('route');
         }
 
-        // Wait for map to be loaded
-        const addRouteToMap = () => {
-          if (!map.current) return;
+        map.current.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: route.geometry,
+          },
+        });
 
-          // Add route source
-          map.current.addSource('route', {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              properties: {},
-              geometry: route.geometry,
-            },
-          });
+        map.current.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#4F46E5',
+            'line-width': 8,
+            'line-opacity': 0.9,
+          },
+        });
 
-          // Add route casing (border) first - this goes underneath
-          map.current.addLayer({
-            id: 'route-casing',
-            type: 'line',
-            source: 'route',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
-            paint: {
-              'line-color': '#1a1a1a',
-              'line-width': 10,
-              'line-opacity': 0.5,
-            },
-          });
+        // Add route casing for better visibility
+        map.current.addLayer({
+          id: 'route-casing',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#1E1B4B',
+            'line-width': 12,
+            'line-opacity': 0.4,
+          },
+        }, 'route');
 
-          // Add main route line on top
-          map.current.addLayer({
-            id: 'route',
-            type: 'line',
-            source: 'route',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
-            paint: {
-              'line-color': '#3b82f6',
-              'line-width': 6,
-              'line-opacity': 1,
-            },
-          });
-
-          console.log('Route layers added successfully');
-        };
-
-        // Check if map is already loaded
-        if (map.current.isStyleLoaded()) {
-          addRouteToMap();
-        } else {
-          // Wait for style to load
-          map.current.once('styledata', addRouteToMap);
-        }
-
-        // Change map style for navigation mode with higher pitch for 3D effect
-        map.current?.setPitch(60);
-        
-        // Calculate initial bearing
-        const initialBearing = calculateBearing(
-          userLocation.lat,
-          userLocation.lng,
-          selectedMedicamento.farmacia_latitude,
-          selectedMedicamento.farmacia_longitude
-        );
-        
-        map.current?.flyTo({
+        // Change map style for navigation mode
+        map.current.setPitch(45);
+        map.current.flyTo({
           center: [userLocation.lng, userLocation.lat],
-          zoom: 17.5,
-          bearing: initialBearing,
-          duration: 1500,
+          zoom: 16,
+          duration: 1000,
         });
 
         toast({
@@ -490,14 +455,6 @@ const Buscar = () => {
               );
               setDistanceToDestination(distToDest);
               
-              // Calculate bearing to destination for camera direction
-              const bearing = calculateBearing(
-                newPos.lat,
-                newPos.lng,
-                selectedMedicamento.farmacia_latitude,
-                selectedMedicamento.farmacia_longitude
-              );
-              
               // Update instruction based on current position
               let closestStep = steps[0];
               let minDist = 9999;
@@ -517,12 +474,11 @@ const Buscar = () => {
                 setCurrentInstruction(closestStep.maneuver.instruction);
               }
               
-              // Keep map centered on user with bearing following direction
+              // Keep map centered on user
               if (map.current) {
                 map.current.easeTo({
                   center: [newPos.lng, newPos.lat],
-                  bearing: bearing,
-                  duration: 1000,
+                  duration: 500,
                 });
               }
               
@@ -561,16 +517,6 @@ const Buscar = () => {
     }
   };
 
-  // Calculate bearing between two points
-  const calculateBearing = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
-    const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
-              Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
-    const bearing = Math.atan2(y, x) * 180 / Math.PI;
-    return (bearing + 360) % 360;
-  };
-
   const stopNavigation = () => {
     if (navigationWatchId.current !== null) {
       navigator.geolocation.clearWatch(navigationWatchId.current);
@@ -580,22 +526,14 @@ const Buscar = () => {
     setCurrentInstruction('');
     setDistanceToDestination(0);
     
-    // Reset map view and remove route
+    // Reset map view
     if (map.current) {
       map.current.setPitch(0);
       
-      // Remove all route layers and source
-      if (map.current.getLayer('route')) {
-        map.current.removeLayer('route');
-      }
+      // Remove route casing if exists
       if (map.current.getLayer('route-casing')) {
         map.current.removeLayer('route-casing');
       }
-      if (map.current.getSource('route')) {
-        map.current.removeSource('route');
-      }
-
-      console.log('Route layers removed');
     }
     
     toast({
@@ -1378,63 +1316,48 @@ const Buscar = () => {
         <div className="flex-1 relative h-96 md:h-auto overflow-hidden">
           <div ref={mapContainer} className="absolute inset-0" />
           
-          {/* Navigation Mode UI - Mapbox Style */}
+          {/* Navigation Mode UI */}
           {isNavigating && selectedMedicamento && (
-            <>
-              {/* Top Compact Instruction Card */}
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-sm animate-fade-in">
-                <Card className="bg-background/95 backdrop-blur-sm shadow-2xl border-2">
-                  <div className="p-3 flex items-center gap-3">
-                    <div className="text-3xl font-bold text-primary flex-shrink-0">↑</div>
+            <div className="absolute top-0 left-0 right-0 z-20 p-3 animate-slide-in-right">
+              <Card className="bg-primary text-primary-foreground shadow-xl">
+                <div className="p-4 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-primary-foreground/20 rounded-full p-2 flex-shrink-0">
+                      <Navigation className="h-6 w-6" />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate leading-tight">{currentInstruction}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{(distanceToDestination * 1000).toFixed(0)} m</p>
+                      <p className="text-lg font-bold mb-1">{currentInstruction}</p>
+                      <p className="text-sm opacity-90">Para {selectedMedicamento.farmacia_nome}</p>
                     </div>
                   </div>
-                </Card>
-              </div>
-
-              {/* Right Side Floating Circular Buttons */}
-              <div className="absolute top-1/2 -translate-y-1/2 right-4 z-20 flex flex-col gap-3 animate-fade-in">
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  onClick={recenterMap}
-                  className="h-12 w-12 rounded-full shadow-2xl bg-background hover:bg-background/90 border-2"
-                >
-                  <Navigation className="h-5 w-5" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  onClick={stopNavigation}
-                  className="h-12 w-12 rounded-full shadow-2xl bg-background hover:bg-background/90 border-2"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-
-              {/* Bottom ETA Card */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-sm animate-fade-in">
-                <Card className="bg-background/95 backdrop-blur-sm shadow-2xl">
-                  <div className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Tempo estimado</p>
-                      <p className="text-2xl font-bold">
-                        {Math.ceil(distanceToDestination * 60)} min
-                      </p>
+                  
+                  <div className="flex items-center justify-between pt-2 border-t border-primary-foreground/20">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span className="font-bold">{(distanceToDestination * 1000).toFixed(0)} m</span>
                     </div>
-                    <Button
-                      variant="destructive"
-                      onClick={stopNavigation}
-                      className="rounded-full px-6 h-10"
-                    >
-                      Terminar
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={recenterMap}
+                        className="h-8"
+                      >
+                        Recentrar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={stopNavigation}
+                        className="h-8"
+                      >
+                        Parar
+                      </Button>
+                    </div>
                   </div>
-                </Card>
-              </div>
-            </>
+                </div>
+              </Card>
+            </div>
           )}
           
           {/* Route Info - Desktop Only */}
