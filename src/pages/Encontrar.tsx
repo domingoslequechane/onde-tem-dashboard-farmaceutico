@@ -155,16 +155,13 @@ const Buscar = () => {
       const mapInstance = new google.maps.Map(mapContainer.current, {
         center: { lat: -25.9655, lng: 32.5892 },
         zoom: 13,
-        mapTypeControl: false,
-        fullscreenControl: false,
-        streetViewControl: false,
+        mapTypeId: 'hybrid', // Satellite view with labels
+        mapTypeControl: true, // Allow switching between map types
+        fullscreenControl: true, // Allow fullscreen
+        streetViewControl: true, // Allow street view
         zoomControl: true,
+        scaleControl: true, // Show scale information
         styles: [
-          {
-            featureType: 'poi',
-            elementType: 'labels',
-            stylers: [{ visibility: 'off' }]
-          },
           {
             featureType: 'poi.business',
             stylers: [{ visibility: 'off' }]
