@@ -198,13 +198,15 @@ const Buscar = () => {
       const mapInstance = new google.maps.Map(mapContainer.current, {
         center: { lat: -25.9655, lng: 32.5892 },
         zoom: 13,
+        tilt: 45, // Enable 3D view
         mapTypeId: 'roadmap', // Standard Maps view
         mapTypeControl: true, // Allow switching between map types
         fullscreenControl: true, // Allow fullscreen
         streetViewControl: false, // Hide street view control
         zoomControl: false, // Hide zoom controls
         scaleControl: true, // Show scale information
-        gestureHandling: 'greedy', // Enable single-finger panning
+        rotateControl: true, // Enable rotation control
+        gestureHandling: 'greedy', // Enable single-finger panning and rotation gestures
         styles: [
           {
             featureType: 'poi.business',
