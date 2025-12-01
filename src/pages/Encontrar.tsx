@@ -112,6 +112,7 @@ const Buscar = () => {
   const lastAnnouncedDistance = useRef<number>(0);
   const hasAnnouncedTurn = useRef<boolean>(false);
   const searchDebounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const routeDotsRef = useRef<google.maps.Marker[]>([]);
 
   useEffect(() => {
     checkLocationPermission();
@@ -1271,6 +1272,39 @@ const Buscar = () => {
     return null;
   };
 
+  const clearRouteDots = () => {
+    routeDotsRef.current.forEach(dot => dot.setMap(null));
+    routeDotsRef.current = [];
+  };
+
+  const drawRouteWithDots = (route: google.maps.DirectionsRoute) => {
+    if (!map.current) return;
+
+    clearRouteDots();
+
+    const path = route.overview_path;
+    const dotsSpacing = 20; // Draw a dot every 20 points for good visual density
+
+    path.forEach((point, index) => {
+      if (index % dotsSpacing === 0) {
+        const dot = new google.maps.Marker({
+          position: point,
+          map: map.current!,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 4,
+            fillColor: '#4F46E5',
+            fillOpacity: 0.8,
+            strokeColor: '#ffffff',
+            strokeWeight: 1,
+          },
+          zIndex: 100
+        });
+        routeDotsRef.current.push(dot);
+      }
+    });
+  };
+
   const startNavigationWithMode = async (mode: 'WALKING' | 'DRIVING') => {
     if (!selectedMedicamento || !userLocation || !directionsService.current || !map.current) return;
     
@@ -1295,18 +1329,31 @@ const Buscar = () => {
 
       directionsService.current.route(request, (result, status) => {
         if (status === 'OK' && result && directionsRenderer.current && map.current) {
-          // Configure renderer for navigation mode with colored route based on mode
-          directionsRenderer.current.setOptions({
-            suppressMarkers: true,
-            polylineOptions: {
-              strokeColor: mode === 'WALKING' ? '#4F46E5' : '#10b981',
-              strokeWeight: 8,
-              strokeOpacity: 0.9
-            }
-          });
-          directionsRenderer.current.setDirections(result);
-
           const route = result.routes[0];
+
+          if (mode === 'WALKING') {
+            // For walking mode, use dots instead of lines
+            directionsRenderer.current.setOptions({
+              suppressMarkers: true,
+              polylineOptions: {
+                strokeOpacity: 0 // Hide the line completely
+              }
+            });
+            directionsRenderer.current.setDirections(result);
+            drawRouteWithDots(route);
+          } else {
+            // For driving mode, use normal line
+            directionsRenderer.current.setOptions({
+              suppressMarkers: true,
+              polylineOptions: {
+                strokeColor: '#10b981',
+                strokeWeight: 8,
+                strokeOpacity: 0.9
+              }
+            });
+            directionsRenderer.current.setDirections(result);
+          }
+
           currentRouteSteps.current = route.legs[0]?.steps || [];
           currentStepIndex.current = 0;
 
@@ -1530,6 +1577,9 @@ const Buscar = () => {
       window.speechSynthesis.cancel();
     }
     
+    // Clear route dots
+    clearRouteDots();
+    
     setIsNavigating(false);
     setCurrentInstruction('');
     setNextInstruction('');
@@ -1563,6 +1613,9 @@ const Buscar = () => {
     if (directionsRenderer.current) {
       directionsRenderer.current.setDirections({ routes: [] } as any);
     }
+    
+    // Clear route dots
+    clearRouteDots();
     
     // Reset map view to show radius circle
     if (map.current && userLocation) {
