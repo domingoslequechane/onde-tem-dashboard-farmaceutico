@@ -206,7 +206,7 @@ const Buscar = () => {
         zoomControl: false, // Hide zoom controls
         scaleControl: true, // Show scale information
         rotateControl: true, // Enable rotation control
-        gestureHandling: 'greedy', // Enable single-finger panning and rotation gestures
+        gestureHandling: 'cooperative', // Requires two fingers on mobile and Ctrl on desktop for zoom
         styles: [
           {
             featureType: 'poi.business',
