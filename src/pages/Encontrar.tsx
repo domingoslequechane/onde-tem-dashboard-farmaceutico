@@ -200,6 +200,12 @@ const Buscar = () => {
         center: { lat: -25.9655, lng: 32.5892 },
         zoom: 13,
         mapTypeId: 'roadmap',
+        mapTypeControl: true,
+        fullscreenControl: true,
+        streetViewControl: true,
+        zoomControl: true,
+        rotateControl: true,
+        gestureHandling: 'greedy',
         styles: [
           {
             featureType: 'poi.business',
