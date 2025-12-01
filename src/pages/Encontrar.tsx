@@ -206,6 +206,8 @@ const Buscar = () => {
         zoomControl: true,
         rotateControl: true,
         gestureHandling: 'greedy',
+        tilt: 0, // Enable 2D rotation
+        heading: 0, // Allow full 360 degree rotation
         styles: [
           {
             featureType: 'poi.business',
@@ -1775,7 +1777,7 @@ const Buscar = () => {
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
       {/* Header - Always visible */}
-      <div className="flex items-center justify-between p-3 md:p-4 bg-card border-b border-border shadow-sm transition-all duration-300">
+      <div className="flex items-center justify-between p-3 md:p-4 bg-card border-b border-border shadow-sm transition-all duration-300 flex-shrink-0">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
           <img src={logo} alt="ONDTem" className="h-8 md:h-10 flex-shrink-0" />
         </div>
@@ -1789,8 +1791,8 @@ const Buscar = () => {
         </Button>
       </div>
 
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden relative">
+      {/* Main Content - Fills remaining space */}
+      <div className="flex-1 overflow-hidden relative min-h-0">
         {/* Map Container */}
         <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
 
@@ -2184,10 +2186,10 @@ const Buscar = () => {
         )}
       </div>
 
-      {/* Footer - Always visible */}
-      <footer className="bg-card border-t border-border py-3 px-4 text-center text-xs md:text-sm text-muted-foreground transition-all duration-300">
-        © {new Date().getFullYear()} ONDTem. by <a href="https://onixagence.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 font-medium transition-colors">Onix Agence</a>
-      </footer>
+        {/* Footer - Always visible at bottom of map area */}
+        <footer className="absolute bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border py-2 px-4 text-center text-xs md:text-sm text-muted-foreground transition-all duration-300 z-[5] flex-shrink-0">
+          © {new Date().getFullYear()} ONDTem. by <a href="https://onixagence.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 font-medium transition-colors">Onix Agence</a>
+        </footer>
 
       {/* Modals */}
       <LeaveReviewModal
