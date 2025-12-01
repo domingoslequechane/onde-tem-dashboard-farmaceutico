@@ -197,9 +197,9 @@ const Buscar = () => {
       // Now google.maps is available globally
       const mapInstance = new google.maps.Map(mapContainer.current, {
         center: { lat: -25.9655, lng: 32.5892 },
-        zoom: 13,
+        zoom: 18, // Higher zoom for rotation to work properly
         tilt: 45, // Enable 3D view
-        mapTypeId: 'roadmap', // Standard Maps view
+        mapTypeId: 'hybrid', // Satellite view with labels - required for rotation
         mapTypeControl: true, // Allow switching between map types
         fullscreenControl: true, // Allow fullscreen
         streetViewControl: false, // Hide street view control
