@@ -1,0 +1,113 @@
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import Header from '@/components/Header';
+import StockControl from '@/components/StockControl';
+import DemandAnalysis from '@/components/DemandAnalysis';
+import DemandHeatmap from '@/components/DemandHeatmap';
+import ServiceImpact from '@/components/ServiceImpact';
+import EmergencyAlert from '@/components/EmergencyAlert';
+import Settings from '@/components/Settings';
+import Support from '@/components/Support';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Package, TrendingUp, Settings as SettingsIcon, MessageSquare, LayoutDashboard } from 'lucide-react';
+
+interface DashboardProps {
+  user: { email: string; name: string } | null;
+  onLogout: () => void;
+  farmacia?: any;
+}
+
+const Dashboard = ({ user, onLogout, farmacia }: DashboardProps) => {
+  const [searchParams] = useSearchParams();
+  const [showEmergencyAlert, setShowEmergencyAlert] = useState(false);
+  const defaultTab = searchParams.get('tab') || 'dashboard';
+
+  return (
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      <Header user={user} onLogout={onLogout} isVerified={true} />
+      
+      {showEmergencyAlert && (
+        <EmergencyAlert onClose={() => setShowEmergencyAlert(false)} />
+      )}
+
+      <main className="flex-1 container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl pb-24 sm:pb-8 overflow-hidden">
+        <Tabs defaultValue={defaultTab} className="w-full h-full flex flex-col">
+          <TabsList className="fixed bottom-0 left-0 right-0 z-50 grid w-full grid-cols-5 h-auto p-1.5 bg-background border-t border-border shadow-lg sm:static sm:grid-cols-5 sm:mb-6 sm:p-1.5 sm:bg-muted/50 sm:rounded-xl sm:gap-1 sm:border-0 sm:shadow-none">
+            <TabsTrigger 
+              value="dashboard" 
+              className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-xs rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-card sm:data-[state=active]:shadow-sm"
+            >
+              <LayoutDashboard className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate text-[9px] sm:text-xs leading-tight">Início</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="estoque" 
+              className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-xs rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-card sm:data-[state=active]:shadow-sm"
+            >
+              <Package className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate text-[9px] sm:text-xs leading-tight">Estoque</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="demanda" 
+              className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-xs rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-card sm:data-[state=active]:shadow-sm"
+            >
+              <TrendingUp className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate text-[9px] sm:text-xs leading-tight">Demanda</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="configuracoes" 
+              className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-xs rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-card sm:data-[state=active]:shadow-sm"
+            >
+              <SettingsIcon className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate text-[9px] sm:text-xs leading-tight">Config.</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="suporte" 
+              className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-xs rounded-lg data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-card sm:data-[state=active]:shadow-sm"
+            >
+              <MessageSquare className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate text-[9px] sm:text-xs leading-tight">Suporte</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="dashboard" className="mt-0 animate-fade-in overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-200px)]">
+            <div className="space-y-4 sm:space-y-6 pr-2">
+              {/* Resultados Onde Tem - Full width on top */}
+              <div className="animate-slide-up">
+                <ServiceImpact />
+              </div>
+              
+              {/* Grid with Demand Analysis and Demand Heatmap side by side */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                  <DemandAnalysis />
+                </div>
+                <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                  <DemandHeatmap />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="estoque" className="mt-0 animate-fade-in overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-200px)] pr-2">
+            <StockControl expanded={true} />
+          </TabsContent>
+          
+          <TabsContent value="demanda" className="mt-0 animate-fade-in overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-200px)] pr-2">
+            <DemandAnalysis expanded={true} />
+          </TabsContent>
+          
+          <TabsContent value="configuracoes" className="mt-0 animate-fade-in overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-200px)] pr-2">
+            <Settings farmacia={farmacia} />
+          </TabsContent>
+          
+          <TabsContent value="suporte" className="mt-0 animate-fade-in overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-200px)] pr-2">
+            <Support />
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+};
+
+export default Dashboard;

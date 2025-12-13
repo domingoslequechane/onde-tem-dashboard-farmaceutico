@@ -1,0 +1,34 @@
+project_id = "uacernprfbnascyfrkrb"
+
+[functions.health-check]
+verify_jwt = false
+
+[functions.get-mapbox-token]
+verify_jwt = false
+
+[functions.send-deletion-code]
+verify_jwt = true
+
+[functions.delete-pharmacy]
+verify_jwt = true
+
+[functions.send-admin-invite]
+verify_jwt = true
+
+[functions.send-password-recovery]
+verify_jwt = false
+
+[functions.send-pharmacy-invite]
+verify_jwt = true
+
+[functions.send-contact-email]
+verify_jwt = false
+
+[functions.get-google-maps-key]
+verify_jwt = false
+
+[functions.support-chat]
+verify_jwt = false
+
+[functions.analyze-demand]
+verify_jwt = false

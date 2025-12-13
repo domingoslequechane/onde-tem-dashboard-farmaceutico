@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+
+@layer base {
+  :root {
+    /* Onde Tem? Brand Colors - Based on logo */
+    --background: 210 17% 98%;
+    --foreground: 215 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    /* Primary: Logo Blue */
+    --primary: 210 85% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 210 85% 60%;
+    --primary-dark: 210 85% 35%;
+
+    /* Secondary: Logo Green */
+    --secondary: 142 76% 36%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 142 76% 50%;
+    --secondary-dark: 142 76% 28%;
+
+    /* Accent: Green accent */
+    --accent: 142 76% 92%;
+    --accent-foreground: 142 76% 28%;
+
+    --muted: 210 17% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 210 85% 45%;
+
+    --radius: 0.75rem;
+
+    /* Custom gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(210 85% 45%) 0%, hsl(210 85% 60%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 76% 50%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(210 85% 45%) 0%, hsl(142 76% 45%) 100%);
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 15%;
+    --sidebar-primary: 210 85% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 17% 96%;
+    --sidebar-accent-foreground: 215 25% 15%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 210 85% 45%;
+  }
+
+  .dark {
+    --background: 215 28% 10%;
+    --foreground: 210 17% 98%;
+
+    --card: 215 25% 12%;
+    --card-foreground: 210 17% 98%;
+
+    --popover: 215 25% 12%;
+    --popover-foreground: 210 17% 98%;
+
+    --primary: 210 85% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 142 76% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 215 25% 18%;
+    --muted-foreground: 215 16% 65%;
+
+    --accent: 215 25% 18%;
+    --accent-foreground: 210 17% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 17% 98%;
+
+    --border: 215 25% 20%;
+    --input: 215 25% 20%;
+    --ring: 210 85% 55%;
+
+    --sidebar-background: 215 28% 10%;
+    --sidebar-foreground: 210 17% 98%;
+    --sidebar-primary: 210 85% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 18%;
+    --sidebar-accent-foreground: 210 17% 98%;
+    --sidebar-border: 215 25% 20%;
+    --sidebar-ring: 210 85% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Mobile-first typography defaults */
+  body {
+    @apply text-base;
+  }
+
+  h1 {
+    @apply text-3xl font-bold;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold;
+  }
+
+  h3 {
+    @apply text-xl font-semibold;
+  }
+
+  h4 {
+    @apply text-lg font-medium;
+  }
+
+  p {
+    @apply text-base;
+  }
+
+  small {
+    @apply text-sm;
+  }
+
+  /* Desktop adjustments */
+  @media (min-width: 768px) {
+    body {
+      @apply text-base;
+    }
+
+    h1 {
+      @apply text-4xl;
+    }
+
+    h2 {
+      @apply text-3xl;
+    }
+
+    h3 {
+      @apply text-2xl;
+    }
+
+    h4 {
+      @apply text-xl;
+    }
+  }
+
+  /* Prevent horizontal overflow globally */
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Ensure all elements respect max width */
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Prevent images and media from causing overflow */
+  img, video, canvas, svg, iframe {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Ensure flex containers don't overflow */
+  .flex, [class*="flex"] {
+    min-width: 0;
+  }
+
+  /* Ensure grid containers don't overflow */
+  .grid, [class*="grid"] {
+    min-width: 0;
+  }
+}
