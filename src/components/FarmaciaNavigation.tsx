@@ -12,7 +12,7 @@ const FarmaciaNavigation = () => {
     { path: '/farmacia/estoque', label: 'Estoque', icon: Package },
     { path: '/farmacia/demanda', label: 'Demanda', icon: TrendingUp },
     { path: '/farmacia/configuracoes', label: 'Configurações', icon: Settings },
-    { path: '/farmacia/suporte', label: 'Chat', icon: MessageSquare },
+    { path: '/farmacia/suporte', label: 'Suporte', icon: MessageSquare },
   ];
 
   return (
