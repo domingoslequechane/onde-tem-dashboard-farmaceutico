@@ -618,32 +618,53 @@ const Buscar = () => {
       return;
     }
 
+    const searchTerm = medicamento.trim().toLowerCase();
+    
     // Need at least 1 character to search
-    if (medicamento.trim().length < 1) {
+    if (searchTerm.length < 1) {
       setFilteredMedicamentos([]);
       return;
     }
 
-    console.log('Filtering medications for:', medicamento, 'Total medications:', allMedicamentos.length);
+    console.log('Filtering medications for:', searchTerm, 'Total medications:', allMedicamentos.length);
 
-    // Fuzzy search configuration for autocomplete only
-    const fuse = new Fuse(allMedicamentos, {
-      keys: ['nome'],
-      threshold: 0.4, // 0.0 = exact match, 1.0 = match anything
-      distance: 100,
-      minMatchCharLength: 1,
-      includeScore: true,
-    });
-
-    // Perform fuzzy search for autocomplete suggestions
-    const fuzzyResults = fuse.search(medicamento.trim());
-    console.log('Fuzzy results:', fuzzyResults.length);
+    // First, try simple prefix/contains matching for better results
+    const simpleMatches = allMedicamentos.filter(med => 
+      med.nome.toLowerCase().includes(searchTerm)
+    );
     
-    const filtered = fuzzyResults.map(result => result.item);
+    console.log('Simple matches:', simpleMatches.length);
+
+    // If we have simple matches, use those
+    let finalResults: Medicamento[] = [];
+    
+    if (simpleMatches.length > 0) {
+      // Sort by relevance: prefix matches first, then contains
+      finalResults = simpleMatches.sort((a, b) => {
+        const aStartsWith = a.nome.toLowerCase().startsWith(searchTerm) ? 0 : 1;
+        const bStartsWith = b.nome.toLowerCase().startsWith(searchTerm) ? 0 : 1;
+        if (aStartsWith !== bStartsWith) return aStartsWith - bStartsWith;
+        return a.nome.localeCompare(b.nome);
+      });
+    } else {
+      // No simple matches - use fuzzy search for typo tolerance
+      const fuse = new Fuse(allMedicamentos, {
+        keys: ['nome'],
+        threshold: 0.6, // Higher threshold for more fuzzy matches
+        distance: 200,
+        minMatchCharLength: 1,
+        includeScore: true,
+        ignoreLocation: true, // Don't penalize matches at the end of string
+      });
+
+      const fuzzyResults = fuse.search(searchTerm);
+      console.log('Fuzzy results:', fuzzyResults.length);
+      finalResults = fuzzyResults.map(result => result.item);
+    }
     
     // Remove duplicates by name
     const uniqueNames = new Map<string, Medicamento>();
-    filtered.forEach(med => {
+    finalResults.forEach(med => {
       if (!uniqueNames.has(med.nome.toLowerCase())) {
         uniqueNames.set(med.nome.toLowerCase(), med);
       }
