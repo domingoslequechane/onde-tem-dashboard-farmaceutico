@@ -722,9 +722,10 @@ const Buscar = () => {
   // Hook para captura de buscas (novo sistema)
   const { completarBusca } = useSearchCapture({ userLocation, raioKm });
 
-  const handleAutoSearch = async () => {
+  const handleAutoSearch = async (options?: { trigger?: 'dropdown' | 'enter' }) => {
     if (!medicamento.trim() || !userLocation) return;
 
+    const trigger = options?.trigger ?? 'dropdown';
     setSearchStatus('searching');
 
     try {
@@ -740,16 +741,18 @@ const Buscar = () => {
 
       if (medError) throw medError;
 
+      // CASE 1: Product does not exist in catalog
       if (!medData || medData.length === 0) {
         setMedicamentos([]);
         setSearchStatus('not-found');
-        // Novo sistema: registrar busca sem resultados de produto
-        if (selectedFromDropdown) {
+        // Register search with no_product outcome
+        if (selectedFromDropdown || trigger === 'enter') {
           await completarBusca(
             typedSearchText.current,
             medicamento,
-            medData?.[0]?.id || null,
-            []
+            null,
+            [],
+            { trigger, outcomeOverride: 'no_product' }
           );
         }
         return;
@@ -853,10 +856,25 @@ const Buscar = () => {
       results.sort((a, b) => a.distancia_km - b.distancia_km);
 
       setMedicamentos(results);
-      setSearchStatus(results.length > 0 ? 'found' : 'not-found');
 
-      // Novo sistema: Registrar busca completa apenas se veio de seleção explícita
-      if (selectedFromDropdown) {
+      // CASE 2: Product exists but no pharmacy has stock within radius
+      if (results.length === 0) {
+        setSearchStatus('not-found');
+        if (selectedFromDropdown || trigger === 'enter') {
+          await completarBusca(
+            typedSearchText.current,
+            medicamento,
+            medData?.[0]?.id || null,
+            [],
+            { trigger, outcomeOverride: 'no_pharmacy' }
+          );
+        }
+        return;
+      }
+
+      // CASE 3: Success - found pharmacies with stock
+      setSearchStatus('found');
+      if (selectedFromDropdown || trigger === 'enter') {
         const farmaciaResults = results.map(r => ({
           farmacia_id: r.farmacia_id,
           distancia_km: r.distancia_km
@@ -866,7 +884,8 @@ const Buscar = () => {
           typedSearchText.current,
           medicamento,
           medData?.[0]?.id || null,
-          farmaciaResults
+          farmaciaResults,
+          { trigger }
         );
       }
 
@@ -975,8 +994,9 @@ const Buscar = () => {
     return google.maps.geometry.spherical.computeDistanceBetween(from, to) / 1000; // Convert to km
   };
 
-  const handleBuscar = async (medicationName?: string) => {
+  const handleBuscar = async (medicationName?: string, options?: { trigger?: 'dropdown' | 'enter' }) => {
     const searchTerm = medicationName || medicamento;
+    const trigger = options?.trigger ?? 'dropdown';
     if (!searchTerm.trim() || !userLocation) {
       return;
     }
@@ -1935,6 +1955,19 @@ const Buscar = () => {
                   setMedicamento(value);
                   setSelectedFromDropdown(false);
                   typedSearchText.current = value; // Track typed text for analytics
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = medicamento.trim();
+                    // Only trigger search if term is valid and we have location
+                    if (value.length >= 3 && userLocation) {
+                      // Keep selectedFromDropdown as false - this is an Enter search
+                      setIsInputFocused(false);
+                      setFilteredMedicamentos([]);
+                      handleAutoSearch({ trigger: 'enter' });
+                    }
+                  }
                 }}
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
