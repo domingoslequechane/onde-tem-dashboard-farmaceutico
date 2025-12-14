@@ -11,6 +11,11 @@ interface PharmacyResult {
   distancia_km: number;
 }
 
+interface CompletarBuscaOptions {
+  trigger?: 'dropdown' | 'enter';
+  outcomeOverride?: 'no_product' | 'no_pharmacy';
+}
+
 // Get or create persistent session ID
 const getOrCreateSessionId = (): string => {
   let sessionId = localStorage.getItem('ondtem_search_session_id');
@@ -20,6 +25,9 @@ const getOrCreateSessionId = (): string => {
   }
   return sessionId;
 };
+
+// Edge function URL for abandonment logging via sendBeacon
+const LOG_ABANDONMENT_URL = 'https://uacernprfbnascyfrkrb.supabase.co/functions/v1/log-abandonment';
 
 export const useSearchCapture = ({ userLocation, raioKm }: SearchCaptureOptions) => {
   const currentSearchId = useRef<string | null>(null);
@@ -144,7 +152,7 @@ export const useSearchCapture = ({ userLocation, raioKm }: SearchCaptureOptions)
     }
   }, []);
 
-  // Register product selection - ONLY when user explicitly clicks
+  // Register product selection - ONLY when user explicitly clicks (dropdown)
   const registrarProductSelection = useCallback(async (
     searchId: string,
     productId: string | null,
@@ -210,82 +218,84 @@ export const useSearchCapture = ({ userLocation, raioKm }: SearchCaptureOptions)
     }
   }, [userLocation]);
 
-  // Complete search flow helper
+  // Complete search flow helper - now with trigger and outcomeOverride support
   const completarBusca = useCallback(async (
     typedText: string,
     selectedProductName: string,
     selectedProductId: string | null,
-    farmaciasEncontradas: PharmacyResult[]
+    farmaciasEncontradas: PharmacyResult[],
+    options?: CompletarBuscaOptions
   ) => {
+    const trigger = options?.trigger ?? 'dropdown';
+    const outcomeOverride = options?.outcomeOverride;
+
     // 1. Register search
     const searchId = await registrarSearch(typedText, selectedProductName);
     if (!searchId) return null;
 
-    // 2. Register normalization (catalog match since user selected from autocomplete)
-    await registrarNormalization(searchId, selectedProductName, 1.0, 'catalog');
+    // 2. Register normalization
+    // - dropdown: catalog match with high confidence
+    // - enter: none match with zero confidence (free text)
+    const matchType = trigger === 'dropdown' ? 'catalog' : 'none';
+    const confidenceScore = trigger === 'dropdown' ? 1.0 : 0;
+    await registrarNormalization(searchId, selectedProductName, confidenceScore, matchType);
 
-    // 3. Register product selection
-    const selectionId = await registrarProductSelection(searchId, selectedProductId, selectedProductName);
+    // 3. Register product selection ONLY if from dropdown
+    let selectionId = null;
+    if (trigger === 'dropdown') {
+      selectionId = await registrarProductSelection(searchId, selectedProductId, selectedProductName);
+    } else {
+      // For Enter key searches, still mark as having intent (prevents abandonment timer)
+      hadProductSelection.current = true;
+      clearAbandonmentTimer();
+    }
 
     // 4. Register outcome
-    const closestDistance = farmaciasEncontradas.length > 0 
-      ? Math.min(...farmaciasEncontradas.map(f => f.distancia_km))
-      : null;
-
-    if (farmaciasEncontradas.length > 0) {
+    if (outcomeOverride) {
+      // Explicit override (no_product or no_pharmacy)
+      await registrarSearchOutcome(searchId, outcomeOverride, 0, null);
+    } else if (farmaciasEncontradas.length > 0) {
+      // Success
+      const closestDistance = Math.min(...farmaciasEncontradas.map(f => f.distancia_km));
       await registrarSearchOutcome(searchId, 'success', farmaciasEncontradas.length, closestDistance);
       // 5. Register impressions
       await registrarImpressoes(searchId, selectionId, farmaciasEncontradas, selectedProductName);
     } else {
+      // No pharmacies found (fallback)
       await registrarSearchOutcome(searchId, 'no_pharmacy', 0, null);
     }
 
     return { searchId, selectionId };
-  }, [registrarSearch, registrarNormalization, registrarProductSelection, registrarSearchOutcome, registrarImpressoes]);
+  }, [registrarSearch, registrarNormalization, registrarProductSelection, registrarSearchOutcome, registrarImpressoes, clearAbandonmentTimer]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - use Edge Function for reliable delivery
   useEffect(() => {
     return () => {
       clearAbandonmentTimer();
       
       // Mark as abandoned if no outcome registered
       if (currentSearchId.current && !hadProductSelection.current && !outcomeRegistered.current) {
-        // Use sendBeacon for reliable delivery on unmount
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://uacernprfbnascyfrkrb.supabase.co';
-        const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhY2VybnByZmJuYXNjeWZya3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxODU5MDQsImV4cCI6MjA3NTc2MTkwNH0.ZpztCp8ikjD1RS61Pet-MusWIsJ-rbLPVT0G33lDUec';
-        
-        const payload = JSON.stringify({
-          search_id: currentSearchId.current,
-          outcome_status: 'abandoned',
-          pharmacies_found_count: 0,
-          closest_pharmacy_distance: null
-        });
-
         navigator.sendBeacon(
-          `${supabaseUrl}/rest/v1/search_outcomes`,
-          new Blob([payload], { type: 'application/json' })
+          LOG_ABANDONMENT_URL,
+          JSON.stringify({
+            search_id: currentSearchId.current,
+            reason: 'unmount'
+          })
         );
       }
     };
   }, [clearAbandonmentTimer]);
 
-  // Handle page unload
+  // Handle page unload - use Edge Function for reliable delivery
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (currentSearchId.current && !hadProductSelection.current && !outcomeRegistered.current) {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://uacernprfbnascyfrkrb.supabase.co';
-        const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhY2VybnByZmJuYXNjeWZya3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxODU5MDQsImV4cCI6MjA3NTc2MTkwNH0.ZpztCp8ikjD1RS61Pet-MusWIsJ-rbLPVT0G33lDUec';
-        
-        const payload = JSON.stringify({
-          search_id: currentSearchId.current,
-          outcome_status: 'abandoned',
-          pharmacies_found_count: 0,
-          closest_pharmacy_distance: null
-        });
-
         navigator.sendBeacon(
-          `${supabaseUrl}/rest/v1/search_outcomes`,
-          new Blob([payload], { type: 'application/json' })
+          LOG_ABANDONMENT_URL,
+          JSON.stringify({
+            search_id: currentSearchId.current,
+            reason: 'exit'
+          })
         );
       }
     };
