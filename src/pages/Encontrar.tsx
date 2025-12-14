@@ -618,17 +618,27 @@ const Buscar = () => {
       return;
     }
 
+    // Need at least 1 character to search
+    if (medicamento.trim().length < 1) {
+      setFilteredMedicamentos([]);
+      return;
+    }
+
+    console.log('Filtering medications for:', medicamento, 'Total medications:', allMedicamentos.length);
+
     // Fuzzy search configuration for autocomplete only
     const fuse = new Fuse(allMedicamentos, {
       keys: ['nome'],
       threshold: 0.4, // 0.0 = exact match, 1.0 = match anything
       distance: 100,
-      minMatchCharLength: 2,
+      minMatchCharLength: 1,
       includeScore: true,
     });
 
     // Perform fuzzy search for autocomplete suggestions
-    const fuzzyResults = fuse.search(medicamento);
+    const fuzzyResults = fuse.search(medicamento.trim());
+    console.log('Fuzzy results:', fuzzyResults.length);
+    
     const filtered = fuzzyResults.map(result => result.item);
     
     // Remove duplicates by name
@@ -639,7 +649,9 @@ const Buscar = () => {
       }
     });
     
-    setFilteredMedicamentos(Array.from(uniqueNames.values()));
+    const uniqueResults = Array.from(uniqueNames.values());
+    console.log('Unique filtered medications:', uniqueResults.length);
+    setFilteredMedicamentos(uniqueResults);
   }, [medicamento, allMedicamentos]);
 
   // Registrar busca no banco de dados
