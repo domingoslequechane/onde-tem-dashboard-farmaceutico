@@ -604,13 +604,8 @@ const Buscar = () => {
     }
   };
 
-  // Real-time search with debounce
+  // Autocomplete filtering (no automatic search)
   useEffect(() => {
-    // Clear previous timer
-    if (searchDebounceTimer.current) {
-      clearTimeout(searchDebounceTimer.current);
-    }
-
     // Reset if field is empty
     if (medicamento.trim().length === 0) {
       setMedicamentos([]);
@@ -623,7 +618,7 @@ const Buscar = () => {
       return;
     }
 
-    // Fuzzy search configuration
+    // Fuzzy search configuration for autocomplete only
     const fuse = new Fuse(allMedicamentos, {
       keys: ['nome'],
       threshold: 0.4, // 0.0 = exact match, 1.0 = match anything
@@ -632,7 +627,7 @@ const Buscar = () => {
       includeScore: true,
     });
 
-    // Perform fuzzy search
+    // Perform fuzzy search for autocomplete suggestions
     const fuzzyResults = fuse.search(medicamento);
     const filtered = fuzzyResults.map(result => result.item);
     
@@ -645,18 +640,7 @@ const Buscar = () => {
     });
     
     setFilteredMedicamentos(Array.from(uniqueNames.values()));
-
-    // Debounced search
-    searchDebounceTimer.current = setTimeout(() => {
-      handleAutoSearch();
-    }, 800);
-
-    return () => {
-      if (searchDebounceTimer.current) {
-        clearTimeout(searchDebounceTimer.current);
-      }
-    };
-  }, [medicamento, allMedicamentos, userLocation, raioKm]);
+  }, [medicamento, allMedicamentos]);
 
   // Registrar busca no banco de dados
   const registrarBusca = async (medicamentoBuscado: string, encontrados: boolean, farmaciasEncontradas: MedicamentoFarmacia[]) => {
@@ -1930,7 +1914,13 @@ const Buscar = () => {
                 {[1, 2, 4, 8, 16].map((radius) => (
                   <button
                     key={radius}
-                    onClick={() => setRaioKm(radius)}
+                    onClick={() => {
+                      setRaioKm(radius);
+                      // Re-run search if medication was already selected
+                      if (medicamento.trim() && medicamentos.length > 0) {
+                        setTimeout(() => handleBuscar(), 100);
+                      }
+                    }}
                     className={`px-2 py-1 rounded-md text-xs md:text-sm font-medium transition-all duration-200 ${
                       raioKm === radius
                         ? 'bg-primary text-primary-foreground shadow-sm'
