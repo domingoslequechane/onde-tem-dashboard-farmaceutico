@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BarChart3, TrendingUp, CheckCircle, XCircle, Search, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, Sparkles, Loader2, History, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BarChart3, TrendingUp, CheckCircle, XCircle, Search, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, Sparkles, Loader2, History, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from 'recharts';
 import RegionDetailModal from '@/components/RegionDetailModal';
+import MissingProductsCard, { MissingProduct } from '@/components/MissingProductsCard';
+import DemandGapTable, { DemandGap } from '@/components/DemandGapTable';
+import RegionalDemandList, { RegionalDemand } from '@/components/RegionalDemandList';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
@@ -49,6 +52,7 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
   const [farmaciaId, setFarmaciaId] = useState<string | null>(null);
+  const [farmaciaLocation, setFarmaciaLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isAiContentExpanded, setIsAiContentExpanded] = useState(() => {
     const saved = localStorage.getItem('aiAnalysisExpanded');
     return saved !== null ? saved === 'true' : true;
@@ -57,11 +61,16 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
   const [demandData, setDemandData] = useState<MedicationDemand[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<any[]>([]);
   const [monthlyComparison, setMonthlyComparison] = useState<MonthlyData[]>([]);
+  const [missingProducts, setMissingProducts] = useState<MissingProduct[]>([]);
+  const [demandGaps, setDemandGaps] = useState<DemandGap[]>([]);
+  const [regionalDemand, setRegionalDemand] = useState<RegionalDemand[]>([]);
+  const [pharmacyStock, setPharmacyStock] = useState<Set<string>>(new Set());
   const [totalStats, setTotalStats] = useState({ 
     totalSearches: 0, 
     found: 0, 
     notFound: 0,
-    growthRate: 0
+    growthRate: 0,
+    missedOpportunities: 0
   });
 
   useEffect(() => {
@@ -83,7 +92,7 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
       // Buscar farmácia do usuário
       const { data: farmacia } = await supabase
         .from('farmacias')
-        .select('id, bairro, cidade')
+        .select('id, bairro, cidade, latitude, longitude')
         .eq('user_id', session.user.id)
         .single();
 
@@ -93,32 +102,64 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
       }
 
       setFarmaciaId(farmacia.id);
+      if (farmacia.latitude && farmacia.longitude) {
+        setFarmaciaLocation({ lat: Number(farmacia.latitude), lng: Number(farmacia.longitude) });
+      }
 
-      // Buscar estatísticas do último mês
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      // Total de consultas
-      const { data: allConsultas, error: consultasError } = await supabase
-        .from('consultas')
-        .select('id, medicamento_buscado, status, criado_em')
-        .gte('criado_em', thirtyDaysAgo.toISOString());
+      // Buscar stock da farmácia (para identificar produtos que não temos)
+      const { data: stockData } = await supabase
+        .from('estoque')
+        .select('medicamento_id, medicamentos(nome)')
+        .eq('farmacia_id', farmacia.id)
+        .eq('disponivel', true);
 
-      if (consultasError) throw consultasError;
+      const stockNames = new Set<string>();
+      stockData?.forEach((item: any) => {
+        if (item.medicamentos?.nome) {
+          stockNames.add(item.medicamentos.nome.toLowerCase());
+        }
+      });
+      setPharmacyStock(stockNames);
 
-      // Impressões da farmácia (quantas vezes apareceu)
-      const { data: impressoes, error: impressoesError } = await supabase
+      // Buscar impressões da farmácia (novas tabelas de tracking)
+      const { data: impressoes } = await supabase
         .from('impressoes_farmacia')
-        .select('id, medicamento_buscado, criado_em')
+        .select('id, medicamento_buscado, criado_em, search_id, is_first_option, is_closest, rank_position')
         .eq('farmacia_id', farmacia.id)
         .gte('criado_em', thirtyDaysAgo.toISOString());
 
-      if (impressoesError) throw impressoesError;
+      // Buscar dados de product_selections para tracking mais preciso
+      const { data: productSelections } = await supabase
+        .from('product_selections')
+        .select('id, product_name, search_id, criado_em')
+        .gte('criado_em', thirtyDaysAgo.toISOString());
 
-      // Calcular estatísticas
-      const totalSearches = allConsultas?.length || 0;
-      const foundCount = allConsultas?.filter(c => c.status === 'encontrado').length || 0;
-      const notFoundCount = allConsultas?.filter(c => c.status === 'nao_encontrado').length || 0;
+      // Buscar outcomes das buscas
+      const { data: searchOutcomes } = await supabase
+        .from('search_outcomes')
+        .select('search_id, outcome_status, pharmacies_found_count')
+        .gte('criado_em', thirtyDaysAgo.toISOString());
+
+      // Buscar todas as buscas com localização (para demanda regional)
+      const { data: searchesWithLocation } = await supabase
+        .from('searches')
+        .select('id, latitude, longitude, typed_text, submitted_text, criado_em')
+        .gte('criado_em', thirtyDaysAgo.toISOString())
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null);
+
+      // Criar mapa de outcomes por search_id
+      const outcomesMap = new Map<string, string>();
+      searchOutcomes?.forEach(o => outcomesMap.set(o.search_id, o.outcome_status));
+
+      // Calcular estatísticas gerais
+      const totalSearches = productSelections?.length || 0;
+      const successCount = searchOutcomes?.filter(o => o.outcome_status === 'success').length || 0;
+      const noPharmacyCount = searchOutcomes?.filter(o => o.outcome_status === 'no_pharmacy').length || 0;
+      const noProductCount = searchOutcomes?.filter(o => o.outcome_status === 'no_product').length || 0;
 
       // Calcular taxa de crescimento comparando com mês anterior
       const sixtyDaysAgo = new Date();
@@ -137,41 +178,205 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
         ? Math.round(((currentImpressions - previousImpressions) / previousImpressions) * 100)
         : currentImpressions > 0 ? 100 : 0;
 
-      setTotalStats({
-        totalSearches,
-        found: foundCount,
-        notFound: notFoundCount,
-        growthRate
+      // Agrupar medicamentos mais buscados (usando product_selections + impressões)
+      const medicamentoCounts: Record<string, { found: number; notFound: number; impressions: number }> = {};
+      
+      // Contar impressões da nossa farmácia
+      impressoes?.forEach(imp => {
+        const med = imp.medicamento_buscado.toLowerCase();
+        if (!medicamentoCounts[med]) {
+          medicamentoCounts[med] = { found: 0, notFound: 0, impressions: 0 };
+        }
+        medicamentoCounts[med].impressions++;
+        // Se temos impressão, significa que o cliente encontrou na nossa farmácia
+        medicamentoCounts[med].found++;
       });
 
-      // Agrupar medicamentos mais buscados
-      const medicamentoCounts: Record<string, { found: number; notFound: number }> = {};
-      allConsultas?.forEach(c => {
-        const med = c.medicamento_buscado.toLowerCase();
+      // Adicionar product_selections onde não temos impressão (oportunidades perdidas)
+      productSelections?.forEach(ps => {
+        const med = ps.product_name.toLowerCase();
         if (!medicamentoCounts[med]) {
-          medicamentoCounts[med] = { found: 0, notFound: 0 };
+          medicamentoCounts[med] = { found: 0, notFound: 0, impressions: 0 };
         }
-        if (c.status === 'encontrado') {
-          medicamentoCounts[med].found++;
-        } else {
+        
+        const hasOurImpression = impressoes?.some(
+          imp => imp.search_id === ps.search_id && imp.medicamento_buscado.toLowerCase() === med
+        );
+        
+        if (!hasOurImpression) {
           medicamentoCounts[med].notFound++;
         }
       });
 
-      // Converter para array e calcular tendências
+      // Converter para array com tendências
       const demandArray: MedicationDemand[] = Object.entries(medicamentoCounts)
-        .map(([name, counts]) => ({
-          name: name.charAt(0).toUpperCase() + name.slice(1),
-          found: counts.found,
-          notFound: counts.notFound,
-          searches: counts.found + counts.notFound,
-          trend: Math.round((Math.random() - 0.3) * 20), // Placeholder - precisa de dados históricos
-          category: 'Medicamento'
-        }))
+        .map(([name, counts]) => {
+          const total = counts.found + counts.notFound;
+          return {
+            name: name.charAt(0).toUpperCase() + name.slice(1),
+            found: counts.found,
+            notFound: counts.notFound,
+            searches: total,
+            trend: Math.round((Math.random() - 0.3) * 20), // TODO: calcular tendência real
+            category: 'Medicamento'
+          };
+        })
         .sort((a, b) => b.searches - a.searches)
         .slice(0, 15);
 
       setDemandData(demandArray);
+
+      // Identificar produtos que não temos no stock mas são buscados (Oportunidades Perdidas)
+      const missingProductsMap: Record<string, { count: number; inOtherPharmacies: number }> = {};
+      
+      productSelections?.forEach(ps => {
+        const productNameLower = ps.product_name.toLowerCase();
+        if (!stockNames.has(productNameLower)) {
+          if (!missingProductsMap[ps.product_name]) {
+            missingProductsMap[ps.product_name] = { count: 0, inOtherPharmacies: 0 };
+          }
+          missingProductsMap[ps.product_name].count++;
+        }
+      });
+
+      // Contar quantas farmácias têm cada produto em falta
+      const { data: allStock } = await supabase
+        .from('estoque')
+        .select('medicamentos(nome), farmacia_id')
+        .eq('disponivel', true);
+
+      const stockByProduct: Record<string, Set<string>> = {};
+      allStock?.forEach((item: any) => {
+        const name = item.medicamentos?.nome;
+        if (name) {
+          if (!stockByProduct[name]) stockByProduct[name] = new Set();
+          stockByProduct[name].add(item.farmacia_id);
+        }
+      });
+
+      Object.keys(missingProductsMap).forEach(productName => {
+        const matchingStock = Object.entries(stockByProduct).find(
+          ([name]) => name.toLowerCase() === productName.toLowerCase()
+        );
+        if (matchingStock) {
+          missingProductsMap[productName].inOtherPharmacies = matchingStock[1].size;
+        }
+      });
+
+      const missingProductsArray: MissingProduct[] = Object.entries(missingProductsMap)
+        .map(([name, data]) => ({
+          name,
+          searchCount: data.count,
+          inOtherPharmacies: data.inOtherPharmacies
+        }))
+        .sort((a, b) => b.searchCount - a.searchCount);
+
+      setMissingProducts(missingProductsArray);
+
+      // Calcular Gap Analysis (Procura vs Oferta)
+      const gapAnalysis: DemandGap[] = Object.entries(medicamentoCounts)
+        .map(([name, counts]) => {
+          const totalDemand = counts.found + counts.notFound;
+          const matchingStock = Object.entries(stockByProduct).find(
+            ([stockName]) => stockName.toLowerCase() === name
+          );
+          const pharmaciesWithStock = matchingStock ? matchingStock[1].size : 0;
+          const gapScore = pharmaciesWithStock > 0 ? totalDemand / pharmaciesWithStock : totalDemand * 2;
+          
+          return {
+            medication: name.charAt(0).toUpperCase() + name.slice(1),
+            totalDemand,
+            pharmaciesWithStock,
+            gapScore,
+            inYourStock: stockNames.has(name)
+          };
+        })
+        .filter(g => g.totalDemand > 0)
+        .sort((a, b) => b.gapScore - a.gapScore)
+        .slice(0, 15);
+
+      setDemandGaps(gapAnalysis);
+
+      // Calcular demanda regional (usando coordenadas das buscas)
+      if (farmacia.latitude && farmacia.longitude) {
+        const pharmacyLat = Number(farmacia.latitude);
+        const pharmacyLng = Number(farmacia.longitude);
+
+        const regionMap: Record<string, { 
+          searches: number; 
+          lat: number; 
+          lng: number; 
+          products: Record<string, number>;
+        }> = {};
+
+        searchesWithLocation?.forEach(search => {
+          const searchLat = Number(search.latitude);
+          const searchLng = Number(search.longitude);
+          
+          // Calcular distância
+          const R = 6371;
+          const dLat = (searchLat - pharmacyLat) * Math.PI / 180;
+          const dLon = (searchLng - pharmacyLng) * Math.PI / 180;
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(pharmacyLat * Math.PI / 180) * Math.cos(searchLat * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          const distance = R * c;
+
+          // Agrupar por proximidade (~500m de raio)
+          const regionKey = `${Math.round(searchLat * 100) / 100},${Math.round(searchLng * 100) / 100}`;
+          
+          if (!regionMap[regionKey]) {
+            regionMap[regionKey] = {
+              searches: 0,
+              lat: searchLat,
+              lng: searchLng,
+              products: {}
+            };
+          }
+          
+          regionMap[regionKey].searches++;
+          
+          const productName = search.submitted_text || search.typed_text;
+          if (productName) {
+            regionMap[regionKey].products[productName] = (regionMap[regionKey].products[productName] || 0) + 1;
+          }
+        });
+
+        const regionalArray: RegionalDemand[] = Object.entries(regionMap)
+          .map(([key, data]) => {
+            const distanceKm = Math.sqrt(
+              Math.pow((data.lat - pharmacyLat) * 111, 2) + 
+              Math.pow((data.lng - pharmacyLng) * 111 * Math.cos(pharmacyLat * Math.PI / 180), 2)
+            );
+            
+            const topProducts = Object.entries(data.products)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 3)
+              .map(([name]) => name);
+
+            return {
+              regionName: `Zona ${key.split(',')[0].slice(-4)}`,
+              latitude: data.lat,
+              longitude: data.lng,
+              totalSearches: data.searches,
+              topProducts,
+              distanceKm
+            };
+          })
+          .sort((a, b) => b.totalSearches - a.totalSearches);
+
+        setRegionalDemand(regionalArray);
+      }
+
+      // Atualizar estatísticas totais
+      setTotalStats({
+        totalSearches,
+        found: successCount,
+        notFound: noPharmacyCount + noProductCount,
+        growthRate,
+        missedOpportunities: missingProductsArray.reduce((sum, p) => sum + p.searchCount, 0)
+      });
 
       // Buscar dados mensais para o gráfico de comparação (últimos 6 meses)
       const monthlyData: MonthlyData[] = [];
@@ -187,8 +392,8 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
           .gte('criado_em', monthStart.toISOString())
           .lte('criado_em', monthEnd.toISOString());
 
-        const { data: monthSearches } = await supabase
-          .from('consultas')
+        const { data: monthSelections } = await supabase
+          .from('product_selections')
           .select('id')
           .gte('criado_em', monthStart.toISOString())
           .lte('criado_em', monthEnd.toISOString());
@@ -196,30 +401,18 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
         monthlyData.push({
           month: format(monthDate, 'MMM', { locale: pt }),
           indicacoes: monthImpressions?.length || 0,
-          buscas: monthSearches?.length || 0
+          buscas: monthSelections?.length || 0
         });
       }
 
       setMonthlyComparison(monthlyData);
 
-      // Buscar dados regionais
-      const neighborhoodCounts: Record<string, { searches: number; lat?: number; lng?: number }> = {};
-      
-      // Agrupar por localização das consultas
-      allConsultas?.forEach(c => {
-        // Por enquanto usar localização genérica
-        const region = farmacia.bairro || 'Região Principal';
-        if (!neighborhoodCounts[region]) {
-          neighborhoodCounts[region] = { searches: 0 };
-        }
-        neighborhoodCounts[region].searches++;
-      });
-
-      const neighborhoodArray = Object.entries(neighborhoodCounts).map(([name, data]) => ({
-        name,
-        searches: data.searches,
-        level: data.searches > 50 ? 'Alta' : data.searches > 20 ? 'Média' : 'Baixa',
-        color: data.searches > 50 ? 'bg-red-500' : data.searches > 20 ? 'bg-yellow-500' : 'bg-green-500'
+      // Dados regionais simplificados para compatibilidade
+      const neighborhoodArray = regionalDemand.map(r => ({
+        name: r.regionName,
+        searches: r.totalSearches,
+        level: r.totalSearches > 50 ? 'Alta' : r.totalSearches > 20 ? 'Média' : 'Baixa',
+        color: r.totalSearches > 50 ? 'bg-red-500' : r.totalSearches > 20 ? 'bg-yellow-500' : 'bg-green-500'
       }));
 
       setNeighborhoods(neighborhoodArray);
@@ -232,7 +425,7 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
   };
 
   const handleRegionClick = (region: any) => {
-    setSelectedRegion(region.name);
+    setSelectedRegion(region.name || region.regionName);
     setIsModalOpen(true);
   };
 
@@ -281,7 +474,14 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
         .insert({
           farmacia_id: farmaciaId,
           analise: analysis,
-          dados_contexto: { demandData, totalStats, neighborhoods } as any
+          dados_contexto: { 
+            demandData, 
+            totalStats, 
+            neighborhoods,
+            missingProducts,
+            demandGaps,
+            regionalDemand
+          } as any
         })
         .select('id, analise, criado_em')
         .single();
@@ -301,7 +501,14 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('analyze-demand', {
-        body: { demandData, totalStats, neighborhoods }
+        body: { 
+          demandData, 
+          totalStats, 
+          neighborhoods,
+          missingProducts,
+          demandGaps,
+          regionalDemand
+        }
       });
 
       if (error) throw error;
@@ -502,7 +709,7 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
         </CardHeader>
         <CardContent className="space-y-4 px-4 sm:px-6">
           {/* Summary Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-2 sm:p-3 text-center">
               <Search className="h-4 w-4 mx-auto mb-1 text-blue-600" />
               <div className="text-lg sm:text-xl font-bold text-blue-700">{totalStats.totalSearches}</div>
@@ -518,7 +725,12 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
               <div className="text-lg sm:text-xl font-bold text-red-700">{totalStats.notFound}</div>
               <div className="text-xs text-red-600">Não Encontrados</div>
             </div>
-            <div className={`bg-gradient-to-br ${totalStats.growthRate >= 0 ? 'from-green-50 to-green-100' : 'from-orange-50 to-orange-100'} rounded-lg p-2 sm:p-3 text-center`}>
+            <div className="bg-gradient-to-br from-amber-50 to-orange-100 rounded-lg p-2 sm:p-3 text-center">
+              <AlertTriangle className="h-4 w-4 mx-auto mb-1 text-amber-600" />
+              <div className="text-lg sm:text-xl font-bold text-amber-700">{totalStats.missedOpportunities}</div>
+              <div className="text-xs text-amber-600">Oport. Perdidas</div>
+            </div>
+            <div className={`bg-gradient-to-br ${totalStats.growthRate >= 0 ? 'from-green-50 to-green-100' : 'from-orange-50 to-orange-100'} rounded-lg p-2 sm:p-3 text-center col-span-2 sm:col-span-1`}>
               {totalStats.growthRate >= 0 ? (
                 <ArrowUpRight className="h-4 w-4 mx-auto mb-1 text-green-600" />
               ) : (
@@ -527,7 +739,7 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
               <div className={`text-lg sm:text-xl font-bold ${totalStats.growthRate >= 0 ? 'text-green-700' : 'text-orange-700'}`}>
                 {totalStats.growthRate >= 0 ? '+' : ''}{totalStats.growthRate}%
               </div>
-              <div className={`text-xs ${totalStats.growthRate >= 0 ? 'text-green-600' : 'text-orange-600'}`}>Crescimento Mensal</div>
+              <div className={`text-xs ${totalStats.growthRate >= 0 ? 'text-green-600' : 'text-orange-600'}`}>Crescimento</div>
             </div>
           </div>
 
@@ -606,6 +818,26 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Oportunidades Perdidas + Gap Analysis - Two column grid when expanded */}
+          {expanded && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <MissingProductsCard 
+                products={missingProducts} 
+                isLoading={isLoading}
+              />
+              <RegionalDemandList 
+                regions={regionalDemand}
+                isLoading={isLoading}
+                onRegionClick={handleRegionClick}
+              />
+            </div>
+          )}
+
+          {/* Gap Analysis Table - Full width when expanded */}
+          {expanded && (
+            <DemandGapTable gaps={demandGaps} isLoading={isLoading} />
           )}
 
           {/* Monthly Comparison Line Chart - Only when expanded */}
@@ -699,7 +931,7 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
                     <div className="flex items-center gap-2">
                       <div className="text-right">
                         <div className="text-sm font-semibold">
-                          {Math.round((item.found / item.searches) * 100)}%
+                          {item.searches > 0 ? Math.round((item.found / item.searches) * 100) : 0}%
                         </div>
                         <div className="text-xs text-gray-500">sucesso</div>
                       </div>
