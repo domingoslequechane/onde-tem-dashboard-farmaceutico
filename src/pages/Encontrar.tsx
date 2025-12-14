@@ -564,7 +564,10 @@ const Buscar = () => {
     }
   };
 
-  const saveToSearchHistory = (searchTerm: string) => {
+  // Only save to history when search was successful (found pharmacies with stock)
+  const saveToSearchHistory = (searchTerm: string, wasSuccessful: boolean = true) => {
+    if (!wasSuccessful || !searchTerm.trim()) return; // Only save successful searches
+    
     try {
       const history = [...searchHistory];
       const index = history.indexOf(searchTerm);
@@ -887,6 +890,9 @@ const Buscar = () => {
           farmaciaResults,
           { trigger }
         );
+        
+        // Save to history ONLY on successful search
+        saveToSearchHistory(medicamento, true);
       }
 
       // Add pharmacy markers to map
@@ -1942,60 +1948,66 @@ const Buscar = () => {
 
         {/* Search Box - Hidden when pharmacy selected or during navigation */}
         {!selectedMedicamento && !isNavigating && (
-          <div className="absolute top-2 left-2 right-2 md:left-auto md:top-2 md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card rounded-lg shadow-lg p-3 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
+          <div className="absolute top-2 left-2 right-2 md:left-auto md:top-2 md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card rounded-xl shadow-lg p-4 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
             <h2 className="text-base md:text-lg font-bold mb-3 text-foreground">Encontre ONDTem!</h2>
             
             <div className="relative mb-3">
-              <Input
-                type="text"
-                placeholder="Digite o medicamento..."
-                value={medicamento}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setMedicamento(value);
-                  setSelectedFromDropdown(false);
-                  typedSearchText.current = value; // Track typed text for analytics
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const value = medicamento.trim();
-                    // Only trigger search if term is valid and we have location
-                    if (value.length >= 3 && userLocation) {
-                      // Keep selectedFromDropdown as false - this is an Enter search
-                      setIsInputFocused(false);
-                      setFilteredMedicamentos([]);
-                      handleAutoSearch({ trigger: 'enter' });
+              {/* Search Input with Icon */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="text"
+                  placeholder={loadingMedicamentos ? "Carregando catálogo..." : "Digite o medicamento..."}
+                  value={medicamento}
+                  disabled={loadingMedicamentos}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setMedicamento(value);
+                    setSelectedFromDropdown(false);
+                    typedSearchText.current = value;
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const value = medicamento.trim();
+                      if (value.length >= 3 && userLocation) {
+                        setIsInputFocused(false);
+                        setFilteredMedicamentos([]);
+                        handleAutoSearch({ trigger: 'enter' });
+                      }
                     }
-                  }
-                }}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
-                className="pr-10 text-sm md:text-base h-9 md:h-10"
-              />
-              {medicamento && (
-                <button
-                  onClick={handleClearSearch}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1 transition-colors"
-                >
-                  <X className="h-4 w-4 text-muted-foreground" />
-                </button>
-              )}
+                  }}
+                  onFocus={() => setIsInputFocused(true)}
+                  onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
+                  className="pl-10 pr-10 text-sm md:text-base h-10 md:h-11 rounded-lg border-2 border-border focus:border-primary transition-colors"
+                />
+                {medicamento ? (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 hover:bg-accent rounded-full p-1 transition-colors"
+                  >
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                ) : loadingMedicamentos ? (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : null}
+              </div>
 
-              {/* Autocomplete Suggestions - stable dropdown without animations */}
+              {/* Autocomplete Suggestions */}
               {isInputFocused && medicamento.trim().length >= 2 && filteredMedicamentos.length > 0 && (
                 <div 
-                  className="absolute top-full left-0 right-0 mt-1 max-h-60 md:max-h-48 overflow-y-auto z-[9999] bg-card border border-border rounded-lg shadow-xl"
-                  onMouseDown={(e) => e.preventDefault()} // Prevent blur on dropdown interaction
+                  className="absolute top-full left-0 right-0 mt-1 max-h-60 md:max-h-48 overflow-y-auto z-[9999] bg-card border border-border rounded-lg shadow-xl animate-in fade-in slide-in-from-top-1 duration-150"
+                  onMouseDown={(e) => e.preventDefault()}
                 >
                   {filteredMedicamentos.slice(0, 8).map((med) => (
                     <div
                       key={med.id}
-                      className="p-3 md:p-2 hover:bg-accent active:bg-accent/80 cursor-pointer transition-colors first:rounded-t-lg last:rounded-b-lg border-b border-border/50 last:border-b-0"
+                      className="p-3 md:p-2.5 hover:bg-accent active:bg-accent/80 cursor-pointer transition-colors first:rounded-t-lg last:rounded-b-lg border-b border-border/50 last:border-b-0 flex items-start gap-2"
                       onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        // Save typed text before updating with selection
                         const originalTyped = typedSearchText.current || medicamento;
                         typedSearchText.current = originalTyped;
                         setMedicamento(med.nome);
@@ -2006,7 +2018,6 @@ const Buscar = () => {
                       }}
                       onTouchEnd={(e) => {
                         e.preventDefault();
-                        // Save typed text before updating with selection
                         const originalTyped = typedSearchText.current || medicamento;
                         typedSearchText.current = originalTyped;
                         setMedicamento(med.nome);
@@ -2016,10 +2027,13 @@ const Buscar = () => {
                         setTimeout(() => handleBuscar(med.nome), 50);
                       }}
                     >
-                      <div className="font-medium text-base md:text-sm text-foreground">{med.nome}</div>
-                      {med.categoria && (
-                        <div className="text-sm md:text-xs text-muted-foreground mt-0.5">{med.categoria}</div>
-                      )}
+                      <Plus className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-base md:text-sm text-foreground truncate">{med.nome}</div>
+                        {med.categoria && (
+                          <div className="text-xs text-muted-foreground mt-0.5 truncate">{med.categoria}</div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2028,22 +2042,24 @@ const Buscar = () => {
 
             {/* Radius Filter Buttons */}
             <div className="flex items-center gap-2 flex-wrap">
-              <label className="text-xs md:text-sm font-semibold text-muted-foreground whitespace-nowrap">Raio de Busca:</label>
-              <div className="flex gap-1 flex-wrap">
+              <label className="text-xs md:text-sm font-semibold text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                Raio:
+              </label>
+              <div className="flex gap-1.5 flex-wrap">
                 {[1, 2, 4, 8, 16].map((radius) => (
                   <button
                     key={radius}
                     onClick={() => {
                       setRaioKm(radius);
-                      // Re-run search if medication was already selected from dropdown
                       if (selectedFromDropdown && medicamento.trim() && medicamentos.length > 0) {
                         setTimeout(() => handleBuscar(medicamento), 100);
                       }
                     }}
-                    className={`px-2 py-1 rounded-md text-xs md:text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-200 ${
                       raioKm === radius
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-white text-foreground hover:bg-gray-50 border border-border'
+                        ? 'bg-primary text-primary-foreground shadow-md scale-105'
+                        : 'bg-card text-foreground hover:bg-accent border border-border hover:border-primary/50'
                     }`}
                   >
                     {radius}km
@@ -2054,36 +2070,40 @@ const Buscar = () => {
 
             {/* Search Status Feedback */}
             {medicamento.trim().length > 0 && searchStatus !== 'idle' && (
-              <div className={`mt-3 p-3 rounded-lg animate-in fade-in slide-in-from-top-2 ${
-                searchStatus === 'searching' ? 'bg-blue-50 border border-blue-200' :
-                searchStatus === 'found' ? 'bg-green-50 border border-green-200' :
-                'bg-red-50 border border-red-200'
+              <div className={`mt-3 p-3 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200 ${
+                searchStatus === 'searching' ? 'bg-primary/5 border border-primary/20' :
+                searchStatus === 'found' ? 'bg-secondary/10 border border-secondary/30' :
+                'bg-destructive/10 border border-destructive/30'
               }`}>
                 {searchStatus === 'searching' && (
-                  <div className="flex items-center gap-2 text-blue-700">
-                    <div className="h-4 w-4 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm font-medium">Buscando medicamentos...</span>
+                  <div className="flex items-center gap-3 text-primary">
+                    <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm font-medium">Buscando farmácias próximas...</span>
                   </div>
                 )}
                 {searchStatus === 'found' && (
-                  <div className="flex items-center gap-2 text-green-700">
-                    <Search className="h-4 w-4" />
-                    <span className="text-sm font-medium">
-                      {medicamentos.length} {medicamentos.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
+                  <div className="flex items-center gap-2 text-secondary-dark">
+                    <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center">
+                      <svg className="h-3 w-3 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-semibold">
+                      {medicamentos.length} {medicamentos.length === 1 ? 'farmácia encontrada' : 'farmácias encontradas'}
                     </span>
                   </div>
                 )}
                 {searchStatus === 'not-found' && (
-                  <div className="text-center space-y-2">
-                    <div className="flex justify-center">
-                      <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                        <Search className="h-6 w-6 text-red-600" />
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0">
+                      <AlertCircle className="h-5 w-5 text-destructive" />
                     </div>
-                    <h4 className="font-bold text-red-900 text-sm md:text-base">Nenhum medicamento encontrado</h4>
-                    <p className="text-xs md:text-sm text-red-700">
-                      Não encontramos "{medicamento}" em farmácias próximas.
-                    </p>
+                    <div>
+                      <h4 className="font-semibold text-destructive text-sm">Não encontrado</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Tente aumentar o raio ou buscar outro termo.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2121,37 +2141,38 @@ const Buscar = () => {
             )}
 
             {/* Recent Searches */}
-            {searchHistory.length > 0 && medicamento.trim().length === 0 && medicamentos.length === 0 && (
-              <div className="mt-2">
-                <h3 className="text-xs md:text-sm font-semibold mb-1 text-muted-foreground">Buscas Recentes</h3>
-                <div className="space-y-1">
-                  {searchHistory.slice(0, 3).map((item, index) => (
+            {searchHistory.length > 0 && medicamento.trim().length === 0 && medicamentos.length === 0 && searchStatus === 'idle' && (
+              <div className="mt-4">
+                <h3 className="text-xs md:text-sm font-semibold mb-2 text-muted-foreground flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  Buscas Recentes
+                </h3>
+                <div className="space-y-1 max-h-36 overflow-y-auto">
+                  {searchHistory.slice(0, 5).map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-1.5 hover:bg-accent rounded-md cursor-pointer group transition-colors"
+                      className="flex items-center justify-between p-2 hover:bg-accent rounded-lg cursor-pointer group transition-all duration-150"
+                      onClick={() => {
+                        typedSearchText.current = item;
+                        setMedicamento(item);
+                        setSelectedFromDropdown(true);
+                        setTimeout(() => handleBuscar(item), 100);
+                      }}
                     >
-                      <span
-                        className="flex-1 text-xs md:text-sm"
-                        onClick={() => {
-                          // For history items, typed text = selected text
-                          typedSearchText.current = item;
-                          setMedicamento(item);
-                          setSelectedFromDropdown(true);
-                          setTimeout(() => handleBuscar(item), 100);
-                        }}
-                      >
-                        {item}
-                      </span>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm font-medium text-foreground truncate">{item}</span>
+                      </div>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-5 px-1 text-xs"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();
                           removeFromSearchHistory(item);
                         }}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   ))}
