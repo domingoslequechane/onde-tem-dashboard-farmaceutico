@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { Button } from '@/components/ui/button';
@@ -116,6 +117,8 @@ const Buscar = () => {
   const searchDebounceTimer = useRef<NodeJS.Timeout | null>(null);
   const typedSearchText = useRef<string>('');
   const routeDotsRef = useRef<google.maps.Marker[]>([]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
     checkLocationPermission();
@@ -123,6 +126,33 @@ const Buscar = () => {
     fetchAllMedicamentos();
     loadSearchHistory();
   }, []);
+
+  // Update dropdown position when input is focused
+  const updateDropdownPosition = useCallback(() => {
+    if (searchInputRef.current) {
+      const rect = searchInputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isInputFocused && medicamento.trim().length >= 2 && filteredMedicamentos.length > 0) {
+      updateDropdownPosition();
+      
+      const handleScrollResize = () => updateDropdownPosition();
+      window.addEventListener('scroll', handleScrollResize, true);
+      window.addEventListener('resize', handleScrollResize);
+      
+      return () => {
+        window.removeEventListener('scroll', handleScrollResize, true);
+        window.removeEventListener('resize', handleScrollResize);
+      };
+    }
+  }, [isInputFocused, medicamento, filteredMedicamentos.length, updateDropdownPosition]);
 
   useEffect(() => {
     if (locationPermission === 'denied') {
@@ -1956,6 +1986,7 @@ const Buscar = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
+                  ref={searchInputRef}
                   type="text"
                   placeholder={loadingMedicamentos ? "Carregando catálogo..." : "Digite o medicamento..."}
                   value={medicamento}
@@ -1994,51 +2025,58 @@ const Buscar = () => {
                   </div>
                 ) : null}
               </div>
-
-              {/* Autocomplete Suggestions */}
-              {isInputFocused && medicamento.trim().length >= 2 && filteredMedicamentos.length > 0 && (
-                <div 
-                  className="absolute top-full left-0 right-0 mt-1 max-h-60 md:max-h-48 overflow-y-auto z-[9999] bg-card border border-border rounded-lg shadow-xl animate-in fade-in slide-in-from-top-1 duration-150"
-                  onMouseDown={(e) => e.preventDefault()}
-                >
-                  {filteredMedicamentos.slice(0, 8).map((med) => (
-                    <div
-                      key={med.id}
-                      className="p-3 md:p-2.5 hover:bg-accent active:bg-accent/80 cursor-pointer transition-colors first:rounded-t-lg last:rounded-b-lg border-b border-border/50 last:border-b-0 flex items-start gap-2"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const originalTyped = typedSearchText.current || medicamento;
-                        typedSearchText.current = originalTyped;
-                        setMedicamento(med.nome);
-                        setSelectedFromDropdown(true);
-                        setIsInputFocused(false);
-                        setFilteredMedicamentos([]);
-                        setTimeout(() => handleBuscar(med.nome), 50);
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        const originalTyped = typedSearchText.current || medicamento;
-                        typedSearchText.current = originalTyped;
-                        setMedicamento(med.nome);
-                        setSelectedFromDropdown(true);
-                        setIsInputFocused(false);
-                        setFilteredMedicamentos([]);
-                        setTimeout(() => handleBuscar(med.nome), 50);
-                      }}
-                    >
-                      <Plus className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-base md:text-sm text-foreground truncate">{med.nome}</div>
-                        {med.categoria && (
-                          <div className="text-xs text-muted-foreground mt-0.5 truncate">{med.categoria}</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
+
+            {/* Autocomplete Suggestions - Rendered via Portal */}
+            {isInputFocused && medicamento.trim().length >= 2 && filteredMedicamentos.length > 0 && dropdownPosition && createPortal(
+              <div 
+                className="fixed max-h-60 overflow-y-auto bg-card border border-border rounded-lg shadow-xl animate-in fade-in slide-in-from-top-1 duration-150"
+                style={{
+                  top: dropdownPosition.top,
+                  left: dropdownPosition.left,
+                  width: dropdownPosition.width,
+                  zIndex: 99999,
+                }}
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                {filteredMedicamentos.slice(0, 8).map((med) => (
+                  <div
+                    key={med.id}
+                    className="p-3 md:p-2.5 hover:bg-accent active:bg-accent/80 cursor-pointer transition-colors first:rounded-t-lg last:rounded-b-lg border-b border-border/50 last:border-b-0 flex items-start gap-2"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const originalTyped = typedSearchText.current || medicamento;
+                      typedSearchText.current = originalTyped;
+                      setMedicamento(med.nome);
+                      setSelectedFromDropdown(true);
+                      setIsInputFocused(false);
+                      setFilteredMedicamentos([]);
+                      setTimeout(() => handleBuscar(med.nome), 50);
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      const originalTyped = typedSearchText.current || medicamento;
+                      typedSearchText.current = originalTyped;
+                      setMedicamento(med.nome);
+                      setSelectedFromDropdown(true);
+                      setIsInputFocused(false);
+                      setFilteredMedicamentos([]);
+                      setTimeout(() => handleBuscar(med.nome), 50);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-base md:text-sm text-foreground truncate">{med.nome}</div>
+                      {med.categoria && (
+                        <div className="text-xs text-muted-foreground mt-0.5 truncate">{med.categoria}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>,
+              document.body
+            )}
 
             {/* Radius Filter Buttons */}
             <div className="flex items-center gap-2 flex-wrap">
