@@ -625,7 +625,7 @@ const Buscar = () => {
     }
   };
 
-  // Autocomplete filtering (no automatic search)
+  // Autocomplete filtering with debounce for better performance
   useEffect(() => {
     // Reset if field is empty
     if (medicamento.trim().length === 0) {
@@ -647,62 +647,74 @@ const Buscar = () => {
       return;
     }
 
-    console.log('Filtering medications for:', searchTerm, 'Total medications:', allMedicamentos.length);
-
-    // First, try simple prefix matching (best quality matches)
-    const prefixMatches = allMedicamentos.filter(med => 
-      med.nome.toLowerCase().startsWith(searchTerm)
-    );
-    
-    console.log('Prefix matches:', prefixMatches.length);
-
-    // Then try contains matching
-    const containsMatches = allMedicamentos.filter(med => 
-      med.nome.toLowerCase().includes(searchTerm) && 
-      !med.nome.toLowerCase().startsWith(searchTerm)
-    );
-    
-    console.log('Contains matches:', containsMatches.length);
-
-    let finalResults: Medicamento[] = [];
-    
-    if (prefixMatches.length > 0 || containsMatches.length > 0) {
-      // Combine: prefix matches first, then contains matches
-      finalResults = [...prefixMatches.sort((a, b) => a.nome.localeCompare(b.nome)), 
-                      ...containsMatches.sort((a, b) => a.nome.localeCompare(b.nome))];
-    } else {
-      // No direct matches - use fuzzy search for typo tolerance with STRICT settings
-      const fuse = new Fuse(allMedicamentos, {
-        keys: ['nome'],
-        threshold: 0.3, // Much stricter - 0.0 is exact, 1.0 matches anything
-        distance: 50, // Characters between pattern and match
-        minMatchCharLength: 3,
-        includeScore: true,
-        ignoreLocation: false, // Prefer matches at the beginning
-        findAllMatches: false,
-      });
-
-      const fuzzyResults = fuse.search(searchTerm);
-      console.log('Fuzzy results (raw):', fuzzyResults.length);
-      
-      // Only keep results with good score (lower is better, 0 = perfect match)
-      const goodMatches = fuzzyResults.filter(result => result.score !== undefined && result.score < 0.35);
-      console.log('Fuzzy results (filtered by score):', goodMatches.length);
-      
-      finalResults = goodMatches.map(result => result.item);
+    // Debounce the filtering to avoid flickering
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current);
     }
-    
-    // Remove duplicates by name
-    const uniqueNames = new Map<string, Medicamento>();
-    finalResults.forEach(med => {
-      if (!uniqueNames.has(med.nome.toLowerCase())) {
-        uniqueNames.set(med.nome.toLowerCase(), med);
+
+    searchDebounceTimer.current = setTimeout(() => {
+      console.log('Filtering medications for:', searchTerm, 'Total medications:', allMedicamentos.length);
+
+      // First, try simple prefix matching (best quality matches)
+      const prefixMatches = allMedicamentos.filter(med => 
+        med.nome.toLowerCase().startsWith(searchTerm)
+      );
+      
+      console.log('Prefix matches:', prefixMatches.length);
+
+      // Then try contains matching
+      const containsMatches = allMedicamentos.filter(med => 
+        med.nome.toLowerCase().includes(searchTerm) && 
+        !med.nome.toLowerCase().startsWith(searchTerm)
+      );
+      
+      console.log('Contains matches:', containsMatches.length);
+
+      let finalResults: Medicamento[] = [];
+      
+      if (prefixMatches.length > 0 || containsMatches.length > 0) {
+        // Combine: prefix matches first, then contains matches
+        finalResults = [...prefixMatches.sort((a, b) => a.nome.localeCompare(b.nome)), 
+                        ...containsMatches.sort((a, b) => a.nome.localeCompare(b.nome))];
+      } else {
+        // No direct matches - use fuzzy search for typo tolerance with STRICT settings
+        const fuse = new Fuse(allMedicamentos, {
+          keys: ['nome'],
+          threshold: 0.3,
+          distance: 50,
+          minMatchCharLength: 3,
+          includeScore: true,
+          ignoreLocation: false,
+          findAllMatches: false,
+        });
+
+        const fuzzyResults = fuse.search(searchTerm);
+        console.log('Fuzzy results (raw):', fuzzyResults.length);
+        
+        const goodMatches = fuzzyResults.filter(result => result.score !== undefined && result.score < 0.35);
+        console.log('Fuzzy results (filtered by score):', goodMatches.length);
+        
+        finalResults = goodMatches.map(result => result.item);
       }
-    });
-    
-    const uniqueResults = Array.from(uniqueNames.values());
-    console.log('Unique filtered medications:', uniqueResults.length);
-    setFilteredMedicamentos(uniqueResults);
+      
+      // Remove duplicates by name
+      const uniqueNames = new Map<string, Medicamento>();
+      finalResults.forEach(med => {
+        if (!uniqueNames.has(med.nome.toLowerCase())) {
+          uniqueNames.set(med.nome.toLowerCase(), med);
+        }
+      });
+      
+      const uniqueResults = Array.from(uniqueNames.values());
+      console.log('Unique filtered medications:', uniqueResults.length);
+      setFilteredMedicamentos(uniqueResults);
+    }, 150); // 150ms debounce delay
+
+    return () => {
+      if (searchDebounceTimer.current) {
+        clearTimeout(searchDebounceTimer.current);
+      }
+    };
   }, [medicamento, allMedicamentos]);
 
   // Registrar busca no banco de dados
@@ -1956,24 +1968,37 @@ const Buscar = () => {
                 </button>
               )}
 
-              {/* Autocomplete Suggestions */}
-              {isInputFocused && medicamento.trim().length > 0 && filteredMedicamentos.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto z-[9999] bg-card border border-border rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2">
-                  {filteredMedicamentos.slice(0, 5).map((med) => (
+              {/* Autocomplete Suggestions - stable dropdown without animations */}
+              {isInputFocused && medicamento.trim().length >= 2 && filteredMedicamentos.length > 0 && (
+                <div 
+                  className="absolute top-full left-0 right-0 mt-1 max-h-60 md:max-h-48 overflow-y-auto z-[9999] bg-card border border-border rounded-lg shadow-xl"
+                  onMouseDown={(e) => e.preventDefault()} // Prevent blur on dropdown interaction
+                >
+                  {filteredMedicamentos.slice(0, 8).map((med) => (
                     <div
                       key={med.id}
-                      className="p-2 hover:bg-accent cursor-pointer transition-colors first:rounded-t-lg last:rounded-b-lg"
+                      className="p-3 md:p-2 hover:bg-accent active:bg-accent/80 cursor-pointer transition-colors first:rounded-t-lg last:rounded-b-lg border-b border-border/50 last:border-b-0"
                       onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setMedicamento(med.nome);
+                        setSelectedFromDropdown(true);
+                        setIsInputFocused(false);
+                        setFilteredMedicamentos([]); // Clear immediately to avoid flicker
+                        setTimeout(() => handleBuscar(med.nome), 50);
+                      }}
+                      onTouchEnd={(e) => {
                         e.preventDefault();
                         setMedicamento(med.nome);
                         setSelectedFromDropdown(true);
                         setIsInputFocused(false);
-                        setTimeout(() => handleBuscar(med.nome), 100);
+                        setFilteredMedicamentos([]);
+                        setTimeout(() => handleBuscar(med.nome), 50);
                       }}
                     >
-                      <div className="font-medium text-sm md:text-base text-foreground">{med.nome}</div>
+                      <div className="font-medium text-base md:text-sm text-foreground">{med.nome}</div>
                       {med.categoria && (
-                        <div className="text-xs md:text-sm text-muted-foreground">{med.categoria}</div>
+                        <div className="text-sm md:text-xs text-muted-foreground mt-0.5">{med.categoria}</div>
                       )}
                     </div>
                   ))}
