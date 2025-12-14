@@ -12,6 +12,7 @@ import pharmacyMarkerIcon from '@/assets/pharmacy-marker-icon.svg';
 import { LeaveReviewModal } from '@/components/LeaveReviewModal';
 import { ViewReviewsModal } from '@/components/ViewReviewsModal';
 import Fuse from 'fuse.js';
+import { useSearchCapture } from '@/hooks/useSearchCapture';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -113,6 +114,7 @@ const Buscar = () => {
   const lastAnnouncedDistance = useRef<number>(0);
   const hasAnnouncedTurn = useRef<boolean>(false);
   const searchDebounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const typedSearchText = useRef<string>('');
   const routeDotsRef = useRef<google.maps.Marker[]>([]);
 
   useEffect(() => {
@@ -717,50 +719,8 @@ const Buscar = () => {
     };
   }, [medicamento, allMedicamentos]);
 
-  // Registrar busca no banco de dados
-  const registrarBusca = async (medicamentoBuscado: string, encontrados: boolean, farmaciasEncontradas: MedicamentoFarmacia[]) => {
-    try {
-      // Registrar a consulta
-      const { data: consulta, error: consultaError } = await supabase
-        .from('consultas')
-        .insert({
-          medicamento_buscado: medicamentoBuscado,
-          latitude: userLocation?.lat,
-          longitude: userLocation?.lng,
-          status: encontrados ? 'encontrado' : 'nao_encontrado',
-          canal: 'web'
-        })
-        .select('id')
-        .single();
-
-      if (consultaError) {
-        console.error('Erro ao registrar consulta:', consultaError);
-        return;
-      }
-
-      // Registrar impressões para cada farmácia que apareceu
-      if (farmaciasEncontradas.length > 0 && consulta) {
-        const impressoes = farmaciasEncontradas.map(f => ({
-          farmacia_id: f.farmacia_id,
-          consulta_id: consulta.id,
-          medicamento_buscado: medicamentoBuscado,
-          cliente_latitude: userLocation?.lat,
-          cliente_longitude: userLocation?.lng,
-          distancia_km: f.distancia_km
-        }));
-
-        const { error: impressoesError } = await supabase
-          .from('impressoes_farmacia')
-          .insert(impressoes);
-
-        if (impressoesError) {
-          console.error('Erro ao registrar impressões:', impressoesError);
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao registrar busca:', error);
-    }
-  };
+  // Hook para captura de buscas (novo sistema)
+  const { completarBusca } = useSearchCapture({ userLocation, raioKm });
 
   const handleAutoSearch = async () => {
     if (!medicamento.trim() || !userLocation) return;
@@ -783,8 +743,15 @@ const Buscar = () => {
       if (!medData || medData.length === 0) {
         setMedicamentos([]);
         setSearchStatus('not-found');
-        // Registrar busca sem resultados
-        await registrarBusca(medicamento, false, []);
+        // Novo sistema: registrar busca sem resultados de produto
+        if (selectedFromDropdown) {
+          await completarBusca(
+            typedSearchText.current,
+            medicamento,
+            medData?.[0]?.id || null,
+            []
+          );
+        }
         return;
       }
 
@@ -888,8 +855,20 @@ const Buscar = () => {
       setMedicamentos(results);
       setSearchStatus(results.length > 0 ? 'found' : 'not-found');
 
-      // Registrar busca no banco de dados
-      await registrarBusca(medicamento, results.length > 0, results);
+      // Novo sistema: Registrar busca completa apenas se veio de seleção explícita
+      if (selectedFromDropdown) {
+        const farmaciaResults = results.map(r => ({
+          farmacia_id: r.farmacia_id,
+          distancia_km: r.distancia_km
+        }));
+        
+        await completarBusca(
+          typedSearchText.current,
+          medicamento,
+          medData?.[0]?.id || null,
+          farmaciaResults
+        );
+      }
 
       // Add pharmacy markers to map
       if (map.current) {
@@ -1952,8 +1931,10 @@ const Buscar = () => {
                 placeholder="Digite o medicamento..."
                 value={medicamento}
                 onChange={(e) => {
-                  setMedicamento(e.target.value);
-                  setSelectedFromDropdown(false); // Reset when user types
+                  const value = e.target.value;
+                  setMedicamento(value);
+                  setSelectedFromDropdown(false);
+                  typedSearchText.current = value; // Track typed text for analytics
                 }}
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
@@ -1981,14 +1962,20 @@ const Buscar = () => {
                       onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        // Save typed text before updating with selection
+                        const originalTyped = typedSearchText.current || medicamento;
+                        typedSearchText.current = originalTyped;
                         setMedicamento(med.nome);
                         setSelectedFromDropdown(true);
                         setIsInputFocused(false);
-                        setFilteredMedicamentos([]); // Clear immediately to avoid flicker
+                        setFilteredMedicamentos([]);
                         setTimeout(() => handleBuscar(med.nome), 50);
                       }}
                       onTouchEnd={(e) => {
                         e.preventDefault();
+                        // Save typed text before updating with selection
+                        const originalTyped = typedSearchText.current || medicamento;
+                        typedSearchText.current = originalTyped;
                         setMedicamento(med.nome);
                         setSelectedFromDropdown(true);
                         setIsInputFocused(false);
@@ -2113,6 +2100,8 @@ const Buscar = () => {
                       <span
                         className="flex-1 text-xs md:text-sm"
                         onClick={() => {
+                          // For history items, typed text = selected text
+                          typedSearchText.current = item;
                           setMedicamento(item);
                           setSelectedFromDropdown(true);
                           setTimeout(() => handleBuscar(item), 100);

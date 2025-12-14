@@ -347,7 +347,12 @@ export type Database = {
           distancia_km: number | null
           farmacia_id: string
           id: string
+          is_closest: boolean | null
+          is_first_option: boolean | null
           medicamento_buscado: string
+          product_selection_id: string | null
+          rank_position: number | null
+          search_id: string | null
         }
         Insert: {
           cliente_latitude?: number | null
@@ -357,7 +362,12 @@ export type Database = {
           distancia_km?: number | null
           farmacia_id: string
           id?: string
+          is_closest?: boolean | null
+          is_first_option?: boolean | null
           medicamento_buscado: string
+          product_selection_id?: string | null
+          rank_position?: number | null
+          search_id?: string | null
         }
         Update: {
           cliente_latitude?: number | null
@@ -367,7 +377,12 @@ export type Database = {
           distancia_km?: number | null
           farmacia_id?: string
           id?: string
+          is_closest?: boolean | null
+          is_first_option?: boolean | null
           medicamento_buscado?: string
+          product_selection_id?: string | null
+          rank_position?: number | null
+          search_id?: string | null
         }
         Relationships: [
           {
@@ -382,6 +397,20 @@ export type Database = {
             columns: ["farmacia_id"]
             isOneToOne: false
             referencedRelation: "farmacias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impressoes_farmacia_product_selection_id_fkey"
+            columns: ["product_selection_id"]
+            isOneToOne: false
+            referencedRelation: "product_selections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impressoes_farmacia_search_id_fkey"
+            columns: ["search_id"]
+            isOneToOne: false
+            referencedRelation: "searches"
             referencedColumns: ["id"]
           },
         ]
@@ -443,6 +472,151 @@ export type Database = {
           nome?: string
           nome_generico?: string | null
           principio_ativo?: string | null
+        }
+        Relationships: []
+      }
+      product_selections: {
+        Row: {
+          criado_em: string | null
+          id: string
+          product_id: string | null
+          product_name: string
+          search_id: string
+        }
+        Insert: {
+          criado_em?: string | null
+          id?: string
+          product_id?: string | null
+          product_name: string
+          search_id: string
+        }
+        Update: {
+          criado_em?: string | null
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          search_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_selections_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "medicamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_selections_search_id_fkey"
+            columns: ["search_id"]
+            isOneToOne: false
+            referencedRelation: "searches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_normalizations: {
+        Row: {
+          confidence_score: number | null
+          criado_em: string | null
+          id: string
+          match_type: string | null
+          normalized_term: string | null
+          search_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          criado_em?: string | null
+          id?: string
+          match_type?: string | null
+          normalized_term?: string | null
+          search_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          criado_em?: string | null
+          id?: string
+          match_type?: string | null
+          normalized_term?: string | null
+          search_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_normalizations_search_id_fkey"
+            columns: ["search_id"]
+            isOneToOne: false
+            referencedRelation: "searches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_outcomes: {
+        Row: {
+          closest_pharmacy_distance: number | null
+          criado_em: string | null
+          id: string
+          outcome_status: string
+          pharmacies_found_count: number | null
+          search_id: string
+        }
+        Insert: {
+          closest_pharmacy_distance?: number | null
+          criado_em?: string | null
+          id?: string
+          outcome_status: string
+          pharmacies_found_count?: number | null
+          search_id: string
+        }
+        Update: {
+          closest_pharmacy_distance?: number | null
+          criado_em?: string | null
+          id?: string
+          outcome_status?: string
+          pharmacies_found_count?: number | null
+          search_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_outcomes_search_id_fkey"
+            columns: ["search_id"]
+            isOneToOne: false
+            referencedRelation: "searches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      searches: {
+        Row: {
+          criado_em: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          search_radius: number | null
+          session_id: string
+          source: string | null
+          submitted_text: string | null
+          typed_text: string
+        }
+        Insert: {
+          criado_em?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          search_radius?: number | null
+          session_id: string
+          source?: string | null
+          submitted_text?: string | null
+          typed_text: string
+        }
+        Update: {
+          criado_em?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          search_radius?: number | null
+          session_id?: string
+          source?: string | null
+          submitted_text?: string | null
+          typed_text?: string
         }
         Relationships: []
       }
@@ -752,6 +926,10 @@ export type Database = {
               medicamento_preco: number
             }[]
           }
+      check_search_rate_limit: {
+        Args: { p_session_id: string }
+        Returns: boolean
+      }
       delete_admin: { Args: { target_user_id: string }; Returns: undefined }
       delete_expired_codes: { Args: never; Returns: undefined }
       delete_old_support_messages: { Args: never; Returns: undefined }
