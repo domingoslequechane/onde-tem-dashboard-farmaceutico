@@ -620,46 +620,55 @@ const Buscar = () => {
 
     const searchTerm = medicamento.trim().toLowerCase();
     
-    // Need at least 1 character to search
-    if (searchTerm.length < 1) {
+    // Need at least 2 characters to search for better results
+    if (searchTerm.length < 2) {
       setFilteredMedicamentos([]);
       return;
     }
 
     console.log('Filtering medications for:', searchTerm, 'Total medications:', allMedicamentos.length);
 
-    // First, try simple prefix/contains matching for better results
-    const simpleMatches = allMedicamentos.filter(med => 
-      med.nome.toLowerCase().includes(searchTerm)
+    // First, try simple prefix matching (best quality matches)
+    const prefixMatches = allMedicamentos.filter(med => 
+      med.nome.toLowerCase().startsWith(searchTerm)
     );
     
-    console.log('Simple matches:', simpleMatches.length);
+    console.log('Prefix matches:', prefixMatches.length);
 
-    // If we have simple matches, use those
+    // Then try contains matching
+    const containsMatches = allMedicamentos.filter(med => 
+      med.nome.toLowerCase().includes(searchTerm) && 
+      !med.nome.toLowerCase().startsWith(searchTerm)
+    );
+    
+    console.log('Contains matches:', containsMatches.length);
+
     let finalResults: Medicamento[] = [];
     
-    if (simpleMatches.length > 0) {
-      // Sort by relevance: prefix matches first, then contains
-      finalResults = simpleMatches.sort((a, b) => {
-        const aStartsWith = a.nome.toLowerCase().startsWith(searchTerm) ? 0 : 1;
-        const bStartsWith = b.nome.toLowerCase().startsWith(searchTerm) ? 0 : 1;
-        if (aStartsWith !== bStartsWith) return aStartsWith - bStartsWith;
-        return a.nome.localeCompare(b.nome);
-      });
+    if (prefixMatches.length > 0 || containsMatches.length > 0) {
+      // Combine: prefix matches first, then contains matches
+      finalResults = [...prefixMatches.sort((a, b) => a.nome.localeCompare(b.nome)), 
+                      ...containsMatches.sort((a, b) => a.nome.localeCompare(b.nome))];
     } else {
-      // No simple matches - use fuzzy search for typo tolerance
+      // No direct matches - use fuzzy search for typo tolerance with STRICT settings
       const fuse = new Fuse(allMedicamentos, {
         keys: ['nome'],
-        threshold: 0.6, // Higher threshold for more fuzzy matches
-        distance: 200,
-        minMatchCharLength: 1,
+        threshold: 0.3, // Much stricter - 0.0 is exact, 1.0 matches anything
+        distance: 50, // Characters between pattern and match
+        minMatchCharLength: 3,
         includeScore: true,
-        ignoreLocation: true, // Don't penalize matches at the end of string
+        ignoreLocation: false, // Prefer matches at the beginning
+        findAllMatches: false,
       });
 
       const fuzzyResults = fuse.search(searchTerm);
-      console.log('Fuzzy results:', fuzzyResults.length);
-      finalResults = fuzzyResults.map(result => result.item);
+      console.log('Fuzzy results (raw):', fuzzyResults.length);
+      
+      // Only keep results with good score (lower is better, 0 = perfect match)
+      const goodMatches = fuzzyResults.filter(result => result.score !== undefined && result.score < 0.35);
+      console.log('Fuzzy results (filtered by score):', goodMatches.length);
+      
+      finalResults = goodMatches.map(result => result.item);
     }
     
     // Remove duplicates by name
