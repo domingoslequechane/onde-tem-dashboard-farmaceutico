@@ -104,6 +104,7 @@ const Buscar = () => {
   const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>('WALKING');
   const [searchStatus, setSearchStatus] = useState<'idle' | 'searching' | 'found' | 'not-found'>('idle');
   const [navigationStartTime, setNavigationStartTime] = useState<number | null>(null);
+  const [selectedFromDropdown, setSelectedFromDropdown] = useState(false);
   const [travelDuration, setTravelDuration] = useState<string>('');
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
@@ -983,13 +984,18 @@ const Buscar = () => {
     return google.maps.geometry.spherical.computeDistanceBetween(from, to) / 1000; // Convert to km
   };
 
-  const handleBuscar = async () => {
-    if (!medicamento.trim() || !userLocation) {
+  const handleBuscar = async (medicationName?: string) => {
+    const searchTerm = medicationName || medicamento;
+    if (!searchTerm.trim() || !userLocation) {
       return;
     }
 
     setSearching(true);
-    saveToSearchHistory(medicamento);
+    
+    // Only save to history if selected from dropdown (valid medication)
+    if (selectedFromDropdown && medicationName) {
+      saveToSearchHistory(medicationName);
+    }
 
     try {
       // Clear existing markers
@@ -1000,7 +1006,7 @@ const Buscar = () => {
       const { data: medData, error: medError } = await supabase
         .from('medicamentos')
         .select('id, nome')
-        .ilike('nome', `%${medicamento}%`);
+        .ilike('nome', `%${searchTerm}%`);
 
       if (medError) throw medError;
 
@@ -1827,6 +1833,7 @@ const Buscar = () => {
 
   const handleClearSearch = () => {
     setMedicamento('');
+    setSelectedFromDropdown(false);
   };
 
   const handleTravelModePreview = async (mode: 'WALKING' | 'DRIVING') => {
@@ -1932,7 +1939,10 @@ const Buscar = () => {
                 type="text"
                 placeholder="Digite o medicamento..."
                 value={medicamento}
-                onChange={(e) => setMedicamento(e.target.value)}
+                onChange={(e) => {
+                  setMedicamento(e.target.value);
+                  setSelectedFromDropdown(false); // Reset when user types
+                }}
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
                 className="pr-10 text-sm md:text-base h-9 md:h-10"
@@ -1956,8 +1966,9 @@ const Buscar = () => {
                       onMouseDown={(e) => {
                         e.preventDefault();
                         setMedicamento(med.nome);
+                        setSelectedFromDropdown(true);
                         setIsInputFocused(false);
-                        setTimeout(() => handleBuscar(), 100);
+                        setTimeout(() => handleBuscar(med.nome), 100);
                       }}
                     >
                       <div className="font-medium text-sm md:text-base text-foreground">{med.nome}</div>
@@ -1979,9 +1990,9 @@ const Buscar = () => {
                     key={radius}
                     onClick={() => {
                       setRaioKm(radius);
-                      // Re-run search if medication was already selected
-                      if (medicamento.trim() && medicamentos.length > 0) {
-                        setTimeout(() => handleBuscar(), 100);
+                      // Re-run search if medication was already selected from dropdown
+                      if (selectedFromDropdown && medicamento.trim() && medicamentos.length > 0) {
+                        setTimeout(() => handleBuscar(medicamento), 100);
                       }
                     }}
                     className={`px-2 py-1 rounded-md text-xs md:text-sm font-medium transition-all duration-200 ${
@@ -2078,7 +2089,8 @@ const Buscar = () => {
                         className="flex-1 text-xs md:text-sm"
                         onClick={() => {
                           setMedicamento(item);
-                          setTimeout(() => handleBuscar(), 100);
+                          setSelectedFromDropdown(true);
+                          setTimeout(() => handleBuscar(item), 100);
                         }}
                       >
                         {item}
