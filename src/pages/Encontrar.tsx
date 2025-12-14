@@ -1886,24 +1886,25 @@ const Buscar = () => {
 
               {/* Autocomplete Suggestions */}
               {isInputFocused && medicamento.trim().length > 0 && filteredMedicamentos.length > 0 && (
-                <Card className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto z-20 animate-in fade-in slide-in-from-top-2">
+                <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto z-[9999] bg-card border border-border rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2">
                   {filteredMedicamentos.slice(0, 5).map((med) => (
                     <div
                       key={med.id}
-                      className="p-2 hover:bg-accent cursor-pointer transition-colors"
-                      onClick={() => {
+                      className="p-2 hover:bg-accent cursor-pointer transition-colors first:rounded-t-lg last:rounded-b-lg"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
                         setMedicamento(med.nome);
                         setIsInputFocused(false);
                         setTimeout(() => handleBuscar(), 100);
                       }}
                     >
-                      <div className="font-medium text-sm md:text-base">{med.nome}</div>
+                      <div className="font-medium text-sm md:text-base text-foreground">{med.nome}</div>
                       {med.categoria && (
                         <div className="text-xs md:text-sm text-muted-foreground">{med.categoria}</div>
                       )}
                     </div>
                   ))}
-                </Card>
+                </div>
               )}
             </div>
 
