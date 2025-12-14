@@ -87,6 +87,7 @@ const Buscar = () => {
   } | null>(null);
   const [routeMode, setRouteMode] = useState<'walking' | 'driving'>('walking');
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showLeaveReview, setShowLeaveReview] = useState(false);
   const [showViewReviews, setShowViewReviews] = useState(false);
@@ -1038,11 +1039,7 @@ const Buscar = () => {
     }
 
     setSearching(true);
-    
-    // Only save to history if selected from dropdown (valid medication)
-    if (selectedFromDropdown && medicationName) {
-      saveToSearchHistory(medicationName);
-    }
+    setSearchStatus('searching');
 
     try {
       // Clear existing markers
@@ -1057,8 +1054,10 @@ const Buscar = () => {
 
       if (medError) throw medError;
 
+      // CASE 1: Product does not exist in catalog
       if (!medData || medData.length === 0) {
         setMedicamentos([]);
+        setSearchStatus('not-found');
         setSearching(false);
         return;
       }
@@ -1162,6 +1161,21 @@ const Buscar = () => {
 
       setMedicamentos(results);
 
+      // CASE 2: Product exists but no pharmacy has stock within radius
+      if (results.length === 0) {
+        setSearchStatus('not-found');
+        setSearching(false);
+        return;
+      }
+
+      // CASE 3: Success - found pharmacies with stock
+      setSearchStatus('found');
+      
+      // Save to history ONLY on successful search with valid medication name
+      if (medicationName) {
+        saveToSearchHistory(medicationName, true);
+      }
+
       // Add pharmacy markers to map with custom icons
       if (map.current) {
         results.forEach(item => {
@@ -1216,6 +1230,7 @@ const Buscar = () => {
       }
     } catch (error) {
       console.error('Error searching medications:', error);
+      setSearchStatus('idle');
     } finally {
       setSearching(false);
     }
@@ -1996,20 +2011,62 @@ const Buscar = () => {
                     setMedicamento(value);
                     setSelectedFromDropdown(false);
                     typedSearchText.current = value;
+                    setHighlightedIndex(-1);
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    const visibleMeds = filteredMedicamentos.slice(0, 8);
+                    
+                    if (e.key === 'ArrowDown') {
                       e.preventDefault();
-                      const value = medicamento.trim();
-                      if (value.length >= 3 && userLocation) {
+                      if (visibleMeds.length > 0) {
+                        setHighlightedIndex(prev => 
+                          prev < visibleMeds.length - 1 ? prev + 1 : 0
+                        );
+                      }
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      if (visibleMeds.length > 0) {
+                        setHighlightedIndex(prev => 
+                          prev > 0 ? prev - 1 : visibleMeds.length - 1
+                        );
+                      }
+                    } else if (e.key === 'Enter') {
+                      e.preventDefault();
+                      // If an item is highlighted, select it
+                      if (highlightedIndex >= 0 && highlightedIndex < visibleMeds.length) {
+                        const selectedMed = visibleMeds[highlightedIndex];
+                        typedSearchText.current = medicamento;
+                        setMedicamento(selectedMed.nome);
+                        setSelectedFromDropdown(true);
                         setIsInputFocused(false);
                         setFilteredMedicamentos([]);
-                        handleAutoSearch({ trigger: 'enter' });
+                        setHighlightedIndex(-1);
+                        setTimeout(() => handleBuscar(selectedMed.nome), 50);
+                      } else {
+                        // No item highlighted - do regular search
+                        const value = medicamento.trim();
+                        if (value.length >= 3 && userLocation) {
+                          setIsInputFocused(false);
+                          setFilteredMedicamentos([]);
+                          setHighlightedIndex(-1);
+                          handleAutoSearch({ trigger: 'enter' });
+                        }
                       }
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setIsInputFocused(false);
+                      setFilteredMedicamentos([]);
+                      setHighlightedIndex(-1);
                     }
                   }}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
+                  onFocus={() => {
+                    setIsInputFocused(true);
+                    setHighlightedIndex(-1);
+                  }}
+                  onBlur={() => setTimeout(() => {
+                    setIsInputFocused(false);
+                    setHighlightedIndex(-1);
+                  }, 200)}
                   className="pl-10 pr-10 text-sm md:text-base h-10 md:h-11 rounded-lg border-2 border-border focus:border-primary transition-colors"
                 />
                 {medicamento ? (
@@ -2039,31 +2096,36 @@ const Buscar = () => {
                 }}
                 onMouseDown={(e) => e.preventDefault()}
               >
-                {filteredMedicamentos.slice(0, 8).map((med) => (
+                {filteredMedicamentos.slice(0, 8).map((med, index) => (
                   <div
                     key={med.id}
-                    className="p-3 md:p-2.5 hover:bg-accent active:bg-accent/80 cursor-pointer transition-colors first:rounded-t-lg last:rounded-b-lg border-b border-border/50 last:border-b-0 flex items-start gap-2"
+                    className={`p-3 md:p-2.5 cursor-pointer transition-colors first:rounded-t-lg last:rounded-b-lg border-b border-border/50 last:border-b-0 flex items-start gap-2 ${
+                      highlightedIndex === index 
+                        ? 'bg-accent' 
+                        : 'hover:bg-accent active:bg-accent/80'
+                    }`}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      const originalTyped = typedSearchText.current || medicamento;
-                      typedSearchText.current = originalTyped;
+                      typedSearchText.current = medicamento;
                       setMedicamento(med.nome);
                       setSelectedFromDropdown(true);
                       setIsInputFocused(false);
                       setFilteredMedicamentos([]);
+                      setHighlightedIndex(-1);
                       setTimeout(() => handleBuscar(med.nome), 50);
                     }}
                     onTouchEnd={(e) => {
                       e.preventDefault();
-                      const originalTyped = typedSearchText.current || medicamento;
-                      typedSearchText.current = originalTyped;
+                      typedSearchText.current = medicamento;
                       setMedicamento(med.nome);
                       setSelectedFromDropdown(true);
                       setIsInputFocused(false);
                       setFilteredMedicamentos([]);
+                      setHighlightedIndex(-1);
                       setTimeout(() => handleBuscar(med.nome), 50);
                     }}
+                    onMouseEnter={() => setHighlightedIndex(index)}
                   >
                     <Plus className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
