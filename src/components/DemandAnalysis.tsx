@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { pt } from 'date-fns/locale';
+import { formatMarkdownToHtml } from '@/lib/formatMarkdown';
 
 interface DemandAnalysisProps {
   expanded?: boolean;
@@ -600,8 +601,8 @@ const DemandAnalysis = ({ expanded = false }: DemandAnalysisProps) => {
                 </div>
               </div>
               {isAiContentExpanded && (
-                <div className="text-sm text-violet-800 whitespace-pre-wrap leading-relaxed">
-                  {aiAnalysis}
+                <div className="text-sm text-violet-800 leading-relaxed">
+                  {formatMarkdownToHtml(aiAnalysis)}
                 </div>
               )}
             </div>
