@@ -2107,28 +2107,35 @@ const Buscar = () => {
             </div>
 
             {/* Search Status Feedback */}
-            {medicamento.trim().length > 0 && searchStatus !== 'idle' && (
+            {searchStatus !== 'idle' && (
               <div className={`mt-3 p-3 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200 ${
                 searchStatus === 'searching' ? 'bg-primary/5 border border-primary/20' :
-                searchStatus === 'found' ? 'bg-secondary/10 border border-secondary/30' :
+                searchStatus === 'found' ? 'bg-green-50 border border-green-200' :
                 'bg-destructive/10 border border-destructive/30'
               }`}>
                 {searchStatus === 'searching' && (
                   <div className="flex items-center gap-3 text-primary">
                     <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm font-medium">Buscando farmácias próximas...</span>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium">Buscando farmácias com </span>
+                      <span className="text-sm font-bold text-primary">"{medicamento}"</span>
+                      <span className="text-sm font-medium">...</span>
+                    </div>
                   </div>
                 )}
                 {searchStatus === 'found' && (
-                  <div className="flex items-center gap-2 text-secondary-dark">
-                    <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center">
-                      <svg className="h-3 w-3 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <div className="flex items-center gap-2 text-green-700">
+                    <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <span className="text-sm font-semibold">
-                      {medicamentos.length} {medicamentos.length === 1 ? 'farmácia encontrada' : 'farmácias encontradas'}
-                    </span>
+                    <div className="flex-1">
+                      <span className="text-sm font-semibold">
+                        {medicamentos.length} {medicamentos.length === 1 ? 'resultado' : 'resultados'} para{' '}
+                      </span>
+                      <span className="text-sm font-bold">"{medicamento}"</span>
+                    </div>
                   </div>
                 )}
                 {searchStatus === 'not-found' && (
@@ -2136,10 +2143,12 @@ const Buscar = () => {
                     <div className="h-10 w-10 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0">
                       <AlertCircle className="h-5 w-5 text-destructive" />
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-destructive text-sm">Não encontrado</h4>
-                      <p className="text-xs text-muted-foreground">
-                        Tente aumentar o raio ou buscar outro termo.
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-destructive text-sm">
+                        Nenhum resultado para "{medicamento}"
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Tente aumentar o raio ou buscar outro medicamento.
                       </p>
                     </div>
                   </div>
@@ -2181,15 +2190,29 @@ const Buscar = () => {
             {/* Recent Searches */}
             {searchHistory.length > 0 && medicamento.trim().length === 0 && medicamentos.length === 0 && searchStatus === 'idle' && (
               <div className="mt-4">
-                <h3 className="text-xs md:text-sm font-semibold mb-2 text-muted-foreground flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
-                  Buscas Recentes
-                </h3>
-                <div className="space-y-1 max-h-36 overflow-y-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs md:text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5" />
+                    Buscas Recentes
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-6 px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => {
+                      localStorage.removeItem('ondtem_search_history');
+                      setSearchHistory([]);
+                    }}
+                  >
+                    Limpar tudo
+                  </Button>
+                </div>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
                   {searchHistory.slice(0, 5).map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-2 hover:bg-accent rounded-lg cursor-pointer group transition-all duration-150"
+                      className="flex items-center justify-between p-2.5 bg-muted/40 hover:bg-accent rounded-lg cursor-pointer group transition-all duration-200 border border-transparent hover:border-primary/20 hover:shadow-sm"
+                      style={{ animationDelay: `${index * 50}ms` }}
                       onClick={() => {
                         typedSearchText.current = item;
                         setMedicamento(item);
@@ -2197,14 +2220,16 @@ const Buscar = () => {
                         setTimeout(() => handleBuscar(item), 100);
                       }}
                     >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <Clock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Search className="h-3.5 w-3.5 text-primary" />
+                        </div>
                         <span className="text-sm font-medium text-foreground truncate">{item}</span>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive rounded-full"
                         onClick={(e) => {
                           e.stopPropagation();
                           removeFromSearchHistory(item);
