@@ -589,14 +589,34 @@ const Buscar = () => {
 
   const fetchAllMedicamentos = async () => {
     try {
-      const { data, error } = await supabase
-        .from('medicamentos')
-        .select('id, nome, categoria')
-        .order('nome');
+      // Fetch ALL medications - Supabase has default limit of 1000
+      // We need to paginate to get all records
+      let allData: Medicamento[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
-      setAllMedicamentos(data || []);
-      setFilteredMedicamentos(data || []);
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('medicamentos')
+          .select('id, nome, categoria')
+          .order('nome')
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          hasMore = data.length === pageSize;
+          page++;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      console.log(`Loaded ${allData.length} medications from database`);
+      setAllMedicamentos(allData);
+      setFilteredMedicamentos(allData);
     } catch (error) {
       console.error('Error fetching medications:', error);
     } finally {
