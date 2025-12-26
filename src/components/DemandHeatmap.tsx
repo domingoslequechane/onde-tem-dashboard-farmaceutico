@@ -9,16 +9,19 @@ interface NeighborhoodData {
   searches: number;
   latitude?: number;
   longitude?: number;
+  topProducts?: string[];
 }
 
 interface DemandHeatmapProps {
   neighborhoods?: NeighborhoodData[];
+  onRegionClick?: (region: NeighborhoodData) => void;
 }
 
-const DemandHeatmap = ({ neighborhoods: propNeighborhoods }: DemandHeatmapProps) => {
+const DemandHeatmap = ({ neighborhoods: propNeighborhoods, onRegionClick }: DemandHeatmapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
   const heatmap = useRef<google.maps.visualization.HeatmapLayer | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
   const [googleMapsKey, setGoogleMapsKey] = useState<string>('');
   const [neighborhoods, setNeighborhoods] = useState<NeighborhoodData[]>(propNeighborhoods || []);
 
@@ -37,31 +40,81 @@ const DemandHeatmap = ({ neighborhoods: propNeighborhoods }: DemandHeatmapProps)
 
   const fetchNeighborhoodData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('consultas')
-        .select('localizacao_informada, latitude, longitude');
+      // Fetch from searches table with product selections
+      const { data: searchesData, error: searchesError } = await supabase
+        .from('searches')
+        .select(`
+          id,
+          latitude,
+          longitude,
+          typed_text,
+          submitted_text,
+          product_selections (
+            product_name
+          )
+        `)
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null);
       
-      if (error) throw error;
+      if (searchesError) throw searchesError;
 
-      // Aggregate searches by location
-      const locationMap = new Map<string, { searches: number; lat?: number; lng?: number }>();
+      // Aggregate searches by location (grid-based clustering)
+      const locationMap = new Map<string, { 
+        searches: number; 
+        lat: number; 
+        lng: number;
+        products: Map<string, number>;
+      }>();
       
-      data?.forEach((consulta) => {
-        const location = consulta.localizacao_informada || 'Desconhecido';
-        const existing = locationMap.get(location) || { searches: 0 };
-        locationMap.set(location, {
+      searchesData?.forEach((search) => {
+        if (!search.latitude || !search.longitude) return;
+        
+        const lat = Number(search.latitude);
+        const lng = Number(search.longitude);
+        
+        // Create grid key (approximately 500m cells)
+        const gridKey = `${Math.round(lat * 200) / 200}_${Math.round(lng * 200) / 200}`;
+        
+        const existing = locationMap.get(gridKey) || { 
+          searches: 0, 
+          lat, 
+          lng, 
+          products: new Map() 
+        };
+        
+        // Get product name from selection or search text
+        const productName = search.product_selections?.[0]?.product_name || 
+                          search.submitted_text || 
+                          search.typed_text;
+        
+        if (productName) {
+          const normalizedName = productName.toLowerCase().trim();
+          existing.products.set(normalizedName, (existing.products.get(normalizedName) || 0) + 1);
+        }
+        
+        locationMap.set(gridKey, {
           searches: existing.searches + 1,
-          lat: consulta.latitude ? Number(consulta.latitude) : existing.lat,
-          lng: consulta.longitude ? Number(consulta.longitude) : existing.lng,
+          lat: (existing.lat * existing.searches + lat) / (existing.searches + 1),
+          lng: (existing.lng * existing.searches + lng) / (existing.searches + 1),
+          products: existing.products,
         });
       });
 
-      const neighborhoodData: NeighborhoodData[] = Array.from(locationMap.entries()).map(([name, data]) => ({
-        name,
-        searches: data.searches,
-        latitude: data.lat,
-        longitude: data.lng,
-      }));
+      const neighborhoodData: NeighborhoodData[] = Array.from(locationMap.entries()).map(([key, data]) => {
+        // Get top 5 products
+        const sortedProducts = Array.from(data.products.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([name]) => name.charAt(0).toUpperCase() + name.slice(1));
+        
+        return {
+          name: `Região ${key.replace('_', ', ')}`,
+          searches: data.searches,
+          latitude: data.lat,
+          longitude: data.lng,
+          topProducts: sortedProducts,
+        };
+      });
 
       setNeighborhoods(neighborhoodData);
     } catch (error) {

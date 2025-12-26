@@ -8,13 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Power, PowerOff, RotateCw, Edit, Search, Store, Users, TrendingUp, UserCog, BarChart, Trash2 } from 'lucide-react';
+import { Plus, Power, PowerOff, RotateCw, Edit, Search, Trash2 } from 'lucide-react';
 import Header from '@/components/Header';
 import AdminNavigation from '@/components/AdminNavigation';
 import AdminFarmaciaModal from '@/components/AdminFarmaciaModal';
 import AdminManagers from '@/components/AdminManagers';
 import AdminStatistics from '@/components/AdminStatistics';
-import PharmacyLoginHistory from '@/components/PharmacyLoginHistory';
+import AdminProspects from '@/components/AdminProspects';
 import { DeletePharmacyDialog } from '@/components/DeletePharmacyDialog';
 
 const Admin = () => {
@@ -134,6 +134,8 @@ const Admin = () => {
     ? 'administradores' 
     : location.pathname === '/admin/farmacias' 
     ? 'farmacias' 
+    : location.pathname === '/admin/prospeccao'
+    ? 'prospeccao'
     : 'estatisticas';
 
   return (
@@ -318,20 +320,11 @@ const Admin = () => {
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Histórico de Logins das Farmácias */}
-            <div className="mt-6">
-              <PharmacyLoginHistory />
-            </div>
           </TabsContent>
 
-          {/* Aba de Estatísticas */}
-          <TabsContent value="estatisticas" className="flex-1 overflow-y-auto m-0">
-            <AdminStatistics 
-              totalFarmacias={farmacias.length}
-              farmaciasAtivas={farmacias.filter(f => f.ativa).length}
-              farmaciasInativas={farmacias.filter(f => !f.ativa).length}
-            />
+          {/* Aba de Prospecção */}
+          <TabsContent value="prospeccao" className="flex-1 overflow-y-auto m-0">
+            <AdminProspects />
           </TabsContent>
 
           {/* Aba de Administradores */}
