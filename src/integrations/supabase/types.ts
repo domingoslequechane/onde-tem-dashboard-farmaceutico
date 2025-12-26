@@ -514,6 +514,104 @@ export type Database = {
           },
         ]
       }
+      prospecto_interacoes: {
+        Row: {
+          criado_em: string | null
+          criado_por: string | null
+          descricao: string
+          id: string
+          prospecto_id: string
+          resultado: string | null
+          tipo: string
+        }
+        Insert: {
+          criado_em?: string | null
+          criado_por?: string | null
+          descricao: string
+          id?: string
+          prospecto_id: string
+          resultado?: string | null
+          tipo: string
+        }
+        Update: {
+          criado_em?: string | null
+          criado_por?: string | null
+          descricao?: string
+          id?: string
+          prospecto_id?: string
+          resultado?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospecto_interacoes_prospecto_id_fkey"
+            columns: ["prospecto_id"]
+            isOneToOne: false
+            referencedRelation: "prospectos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospectos: {
+        Row: {
+          atualizado_em: string | null
+          bairro: string | null
+          cidade: string | null
+          criado_em: string | null
+          criado_por: string | null
+          data_proximo_followup: string | null
+          email: string | null
+          estado: string | null
+          fonte: string | null
+          id: string
+          nome: string
+          notas: string | null
+          responsavel: string | null
+          status: string
+          telefone: string | null
+          valor_estimado: number | null
+          whatsapp: string | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          bairro?: string | null
+          cidade?: string | null
+          criado_em?: string | null
+          criado_por?: string | null
+          data_proximo_followup?: string | null
+          email?: string | null
+          estado?: string | null
+          fonte?: string | null
+          id?: string
+          nome: string
+          notas?: string | null
+          responsavel?: string | null
+          status?: string
+          telefone?: string | null
+          valor_estimado?: number | null
+          whatsapp?: string | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          bairro?: string | null
+          cidade?: string | null
+          criado_em?: string | null
+          criado_por?: string | null
+          data_proximo_followup?: string | null
+          email?: string | null
+          estado?: string | null
+          fonte?: string | null
+          id?: string
+          nome?: string
+          notas?: string | null
+          responsavel?: string | null
+          status?: string
+          telefone?: string | null
+          valor_estimado?: number | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       search_normalizations: {
         Row: {
           confidence_score: number | null

@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BarChart3, Building2, Users } from 'lucide-react';
+import { BarChart3, Building2, Users, Target } from 'lucide-react';
 
 const AdminNavigation = () => {
   const navigate = useNavigate();
@@ -10,6 +10,7 @@ const AdminNavigation = () => {
   const navItems = [
     { path: '/admin/estatisticas', label: 'Estatísticas', icon: BarChart3 },
     { path: '/admin/farmacias', label: 'Farmácias', icon: Building2 },
+    { path: '/admin/prospeccao', label: 'Prospecção', icon: Target },
     { path: '/admin/administradores', label: 'Administradores', icon: Users },
   ];
 
