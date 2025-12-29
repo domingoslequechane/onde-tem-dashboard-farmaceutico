@@ -128,7 +128,7 @@ const AdminLogin = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/')}
             className="mb-6 -ml-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -141,7 +141,8 @@ const AdminLogin = () => {
               <img 
                 src={ondeTemLogo} 
                 alt="ONDTem" 
-                className="h-12" 
+                className="h-12 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => navigate('/')}
               />
             </div>
             <div className="flex items-center gap-2 mb-4 justify-center md:justify-start">
