@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Phone, MessageCircle, Mail, MapPin, Users, StickyNote } from 'lucide-react';
+import { Phone, MessageCircle, Mail, MapPin, Users, StickyNote, Pencil, X, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Interaction {
   id: string;
@@ -17,6 +21,7 @@ interface Interaction {
 
 interface ProspectInteractionTimelineProps {
   prospectId: string;
+  onInteractionUpdated?: () => void;
 }
 
 const TIPO_CONFIG = {
@@ -34,9 +39,16 @@ const RESULTADO_CONFIG = {
   negativo: { label: 'Negativo', icon: '❌', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
 };
 
-const ProspectInteractionTimeline = ({ prospectId }: ProspectInteractionTimelineProps) => {
+const ProspectInteractionTimeline = ({ prospectId, onInteractionUpdated }: ProspectInteractionTimelineProps) => {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    tipo: string;
+    descricao: string;
+    resultado: string;
+  }>({ tipo: '', descricao: '', resultado: '' });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetchInteractions();
@@ -57,6 +69,52 @@ const ProspectInteractionTimeline = ({ prospectId }: ProspectInteractionTimeline
       console.error('Error fetching interactions:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleStartEdit = (interaction: Interaction) => {
+    setEditingId(interaction.id);
+    setEditForm({
+      tipo: interaction.tipo,
+      descricao: interaction.descricao,
+      resultado: interaction.resultado || '',
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditForm({ tipo: '', descricao: '', resultado: '' });
+  };
+
+  const handleSaveEdit = async (interactionId: string) => {
+    if (!editForm.descricao.trim()) {
+      toast.error('A descrição é obrigatória');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('prospecto_interacoes')
+        .update({
+          tipo: editForm.tipo,
+          descricao: editForm.descricao.trim(),
+          resultado: editForm.resultado || null,
+        })
+        .eq('id', interactionId);
+
+      if (error) throw error;
+
+      toast.success('Interação atualizada com sucesso');
+      setEditingId(null);
+      setEditForm({ tipo: '', descricao: '', resultado: '' });
+      fetchInteractions();
+      onInteractionUpdated?.();
+    } catch (error) {
+      console.error('Error updating interaction:', error);
+      toast.error('Erro ao atualizar interação');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -84,6 +142,7 @@ const ProspectInteractionTimeline = ({ prospectId }: ProspectInteractionTimeline
         const config = TIPO_CONFIG[interaction.tipo];
         const Icon = config.icon;
         const resultadoConfig = interaction.resultado ? RESULTADO_CONFIG[interaction.resultado] : null;
+        const isEditing = editingId === interaction.id;
 
         return (
           <div key={interaction.id} className="relative">
@@ -102,20 +161,95 @@ const ProspectInteractionTimeline = ({ prospectId }: ProspectInteractionTimeline
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="font-medium text-sm">{config.label}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {format(parseISO(interaction.criado_em), "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-                      </span>
-                      {resultadoConfig && (
-                        <Badge variant="secondary" className={resultadoConfig.className}>
-                          {resultadoConfig.icon} {resultadoConfig.label}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">
-                      {interaction.descricao}
-                    </p>
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Select
+                            value={editForm.tipo}
+                            onValueChange={(value) => setEditForm(prev => ({ ...prev, tipo: value }))}
+                          >
+                            <SelectTrigger className="w-[140px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="chamada">Chamada</SelectItem>
+                              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                              <SelectItem value="email">Email</SelectItem>
+                              <SelectItem value="visita">Visita</SelectItem>
+                              <SelectItem value="reuniao">Reunião</SelectItem>
+                              <SelectItem value="nota">Nota</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <Select
+                            value={editForm.resultado}
+                            onValueChange={(value) => setEditForm(prev => ({ ...prev, resultado: value }))}
+                          >
+                            <SelectTrigger className="w-[130px]">
+                              <SelectValue placeholder="Resultado" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="positivo">✅ Positivo</SelectItem>
+                              <SelectItem value="neutro">⚪ Neutro</SelectItem>
+                              <SelectItem value="negativo">❌ Negativo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <Textarea
+                          value={editForm.descricao}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, descricao: e.target.value }))}
+                          rows={3}
+                          className="resize-none"
+                        />
+
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCancelEdit}
+                            disabled={isSaving}
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Cancelar
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleSaveEdit(interaction.id)}
+                            disabled={isSaving}
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            {isSaving ? 'Guardando...' : 'Guardar'}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="font-medium text-sm">{config.label}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(parseISO(interaction.criado_em), "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                          </span>
+                          {resultadoConfig && (
+                            <Badge variant="secondary" className={resultadoConfig.className}>
+                              {resultadoConfig.icon} {resultadoConfig.label}
+                            </Badge>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 ml-auto"
+                            onClick={() => handleStartEdit(interaction)}
+                            title="Editar interação"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <p className="text-sm text-foreground whitespace-pre-wrap">
+                          {interaction.descricao}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardContent>
