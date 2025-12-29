@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
     componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['ondtem-icon.svg', 'onde-tem-logo.png'],
+      includeAssets: ['app-icon.png', 'onde-tem-logo.png'],
       manifest: {
         name: 'ONDTem - Plataforma de Gestão Farmacêutica',
         short_name: 'ONDTem',
@@ -26,9 +26,9 @@ export default defineConfig(({ mode }) => ({
         display: 'standalone',
         icons: [
           {
-            src: '/ondtem-icon.svg',
+            src: '/app-icon.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable'
           }
         ]
