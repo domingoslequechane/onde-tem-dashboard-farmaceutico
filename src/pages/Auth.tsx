@@ -26,7 +26,13 @@ const Auth = () => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Mensagens mais claras para erros de autenticação
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Email ou senha incorretos. Verifique suas credenciais.');
+        }
+        throw error;
+      }
 
       // Verificar se o usuário é farmácia
       const { data: roleData, error: roleError } = await supabase
@@ -34,10 +40,18 @@ const Auth = () => {
 
       if (roleError) throw roleError;
 
-      // Se não for farmácia (é admin), fazer logout e mostrar erro
-      if (!roleData || roleData !== 'farmacia') {
+      // Se não for farmácia (é admin), fazer logout e mostrar erro apropriado
+      if (!roleData) {
         await supabase.auth.signOut();
-        throw new Error('Esta farmácia não existe. Verifique suas credenciais.');
+        throw new Error('Conta não encontrada. Entre em contato com o suporte.');
+      }
+      
+      if (roleData !== 'farmacia') {
+        await supabase.auth.signOut();
+        if (roleData === 'admin' || roleData === 'super_admin') {
+          throw new Error('Esta conta é de administrador. Use o acesso administrativo.');
+        }
+        throw new Error('Tipo de conta inválido. Entre em contato com o suporte.');
       }
 
       // Registrar login no histórico
@@ -50,7 +64,7 @@ const Auth = () => {
       navigate('/farmacia/dashboard');
     } catch (error: any) {
       toast({
-        title: "Erro",
+        title: "Erro de autenticação",
         description: error.message || "Ocorreu um erro. Tente novamente.",
         variant: "destructive",
       });
