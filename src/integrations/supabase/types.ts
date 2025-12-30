@@ -806,6 +806,41 @@ export type Database = {
       }
     }
     Views: {
+      avaliacoes_publicas: {
+        Row: {
+          avaliacao: number | null
+          cliente_nome: string | null
+          comentario: string | null
+          criado_em: string | null
+          farmacia_id: string | null
+          id: string | null
+        }
+        Insert: {
+          avaliacao?: number | null
+          cliente_nome?: string | null
+          comentario?: string | null
+          criado_em?: string | null
+          farmacia_id?: string | null
+          id?: string | null
+        }
+        Update: {
+          avaliacao?: number | null
+          cliente_nome?: string | null
+          comentario?: string | null
+          criado_em?: string | null
+          farmacia_id?: string | null
+          id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_farmacia_id_fkey"
+            columns: ["farmacia_id"]
+            isOneToOne: false
+            referencedRelation: "farmacias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       geography_columns: {
         Row: {
           coord_dimension: number | null
