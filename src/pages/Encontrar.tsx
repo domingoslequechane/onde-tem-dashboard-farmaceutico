@@ -2571,7 +2571,7 @@ const Buscar = () => {
               Autorizar Localização
             </AlertDialogAction>
             <AlertDialogAction 
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/home')}
               className="bg-primary hover:bg-primary/90"
             >
               Sou Farmácia
