@@ -276,6 +276,7 @@ export type Database = {
           latitude: number | null
           link_google_maps: string | null
           longitude: number | null
+          mostrar_preco: boolean
           nome: string
           plano: string | null
           ponto_referencia: string | null
@@ -302,6 +303,7 @@ export type Database = {
           latitude?: number | null
           link_google_maps?: string | null
           longitude?: number | null
+          mostrar_preco?: boolean
           nome: string
           plano?: string | null
           ponto_referencia?: string | null
@@ -328,6 +330,7 @@ export type Database = {
           latitude?: number | null
           link_google_maps?: string | null
           longitude?: number | null
+          mostrar_preco?: boolean
           nome?: string
           plano?: string | null
           ponto_referencia?: string | null

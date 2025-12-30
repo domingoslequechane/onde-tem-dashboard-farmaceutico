@@ -45,6 +45,7 @@ interface MedicamentoFarmacia {
   farmacia_longitude: number;
   farmacia_horario_abertura: string | null;
   farmacia_horario_fechamento: string | null;
+  farmacia_mostrar_preco: boolean;
   distancia_km: number;
   media_avaliacoes?: number;
   total_avaliacoes?: number;
@@ -810,7 +811,8 @@ const Buscar = () => {
             horario_abertura,
             horario_fechamento,
             bairro,
-            cidade
+            cidade,
+            mostrar_preco
           ),
           medicamentos!inner (
             id,
@@ -852,6 +854,7 @@ const Buscar = () => {
             farmacia_longitude: farmacia.longitude,
             farmacia_horario_abertura: farmacia.horario_abertura,
             farmacia_horario_fechamento: farmacia.horario_fechamento,
+            farmacia_mostrar_preco: farmacia.mostrar_preco ?? true,
             distancia_km: distance,
           });
         }
@@ -1080,7 +1083,8 @@ const Buscar = () => {
             horario_abertura,
             horario_fechamento,
             bairro,
-            cidade
+            cidade,
+            mostrar_preco
           ),
           medicamentos!inner (
             id,
@@ -1122,6 +1126,7 @@ const Buscar = () => {
             farmacia_longitude: farmacia.longitude,
             farmacia_horario_abertura: farmacia.horario_abertura,
             farmacia_horario_fechamento: farmacia.horario_fechamento,
+            farmacia_mostrar_preco: farmacia.mostrar_preco ?? true,
             distancia_km: distance,
           });
         }
@@ -2233,7 +2238,11 @@ const Buscar = () => {
                         <p className="text-xs md:text-sm text-muted-foreground truncate">{item.farmacia_nome}</p>
                       </div>
                       <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                        <span className="text-sm md:text-base font-bold text-green-600">{item.medicamento_preco.toFixed(2)} MT</span>
+                        {item.farmacia_mostrar_preco ? (
+                          <span className="text-sm md:text-base font-bold text-green-600">{item.medicamento_preco.toFixed(2)} MT</span>
+                        ) : (
+                          <span className="text-xs md:text-sm text-muted-foreground italic">Consultar preço</span>
+                        )}
                         <span className="text-xs md:text-sm text-green-600 font-medium">{item.distancia_km.toFixed(1)}km</span>
                       </div>
                     </div>
@@ -2314,7 +2323,7 @@ const Buscar = () => {
               {/* Header with medication name and close button */}
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-base md:text-lg lg:text-xl font-bold text-primary flex-1">
-                  {selectedMedicamento.medicamento_nome} - {selectedMedicamento.medicamento_preco.toFixed(2)} MT
+                  {selectedMedicamento.medicamento_nome} - {selectedMedicamento.farmacia_mostrar_preco ? `${selectedMedicamento.medicamento_preco.toFixed(2)} MT` : 'Consultar preço'}
                 </h3>
                 <Button
                   variant="ghost"
@@ -2602,7 +2611,7 @@ const Buscar = () => {
                 <div className="space-y-3">
                   {isFromSearch && (
                     <h3 className="text-lg font-semibold text-primary">
-                      {selectedMedicamento.medicamento_nome} - {selectedMedicamento.medicamento_preco.toFixed(2)} MT
+                      {selectedMedicamento.medicamento_nome} - {selectedMedicamento.farmacia_mostrar_preco ? `${selectedMedicamento.medicamento_preco.toFixed(2)} MT` : 'Consultar preço'}
                     </h3>
                   )}
 
