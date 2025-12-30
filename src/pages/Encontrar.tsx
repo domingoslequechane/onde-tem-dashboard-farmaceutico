@@ -2562,12 +2562,24 @@ const Buscar = () => {
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogAction 
+              onClick={() => {
+                setShowLocationDialog(false);
+                requestGeolocation();
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Autorizar Localização
+            </AlertDialogAction>
+            <AlertDialogAction 
               onClick={() => navigate('/')}
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              className="bg-primary hover:bg-primary/90"
             >
               Sou Farmácia
             </AlertDialogAction>
-            <AlertDialogAction onClick={() => window.location.reload()}>
+            <AlertDialogAction 
+              onClick={() => window.location.reload()}
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            >
               Recarregar Página
             </AlertDialogAction>
           </AlertDialogFooter>
