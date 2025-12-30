@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, Shield, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -20,6 +21,8 @@ const adminAuthSchema = z.object({
     .max(72, 'A senha deve ter no máximo 72 caracteres')
 });
 
+const STORAGE_KEY = 'ondtem_admin_credentials';
+
 const AdminLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -28,7 +31,22 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState('');
-  
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Carregar credenciais salvas ao montar o componente
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem(STORAGE_KEY);
+    if (savedCredentials) {
+      try {
+        const { email: savedEmail, password: savedPassword } = JSON.parse(savedCredentials);
+        setEmail(savedEmail || '');
+        setPassword(savedPassword || '');
+        setRememberMe(true);
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +76,13 @@ const AdminLogin = () => {
 
       // Registrar login no histórico
       await supabase.rpc('log_user_login');
+
+      // Salvar ou remover credenciais baseado no checkbox
+      if (rememberMe) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: validatedData.email, password: validatedData.password }));
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
 
       toast({
         title: "Login realizado com sucesso!",
@@ -255,7 +280,21 @@ const AdminLogin = () => {
                     Acessar Painel
                   </>
                 )}
-              </Button>
+                </Button>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="rememberMeAdmin"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                />
+                <label
+                  htmlFor="rememberMeAdmin"
+                  className="text-sm text-muted-foreground cursor-pointer select-none"
+                >
+                  Lembrar minhas credenciais
+                </label>
+              </div>
               
               <div className="space-y-2 pt-1 text-center md:text-left">
                 <button

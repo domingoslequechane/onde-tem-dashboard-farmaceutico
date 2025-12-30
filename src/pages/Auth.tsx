@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import ondeTemLogo from '@/assets/ondtem-logo.png';
 import networkIllustration from '@/assets/pharmacy-network-illustration.png';
+
+const STORAGE_KEY = 'ondtem_farmacia_credentials';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -15,6 +18,22 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Carregar credenciais salvas ao montar o componente
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem(STORAGE_KEY);
+    if (savedCredentials) {
+      try {
+        const { email: savedEmail, password: savedPassword } = JSON.parse(savedCredentials);
+        setEmail(savedEmail || '');
+        setPassword(savedPassword || '');
+        setRememberMe(true);
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +75,13 @@ const Auth = () => {
 
       // Registrar login no histórico
       await supabase.rpc('log_user_login');
+
+      // Salvar ou remover credenciais baseado no checkbox
+      if (rememberMe) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ email, password }));
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
 
       toast({
         title: "Login realizado com sucesso!",
@@ -181,7 +207,23 @@ const Auth = () => {
               </div>
             )}
 
-            <Button 
+            {!showForgotPassword && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                />
+                <label
+                  htmlFor="rememberMe"
+                  className="text-sm text-muted-foreground cursor-pointer select-none"
+                >
+                  Lembrar minhas credenciais
+                </label>
+              </div>
+            )}
+
+            <Button
               type="submit" 
               className="w-full h-11 text-base font-semibold"
               disabled={isLoading}
