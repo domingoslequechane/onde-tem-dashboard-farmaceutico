@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import ondeTemLogo from '@/assets/ondtem-logo.svg';
+import ondeTemLogo from '@/assets/ondtem-logo.png';
 import { Button } from '@/components/ui/button';
 import { LogOut, User, Menu, Settings } from 'lucide-react';
 import {

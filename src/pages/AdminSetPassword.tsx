@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Lock, AlertCircle } from 'lucide-react';
-import ondeLogo from '@/assets/ondtem-logo.svg';
+import ondeLogo from '@/assets/ondtem-logo.png';
 
 const AdminSetPassword = () => {
   const [searchParams] = useSearchParams();

@@ -7,7 +7,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFoo
 import { Eye, EyeOff, KeyRound, Shield, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import ondeTemLogo from '@/assets/ondtem-logo.svg';
+import ondeTemLogo from '@/assets/ondtem-logo.png';
 
 const AdminResetPassword = () => {
   const navigate = useNavigate();

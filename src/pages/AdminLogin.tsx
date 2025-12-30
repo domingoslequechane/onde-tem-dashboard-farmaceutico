@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, Shield, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import ondeTemLogo from '@/assets/ondtem-logo.svg';
+import ondeTemLogo from '@/assets/ondtem-logo.png';
 import networkIllustration from '@/assets/pharmacy-network-illustration.png';
 import { z } from 'zod';
 
