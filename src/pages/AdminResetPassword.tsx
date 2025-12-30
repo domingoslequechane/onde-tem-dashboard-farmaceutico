@@ -110,6 +110,9 @@ const AdminResetPassword = () => {
 
       if (error) throw error;
 
+      // Registrar o login após redefinir a senha
+      await supabase.rpc('log_user_login');
+
       setShowSuccessModal(true);
     } catch (error: any) {
       toast({
