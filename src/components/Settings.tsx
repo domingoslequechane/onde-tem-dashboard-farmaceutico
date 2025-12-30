@@ -32,6 +32,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
     longitude: '',
     link_google_maps: '',
     ativa: true,
+    mostrar_preco: true,
   });
 
   useEffect(() => {
@@ -51,6 +52,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
         longitude: farmacia.longitude ? String(farmacia.longitude) : '',
         link_google_maps: farmacia.link_google_maps || '',
         ativa: farmacia.ativa ?? true,
+        mostrar_preco: farmacia.mostrar_preco ?? true,
       });
     }
   }, [farmacia]);
@@ -94,6 +96,7 @@ const Settings = ({ farmacia }: SettingsProps) => {
           longitude: pharmacyData.longitude ? parseFloat(pharmacyData.longitude) : null,
           link_google_maps: pharmacyData.link_google_maps,
           ativa: pharmacyData.ativa,
+          mostrar_preco: pharmacyData.mostrar_preco,
         })
         .eq('id', farmacia.id);
 
@@ -300,6 +303,21 @@ const Settings = ({ farmacia }: SettingsProps) => {
               id="ativa"
               checked={pharmacyData.ativa}
               onCheckedChange={(checked) => setPharmacyData({ ...pharmacyData, ativa: checked })}
+            />
+          </div>
+          <div className="flex items-center justify-between p-3 sm:p-4 bg-muted rounded-lg">
+            <div className="space-y-0.5">
+              <Label htmlFor="mostrar_preco" className="text-sm font-medium">Exibir Preços</Label>
+              <p className="text-xs text-muted-foreground">
+                {pharmacyData.mostrar_preco 
+                  ? 'Os preços dos medicamentos serão exibidos nas buscas' 
+                  : 'Os preços serão ocultados (exibirá "Consultar preço")'}
+              </p>
+            </div>
+            <Switch
+              id="mostrar_preco"
+              checked={pharmacyData.mostrar_preco}
+              onCheckedChange={(checked) => setPharmacyData({ ...pharmacyData, mostrar_preco: checked })}
             />
           </div>
         </CardContent>
