@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Phone, MapPin, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import logo from '@/assets/ondtem-logo.svg';
+import logo from '@/assets/ondtem-logo.png';
 import { z } from 'zod';
 
 const contactSchema = z.object({

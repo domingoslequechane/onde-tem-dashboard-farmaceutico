@@ -10,7 +10,7 @@ import {
   CheckCircle2,
   ArrowRight
 } from 'lucide-react';
-import logo from '@/assets/ondtem-logo.svg';
+import logo from '@/assets/ondtem-logo.png';
 import heroBackground from '@/assets/pharmacy-hero-bg.jpg';
 
 const Landing = () => {

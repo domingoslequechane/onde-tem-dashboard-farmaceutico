@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Download, Smartphone, CheckCircle2, ArrowLeft } from "lucide-react";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
-import ondtemLogo from "@/assets/onde-tem-logo.png";
+import ondtemLogo from "@/assets/ondtem-logo.png";
 
 const Instalar = () => {
   const navigate = useNavigate();
