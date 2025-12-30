@@ -103,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Gerar link de convite personalizado
-    const appUrl = Deno.env.get('APP_URL') || 'https://91e2f1f8-ea96-415f-9224-8bd034d01d6f.lovableproject.com';
+    const appUrl = Deno.env.get('APP_URL') || 'https://ondtem.com';
     const redirectTo = `${appUrl}/farmacia/set-password`;
     
     const { data: resetData, error: resetError } = await supabaseClient.auth.admin.generateLink({
@@ -126,7 +126,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Enviar email de convite
     const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
     const { error: emailError } = await resend.emails.send({
-      from: `OndeTem <${fromEmail}>`,
+      from: `ONDTem <${fromEmail}>`,
       to: [email],
       subject: "Convite para Farmácia - OndeTem",
       html: `
