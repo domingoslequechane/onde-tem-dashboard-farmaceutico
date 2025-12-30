@@ -2560,7 +2560,13 @@ const Buscar = () => {
               Por favor, ative a localização nas configurações do navegador e recarregue a página.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogAction 
+              onClick={() => navigate('/')}
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            >
+              Sou Farmácia
+            </AlertDialogAction>
             <AlertDialogAction onClick={() => window.location.reload()}>
               Recarregar Página
             </AlertDialogAction>

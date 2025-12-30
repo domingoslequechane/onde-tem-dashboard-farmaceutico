@@ -84,6 +84,9 @@ const AdminSetPassword = () => {
 
       if (error) throw error;
 
+      // Registrar o login após definir a senha
+      await supabase.rpc('log_user_login');
+
       toast({
         title: "Senha definida!",
         description: "Sua senha foi criada com sucesso. Você será redirecionado para o painel.",

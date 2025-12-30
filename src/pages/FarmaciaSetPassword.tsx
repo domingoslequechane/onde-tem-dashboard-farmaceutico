@@ -93,6 +93,9 @@ const FarmaciaSetPassword = () => {
         if (updateError) {
           console.error('Erro ao atualizar status:', updateError);
         }
+
+        // Registrar o login após definir a senha
+        await supabase.rpc('log_user_login');
       }
 
       toast({
