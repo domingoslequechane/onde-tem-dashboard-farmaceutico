@@ -108,6 +108,7 @@ const Buscar = () => {
   const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>('WALKING');
   const [searchStatus, setSearchStatus] = useState<'idle' | 'searching' | 'found' | 'not-found'>('idle');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isSearchCollapsed, setIsSearchCollapsed] = useState(false);
   const [navigationStartTime, setNavigationStartTime] = useState<number | null>(null);
   const [selectedFromDropdown, setSelectedFromDropdown] = useState(false);
   const [travelDuration, setTravelDuration] = useState<string>('');
@@ -1006,55 +1007,65 @@ const Buscar = () => {
     
     setIsGettingLocation(true);
     
-    const tryGetLocation = (highAccuracy: boolean, timeout: number, isRetry: boolean) => {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const newLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setUserLocation(newLocation);
-          setLocationPermission('granted');
-          setIsGettingLocation(false);
-          
-          if (map.current) {
-            updateMapWithUserLocation(newLocation);
-          }
-        },
-        (error) => {
-          console.error('Error getting location:', { code: error.code, message: error.message, highAccuracy, isRetry });
-          
-          if (error.code === 1) {
-            // PERMISSION_DENIED - mostrar modal
-            setLocationPermission('denied');
-            setShowLocationDialog(true);
-            setIsGettingLocation(false);
-          } else if (!isRetry && !highAccuracy) {
-            // Falhou com baixa precisão, tentar com alta precisão
-            tryGetLocation(true, 20000, false);
-          } else if (!isRetry && highAccuracy) {
-            // Falhou com alta precisão na primeira vez, tentar de novo com baixa
-            tryGetLocation(false, 15000, true);
-          } else {
-            // Todas as tentativas falharam
-            setIsGettingLocation(false);
-            toast({
-              title: 'Localização indisponível',
-              description: 'Não foi possível obter sua localização. Verifique se o GPS está ativado.',
-              variant: 'destructive',
-            });
-          }
-        },
-        {
-          enableHighAccuracy: highAccuracy,
-          timeout: timeout,
-          maximumAge: 60000 // Aceitar localização de até 1 minuto atrás
+    // Primeira tentativa: Alta precisão (GPS real) com timeout curto
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setUserLocation(newLocation);
+        setLocationPermission('granted');
+        setIsGettingLocation(false);
+        
+        if (map.current) {
+          updateMapWithUserLocation(newLocation);
         }
-      );
-    };
-    
-    // Começar com baixa precisão (mais rápido, usa rede/WiFi)
-    tryGetLocation(false, 10000, false);
+      },
+      (error) => {
+        console.error('High accuracy location error:', { code: error.code, message: error.message });
+        
+        if (error.code === 1) {
+          // PERMISSION_DENIED
+          setLocationPermission('denied');
+          setShowLocationDialog(true);
+          setIsGettingLocation(false);
+        } else {
+          // Timeout ou indisponível - tentar com baixa precisão como fallback
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const newLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              };
+              setUserLocation(newLocation);
+              setLocationPermission('granted');
+              setIsGettingLocation(false);
+              
+              if (map.current) {
+                updateMapWithUserLocation(newLocation);
+              }
+            },
+            (fallbackError) => {
+              console.error('Fallback location error:', { code: fallbackError.code, message: fallbackError.message });
+              setIsGettingLocation(false);
+              if (fallbackError.code === 1) {
+                setLocationPermission('denied');
+                setShowLocationDialog(true);
+              } else {
+                toast({
+                  title: 'Localização indisponível',
+                  description: 'Verifique se o GPS está ativado e tente novamente.',
+                  variant: 'destructive',
+                });
+              }
+            },
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 }
+          );
+        }
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
   }, [isGettingLocation, toast]);
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
@@ -2047,8 +2058,29 @@ const Buscar = () => {
 
         {/* Search Box - Hidden when pharmacy selected or during navigation */}
         {!selectedMedicamento && !isNavigating && (
+          <>
+            {isSearchCollapsed ? (
+              <Button
+                onClick={() => setIsSearchCollapsed(false)}
+                className="absolute top-2 right-2 z-10 shadow-lg"
+                size="icon"
+                variant="default"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            ) : (
           <div className="absolute top-2 left-2 right-2 md:left-auto md:top-2 md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card rounded-xl shadow-lg p-4 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
-            <h2 className="text-base md:text-lg font-bold mb-3 text-foreground">Encontre ONDTem!</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base md:text-lg font-bold text-foreground">Encontre ONDTem!</h2>
+              <Button
+                onClick={() => setIsSearchCollapsed(true)}
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
             
             <div className="relative mb-3">
               {/* Search Input with Icon */}
@@ -2363,6 +2395,8 @@ const Buscar = () => {
               </div>
             )}
           </div>
+            )}
+          </>
         )}
 
         {/* Pharmacy Info Card - Hidden during navigation */}
