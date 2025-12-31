@@ -159,8 +159,11 @@ const Buscar = () => {
   useEffect(() => {
     if (locationPermission === 'denied') {
       setShowLocationDialog(true);
-    } else if (locationPermission === 'prompt') {
-      requestGeolocation();
+    } else if (locationPermission === 'granted' || locationPermission === 'prompt') {
+      // Se permissão já concedida ou em prompt, tenta obter localização
+      if (!userLocation) {
+        requestGeolocation();
+      }
     }
   }, [locationPermission]);
 
@@ -1015,13 +1018,26 @@ const Buscar = () => {
           }
         },
         (error) => {
-          console.error('Error getting location:', error);
-          setLocationPermission('denied');
-          setShowLocationDialog(true);
+          console.error('Error getting location:', { code: error.code, message: error.message });
+          
+          // Só marca como 'denied' se for realmente negação de permissão
+          if (error.code === 1) {
+            // PERMISSION_DENIED
+            setLocationPermission('denied');
+            setShowLocationDialog(true);
+          } else {
+            // POSITION_UNAVAILABLE (2) ou TIMEOUT (3)
+            // Não é problema de permissão, é problema de GPS/sinal
+            toast({
+              title: 'Localização indisponível',
+              description: 'Não foi possível obter sua localização. Verifique se o GPS está ativado e tente novamente.',
+              variant: 'destructive',
+            });
+          }
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 15000,
           maximumAge: 0
         }
       );
@@ -2575,9 +2591,24 @@ const Buscar = () => {
                 setShowLocationDialog(false);
                 if ('geolocation' in navigator) {
                   navigator.geolocation.getCurrentPosition(
-                    () => window.location.reload(),
-                    () => window.location.reload(),
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    () => {
+                      // Permissão concedida - recarrega para atualizar estado
+                      window.location.reload();
+                    },
+                    (error) => {
+                      if (error.code === 1) {
+                        // Permissão negada - recarrega para atualizar estado
+                        window.location.reload();
+                      } else {
+                        // Timeout ou GPS indisponível - não recarrega, mostra toast
+                        toast({
+                          title: 'Localização indisponível',
+                          description: 'Não foi possível obter sua localização. Verifique se o GPS está ativado.',
+                          variant: 'destructive',
+                        });
+                      }
+                    },
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
                   );
                 } else {
                   window.location.reload();
