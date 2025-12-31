@@ -5,7 +5,7 @@ import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass } from 'lucide-react';
+import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.png';
@@ -107,6 +107,7 @@ const Buscar = () => {
   const [selectedTravelMode, setSelectedTravelMode] = useState<'WALKING' | 'DRIVING'>('WALKING');
   const [travelModePreview, setTravelModePreview] = useState<'WALKING' | 'DRIVING' | null>('WALKING');
   const [searchStatus, setSearchStatus] = useState<'idle' | 'searching' | 'found' | 'not-found'>('idle');
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [navigationStartTime, setNavigationStartTime] = useState<number | null>(null);
   const [selectedFromDropdown, setSelectedFromDropdown] = useState(false);
   const [travelDuration, setTravelDuration] = useState<string>('');
@@ -159,13 +160,11 @@ const Buscar = () => {
   useEffect(() => {
     if (locationPermission === 'denied') {
       setShowLocationDialog(true);
-    } else if (locationPermission === 'granted' || locationPermission === 'prompt') {
-      // Se permissão já concedida ou em prompt, tenta obter localização
-      if (!userLocation) {
-        requestGeolocation();
-      }
+    } else if (!userLocation && !isGettingLocation) {
+      // Se não temos localização e não estamos tentando, tentar obter
+      requestGeolocation();
     }
-  }, [locationPermission]);
+  }, [locationPermission, userLocation, isGettingLocation]);
 
   useEffect(() => {
     // Only initialize if we have a valid API key (non-empty string)
@@ -1002,8 +1001,12 @@ const Buscar = () => {
     }
   };
 
-  const requestGeolocation = () => {
-    if ('geolocation' in navigator) {
+  const requestGeolocation = useCallback(() => {
+    if (!('geolocation' in navigator) || isGettingLocation) return;
+    
+    setIsGettingLocation(true);
+    
+    const tryGetLocation = (highAccuracy: boolean, timeout: number, isRetry: boolean) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const newLocation = {
@@ -1012,37 +1015,47 @@ const Buscar = () => {
           };
           setUserLocation(newLocation);
           setLocationPermission('granted');
+          setIsGettingLocation(false);
           
           if (map.current) {
             updateMapWithUserLocation(newLocation);
           }
         },
         (error) => {
-          console.error('Error getting location:', { code: error.code, message: error.message });
+          console.error('Error getting location:', { code: error.code, message: error.message, highAccuracy, isRetry });
           
-          // Só marca como 'denied' se for realmente negação de permissão
           if (error.code === 1) {
-            // PERMISSION_DENIED
+            // PERMISSION_DENIED - mostrar modal
             setLocationPermission('denied');
             setShowLocationDialog(true);
+            setIsGettingLocation(false);
+          } else if (!isRetry && !highAccuracy) {
+            // Falhou com baixa precisão, tentar com alta precisão
+            tryGetLocation(true, 20000, false);
+          } else if (!isRetry && highAccuracy) {
+            // Falhou com alta precisão na primeira vez, tentar de novo com baixa
+            tryGetLocation(false, 15000, true);
           } else {
-            // POSITION_UNAVAILABLE (2) ou TIMEOUT (3)
-            // Não é problema de permissão, é problema de GPS/sinal
+            // Todas as tentativas falharam
+            setIsGettingLocation(false);
             toast({
               title: 'Localização indisponível',
-              description: 'Não foi possível obter sua localização. Verifique se o GPS está ativado e tente novamente.',
+              description: 'Não foi possível obter sua localização. Verifique se o GPS está ativado.',
               variant: 'destructive',
             });
           }
         },
         {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 0
+          enableHighAccuracy: highAccuracy,
+          timeout: timeout,
+          maximumAge: 60000 // Aceitar localização de até 1 minuto atrás
         }
       );
-    }
-  };
+    };
+    
+    // Começar com baixa precisão (mais rápido, usa rede/WiFi)
+    tryGetLocation(false, 10000, false);
+  }, [isGettingLocation, toast]);
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
     const from = new google.maps.LatLng(lat1, lng1);
@@ -2011,6 +2024,26 @@ const Buscar = () => {
       <div className="flex flex-1 overflow-hidden relative">
         {/* Map Container */}
         <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+        
+        {/* Location Loading/Retry Button */}
+        {!userLocation && !selectedMedicamento && !isNavigating && (
+          isGettingLocation ? (
+            <div className="absolute top-4 left-4 z-10 bg-card px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-border">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm font-medium text-foreground">Obtendo localização...</span>
+            </div>
+          ) : (
+            <Button 
+              onClick={requestGeolocation}
+              className="absolute top-4 left-4 z-10 shadow-lg"
+              size="sm"
+              variant="default"
+            >
+              <MapPin className="h-4 w-4 mr-2" />
+              Obter Localização
+            </Button>
+          )
+        )}
 
         {/* Search Box - Hidden when pharmacy selected or during navigation */}
         {!selectedMedicamento && !isNavigating && (
@@ -2589,34 +2622,11 @@ const Buscar = () => {
             <AlertDialogAction 
               onClick={() => {
                 setShowLocationDialog(false);
-                if ('geolocation' in navigator) {
-                  navigator.geolocation.getCurrentPosition(
-                    () => {
-                      // Permissão concedida - recarrega para atualizar estado
-                      window.location.reload();
-                    },
-                    (error) => {
-                      if (error.code === 1) {
-                        // Permissão negada - recarrega para atualizar estado
-                        window.location.reload();
-                      } else {
-                        // Timeout ou GPS indisponível - não recarrega, mostra toast
-                        toast({
-                          title: 'Localização indisponível',
-                          description: 'Não foi possível obter sua localização. Verifique se o GPS está ativado.',
-                          variant: 'destructive',
-                        });
-                      }
-                    },
-                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-                  );
-                } else {
-                  window.location.reload();
-                }
+                requestGeolocation();
               }}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              Autorizar e Recarregar
+              Autorizar Localização
             </AlertDialogAction>
             <AlertDialogAction 
               onClick={() => navigate('/home')}
