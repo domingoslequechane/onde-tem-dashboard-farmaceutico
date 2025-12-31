@@ -2573,23 +2573,25 @@ const Buscar = () => {
             <AlertDialogAction 
               onClick={() => {
                 setShowLocationDialog(false);
-                requestGeolocation();
+                if ('geolocation' in navigator) {
+                  navigator.geolocation.getCurrentPosition(
+                    () => window.location.reload(),
+                    () => window.location.reload(),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                  );
+                } else {
+                  window.location.reload();
+                }
               }}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              Autorizar Localização
+              Autorizar e Recarregar
             </AlertDialogAction>
             <AlertDialogAction 
               onClick={() => navigate('/home')}
               className="bg-primary hover:bg-primary/90"
             >
               Sou Farmácia
-            </AlertDialogAction>
-            <AlertDialogAction 
-              onClick={() => window.location.reload()}
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
-            >
-              Recarregar Página
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
