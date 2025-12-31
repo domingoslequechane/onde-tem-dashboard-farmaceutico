@@ -117,6 +117,9 @@ const Buscar = () => {
   const [selectedFromDropdown, setSelectedFromDropdown] = useState(false);
   const [travelDuration, setTravelDuration] = useState<string>('');
   const [mapViewMode, setMapViewMode] = useState<'2d' | '3d'>('2d');
+  const [isNightMode, setIsNightMode] = useState(false);
+  const [userHeading, setUserHeading] = useState<number>(0);
+  const [isViewTransitioning, setIsViewTransitioning] = useState(false);
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
@@ -128,6 +131,57 @@ const Buscar = () => {
   const routeDotsRef = useRef<google.maps.Marker[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
+  const lastUserPositionRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  // Night mode styles for Google Maps
+  const nightModeStyles: google.maps.MapTypeStyle[] = [
+    { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+    { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+    { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+    { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+    { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#263c3f' }] },
+    { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#6b9a76' }] },
+    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
+    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
+    { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
+    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#746855' }] },
+    { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#1f2835' }] },
+    { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#f3d19c' }] },
+    { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2f3948' }] },
+    { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
+    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#515c6d' }] },
+    { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#17263c' }] },
+    { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', stylers: [{ visibility: 'off' }] },
+  ];
+
+  const dayModeStyles: google.maps.MapTypeStyle[] = [
+    { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', stylers: [{ visibility: 'off' }] },
+  ];
+
+  // Check if it's night time (after 18:00 or before 06:00)
+  const checkNightMode = useCallback(() => {
+    const hour = new Date().getHours();
+    const shouldBeNightMode = hour >= 18 || hour < 6;
+    if (shouldBeNightMode !== isNightMode) {
+      setIsNightMode(shouldBeNightMode);
+      if (map.current) {
+        map.current.setOptions({
+          styles: shouldBeNightMode ? nightModeStyles : dayModeStyles
+        });
+      }
+    }
+  }, [isNightMode]);
+
+  // Check night mode on mount and every minute
+  useEffect(() => {
+    checkNightMode();
+    const interval = setInterval(checkNightMode, 60000);
+    return () => clearInterval(interval);
+  }, [checkNightMode]);
 
   useEffect(() => {
     checkLocationPermission();
@@ -250,6 +304,11 @@ const Buscar = () => {
       console.log('Google Maps libraries loaded successfully');
 
       // Now google.maps is available globally - use Vector Map for rotation/tilt support
+      // Check if it's night mode
+      const hour = new Date().getHours();
+      const isNight = hour >= 18 || hour < 6;
+      setIsNightMode(isNight);
+      
       const mapInstance = new google.maps.Map(mapContainer.current, {
         center: { lat: -25.9655, lng: 32.5892 },
         zoom: 13,
@@ -263,16 +322,7 @@ const Buscar = () => {
         gestureHandling: 'greedy',
         tilt: 0,
         heading: 0,
-        styles: [
-          {
-            featureType: 'poi.business',
-            stylers: [{ visibility: 'off' }]
-          },
-          {
-            featureType: 'poi.medical',
-            stylers: [{ visibility: 'off' }]
-          }
-        ]
+        styles: isNight ? nightModeStyles : dayModeStyles
       });
 
       map.current = mapInstance;
@@ -324,12 +374,31 @@ const Buscar = () => {
     map.current.setCenter(location);
     map.current.setZoom(targetZoom);
 
-    // Create or update user marker
+    // Calculate heading from last position
+    let heading = userHeading;
+    if (lastUserPositionRef.current && isNavigating) {
+      heading = google.maps.geometry.spherical.computeHeading(
+        new google.maps.LatLng(lastUserPositionRef.current.lat, lastUserPositionRef.current.lng),
+        new google.maps.LatLng(location.lat, location.lng)
+      );
+      setUserHeading(heading);
+    }
+    lastUserPositionRef.current = location;
+
+    // Create or update user marker with direction arrow during navigation
     if (!userMarkerRef.current) {
       userMarkerRef.current = new google.maps.Marker({
         position: location,
         map: map.current,
-        icon: {
+        icon: isNavigating ? {
+          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          scale: 6,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+          rotation: heading,
+        } : {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 10,
           fillColor: '#4285F4',
@@ -341,6 +410,18 @@ const Buscar = () => {
       });
     } else {
       userMarkerRef.current.setPosition(location);
+      // Update icon with rotation during navigation
+      if (isNavigating) {
+        userMarkerRef.current.setIcon({
+          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          scale: 6,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+          rotation: heading,
+        });
+      }
     }
 
     updateRadiusCircle(location);
@@ -1713,6 +1794,20 @@ const Buscar = () => {
           );
           const userLatLng = new google.maps.LatLng(userLocation.lat, userLocation.lng);
           const initialHeading = google.maps.geometry.spherical.computeHeading(userLatLng, destLatLng);
+          setUserHeading(initialHeading);
+          
+          // Update user marker to arrow pointing towards destination
+          if (userMarkerRef.current) {
+            userMarkerRef.current.setIcon({
+              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+              scale: 6,
+              fillColor: '#4285F4',
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 2,
+              rotation: initialHeading,
+            });
+          }
           
           // Use moveCamera for smooth transition with heading
           map.current.moveCamera({
@@ -1765,6 +1860,20 @@ const Buscar = () => {
                       new google.maps.LatLng(newPos.lat, newPos.lng),
                       currentStep.end_location
                     );
+                    
+                    // Update user marker with direction arrow
+                    setUserHeading(heading);
+                    if (userMarkerRef.current) {
+                      userMarkerRef.current.setIcon({
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        scale: 6,
+                        fillColor: '#4285F4',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                        rotation: heading,
+                      });
+                    }
                     
                     // Smooth camera update with heading aligned to direction
                     map.current?.moveCamera({
@@ -1936,19 +2045,52 @@ const Buscar = () => {
       map.current.setZoom(14);
       setMapViewMode('2d');
     }
+    
+    // Reset user marker to circle icon
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setIcon({
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 10,
+        fillColor: '#4285F4',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3,
+      });
+    }
   };
 
   const toggleMapView = () => {
-    if (!map.current) return;
+    if (!map.current || isViewTransitioning) return;
     
-    if (mapViewMode === '2d') {
-      map.current.setTilt(45);
-      setMapViewMode('3d');
-    } else {
-      map.current.setTilt(0);
-      map.current.setHeading(0);
-      setMapViewMode('2d');
-    }
+    setIsViewTransitioning(true);
+    
+    const targetTilt = mapViewMode === '2d' ? 45 : 0;
+    const targetHeading = mapViewMode === '3d' ? 0 : undefined;
+    const currentZoom = map.current.getZoom() || 14;
+    
+    // Animate transition with zoom effect
+    const animateView = async () => {
+      // First, zoom out slightly for smooth transition
+      map.current?.setZoom(currentZoom - 1);
+      
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
+      // Apply tilt change
+      map.current?.setTilt(targetTilt);
+      if (targetHeading !== undefined) {
+        map.current?.setHeading(targetHeading);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Zoom back in
+      map.current?.setZoom(currentZoom);
+      
+      setMapViewMode(mapViewMode === '2d' ? '3d' : '2d');
+      setIsViewTransitioning(false);
+    };
+    
+    animateView();
   };
 
   const resetMapOrientation = () => {
