@@ -2,16 +2,18 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon } from 'lucide-react';
+import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon, Moon, Sun, MessageSquare, Crosshair } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.png';
 import pharmacyMarkerIcon from '@/assets/pharmacy-marker-icon.png';
 import { LeaveReviewModal } from '@/components/LeaveReviewModal';
 import { ViewReviewsModal } from '@/components/ViewReviewsModal';
+import { FeedbackModal } from '@/components/FeedbackModal';
 import Fuse from 'fuse.js';
 import { useSearchCapture } from '@/hooks/useSearchCapture';
 import {
@@ -60,6 +62,7 @@ interface Medicamento {
 const Buscar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -92,6 +95,7 @@ const Buscar = () => {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showLeaveReview, setShowLeaveReview] = useState(false);
   const [showViewReviews, setShowViewReviews] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -118,6 +122,7 @@ const Buscar = () => {
   const [travelDuration, setTravelDuration] = useState<string>('');
   const [mapViewMode, setMapViewMode] = useState<'2d' | '3d'>('2d');
   const [isNightMode, setIsNightMode] = useState(false);
+  const [manualNightMode, setManualNightMode] = useState<'auto' | 'day' | 'night'>('auto');
   const [userHeading, setUserHeading] = useState<number>(0);
   const [isViewTransitioning, setIsViewTransitioning] = useState(false);
   const navigationWatchId = useRef<number | null>(null);
@@ -133,15 +138,22 @@ const Buscar = () => {
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const lastUserPositionRef = useRef<{ lat: number; lng: number } | null>(null);
 
+  // Base styles to hide all POIs (show only our registered pharmacies)
+  const baseMapStyles: google.maps.MapTypeStyle[] = [
+    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.park', stylers: [{ visibility: 'simplified' }] },
+    { featureType: 'poi.government', stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.school', stylers: [{ visibility: 'on' }] },
+    { featureType: 'transit', stylers: [{ visibility: 'simplified' }] },
+  ];
+
   // Night mode styles for Google Maps
   const nightModeStyles: google.maps.MapTypeStyle[] = [
+    ...baseMapStyles,
     { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
     { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
     { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
     { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-    { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#263c3f' }] },
-    { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#6b9a76' }] },
     { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
     { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
     { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
@@ -153,17 +165,43 @@ const Buscar = () => {
     { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
     { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#515c6d' }] },
     { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#17263c' }] },
-    { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
-    { featureType: 'poi.medical', stylers: [{ visibility: 'off' }] },
   ];
 
   const dayModeStyles: google.maps.MapTypeStyle[] = [
-    { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
-    { featureType: 'poi.medical', stylers: [{ visibility: 'off' }] },
+    ...baseMapStyles,
   ];
+
+  // Get current map styles based on manual night mode or auto detection
+  const getCurrentMapStyles = useCallback(() => {
+    if (manualNightMode === 'night') return nightModeStyles;
+    if (manualNightMode === 'day') return dayModeStyles;
+    // Auto mode - check time
+    const hour = new Date().getHours();
+    return (hour >= 18 || hour < 6) ? nightModeStyles : dayModeStyles;
+  }, [manualNightMode]);
+
+  // Toggle night mode manually
+  const toggleNightMode = useCallback(() => {
+    const newMode = manualNightMode === 'auto' 
+      ? 'night' 
+      : manualNightMode === 'night' 
+        ? 'day' 
+        : 'auto';
+    setManualNightMode(newMode);
+    
+    const styles = newMode === 'night' ? nightModeStyles : newMode === 'day' ? dayModeStyles : getCurrentMapStyles();
+    map.current?.setOptions({ styles });
+    
+    toast({
+      title: newMode === 'auto' ? 'Modo automático' : newMode === 'night' ? 'Modo noturno' : 'Modo diurno',
+      description: newMode === 'auto' ? 'O mapa ajusta-se automaticamente' : undefined,
+    });
+  }, [manualNightMode, getCurrentMapStyles, toast]);
 
   // Check if it's night time (after 18:00 or before 06:00)
   const checkNightMode = useCallback(() => {
+    if (manualNightMode !== 'auto') return; // Don't auto-change if manual mode is set
+    
     const hour = new Date().getHours();
     const shouldBeNightMode = hour >= 18 || hour < 6;
     if (shouldBeNightMode !== isNightMode) {
@@ -174,7 +212,7 @@ const Buscar = () => {
         });
       }
     }
-  }, [isNightMode]);
+  }, [isNightMode, manualNightMode]);
 
   // Check night mode on mount and every minute
   useEffect(() => {
@@ -304,7 +342,8 @@ const Buscar = () => {
       console.log('Google Maps libraries loaded successfully');
 
       // Now google.maps is available globally - use Vector Map for rotation/tilt support
-      // Check if it's night mode
+      // Get initial styles based on current mode
+      const initialStyles = getCurrentMapStyles();
       const hour = new Date().getHours();
       const isNight = hour >= 18 || hour < 6;
       setIsNightMode(isNight);
@@ -322,7 +361,7 @@ const Buscar = () => {
         gestureHandling: 'greedy',
         tilt: 0,
         heading: 0,
-        styles: isNight ? nightModeStyles : dayModeStyles
+        styles: initialStyles
       });
 
       map.current = mapInstance;
@@ -2274,13 +2313,41 @@ const Buscar = () => {
           <img src={logo} alt="ONDTem" className="h-8 md:h-10 flex-shrink-0" />
         </div>
         
-        <Button
-          variant="outline"
-          onClick={() => navigate('/home')}
-          className="flex-shrink-0 text-sm md:text-base font-semibold"
-        >
-          Sou Farmacia
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Theme Toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="h-9 w-9"
+            title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Button>
+          
+          {/* Feedback Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowFeedbackModal(true)}
+            className="h-9 w-9"
+            title="Enviar feedback"
+          >
+            <MessageSquare className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => navigate('/home')}
+            className="flex-shrink-0 text-sm md:text-base font-semibold"
+          >
+            Sou Farmacia
+          </Button>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -2308,15 +2375,20 @@ const Buscar = () => {
           )
         )}
 
-        {/* Map Control Buttons - Always visible when not navigating */}
+        {/* Map Control Buttons - Repositioned to avoid overlap with Google Maps controls */}
         {!isNavigating && userLocation && (
-          <div className="absolute bottom-24 right-4 flex flex-col gap-2 z-10">
+          <div className="absolute bottom-44 right-4 flex flex-col gap-2 z-20">
             {/* Toggle 2D/3D View */}
             <Button
               size="icon"
               variant="secondary"
-              className="h-10 w-10 rounded-full shadow-lg bg-white hover:bg-gray-100"
-              onClick={toggleMapView}
+              className="h-10 w-10 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
+              onClick={() => {
+                toggleMapView();
+                toast({
+                  title: mapViewMode === '2d' ? 'Vista 3D ativada' : 'Vista 2D ativada',
+                });
+              }}
               title={mapViewMode === '2d' ? 'Vista 3D' : 'Vista 2D'}
             >
               {mapViewMode === '2d' ? (
@@ -2330,11 +2402,42 @@ const Buscar = () => {
             <Button
               size="icon"
               variant="secondary"
-              className="h-10 w-10 rounded-full shadow-lg bg-white hover:bg-gray-100"
-              onClick={resetMapOrientation}
+              className="h-10 w-10 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
+              onClick={() => {
+                resetMapOrientation();
+                toast({ title: 'Mapa orientado para norte' });
+              }}
               title="Norte para cima"
             >
               <Compass className="h-4 w-4 text-primary" />
+            </Button>
+            
+            {/* Night Mode Toggle */}
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-10 w-10 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
+              onClick={toggleNightMode}
+              title={manualNightMode === 'auto' ? 'Automático' : manualNightMode === 'night' ? 'Noturno' : 'Diurno'}
+            >
+              {manualNightMode === 'night' ? (
+                <Moon className="h-4 w-4 text-primary" />
+              ) : manualNightMode === 'day' ? (
+                <Sun className="h-4 w-4 text-primary" />
+              ) : (
+                <Sun className="h-4 w-4 text-muted-foreground" />
+              )}
+            </Button>
+            
+            {/* Recenter Button */}
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-10 w-10 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
+              onClick={recenterMap}
+              title="Centralizar no utilizador"
+            >
+              <Crosshair className="h-4 w-4 text-primary" />
             </Button>
           </div>
         )}
@@ -2345,7 +2448,7 @@ const Buscar = () => {
             {isSearchCollapsed ? (
               <Button
                 onClick={() => setIsSearchCollapsed(false)}
-                className="absolute top-2 right-2 z-10 shadow-lg"
+                className="absolute top-20 left-4 z-10 shadow-lg"
                 size="icon"
                 variant="default"
               >
@@ -3076,6 +3179,12 @@ const Buscar = () => {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        open={showFeedbackModal}
+        onOpenChange={setShowFeedbackModal}
+      />
     </div>
   );
 };
