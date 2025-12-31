@@ -109,6 +109,10 @@ const Buscar = () => {
   const [searchStatus, setSearchStatus] = useState<'idle' | 'searching' | 'found' | 'not-found'>('idle');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isSearchCollapsed, setIsSearchCollapsed] = useState(false);
+  const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
+  const userLocationWatchIdRef = useRef<number | null>(null);
+  const didAutoRequestLocationRef = useRef(false);
+  const lastLocationToastRef = useRef<number>(0);
   const [navigationStartTime, setNavigationStartTime] = useState<number | null>(null);
   const [selectedFromDropdown, setSelectedFromDropdown] = useState(false);
   const [travelDuration, setTravelDuration] = useState<string>('');
@@ -161,11 +165,22 @@ const Buscar = () => {
   useEffect(() => {
     if (locationPermission === 'denied') {
       setShowLocationDialog(true);
-    } else if (!userLocation && !isGettingLocation) {
-      // Se não temos localização e não estamos tentando, tentar obter
+    } else if (!didAutoRequestLocationRef.current && !userLocation && !isGettingLocation) {
+      // Tentar obter localização apenas uma vez automaticamente
+      didAutoRequestLocationRef.current = true;
       requestGeolocation();
     }
-  }, [locationPermission, userLocation, isGettingLocation]);
+  }, [locationPermission]);
+  
+  // Cleanup watchPosition on unmount
+  useEffect(() => {
+    return () => {
+      if (userLocationWatchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(userLocationWatchIdRef.current);
+        userLocationWatchIdRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Only initialize if we have a valid API key (non-empty string)
@@ -1007,7 +1022,13 @@ const Buscar = () => {
     
     setIsGettingLocation(true);
     
-    // Primeira tentativa: Alta precisão (GPS real) com timeout curto
+    // Stop any existing watch
+    if (userLocationWatchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(userLocationWatchIdRef.current);
+      userLocationWatchIdRef.current = null;
+    }
+    
+    // Phase A: Quick location (accepts cache, low accuracy OK)
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const newLocation = {
@@ -1015,15 +1036,22 @@ const Buscar = () => {
           lng: position.coords.longitude,
         };
         setUserLocation(newLocation);
+        setLocationAccuracy(position.coords.accuracy);
         setLocationPermission('granted');
-        setIsGettingLocation(false);
         
         if (map.current) {
           updateMapWithUserLocation(newLocation);
         }
+        
+        // Phase B: Start watching for better accuracy (if current is poor)
+        if (position.coords.accuracy > 50) {
+          startAccuracyRefinement();
+        } else {
+          setIsGettingLocation(false);
+        }
       },
       (error) => {
-        console.error('High accuracy location error:', { code: error.code, message: error.message });
+        console.error('Quick location error:', { code: error.code, message: error.message });
         
         if (error.code === 1) {
           // PERMISSION_DENIED
@@ -1031,42 +1059,98 @@ const Buscar = () => {
           setShowLocationDialog(true);
           setIsGettingLocation(false);
         } else {
-          // Timeout ou indisponível - tentar com baixa precisão como fallback
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const newLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-              };
-              setUserLocation(newLocation);
-              setLocationPermission('granted');
-              setIsGettingLocation(false);
-              
-              if (map.current) {
-                updateMapWithUserLocation(newLocation);
-              }
-            },
-            (fallbackError) => {
-              console.error('Fallback location error:', { code: fallbackError.code, message: fallbackError.message });
-              setIsGettingLocation(false);
-              if (fallbackError.code === 1) {
-                setLocationPermission('denied');
-                setShowLocationDialog(true);
-              } else {
-                toast({
-                  title: 'Localização indisponível',
-                  description: 'Verifique se o GPS está ativado e tente novamente.',
-                  variant: 'destructive',
-                });
-              }
-            },
-            { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 }
-          );
+          // Phase B directly: Try watchPosition for better results
+          startAccuracyRefinement();
         }
       },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      { enableHighAccuracy: false, timeout: 3000, maximumAge: 60000 }
     );
-  }, [isGettingLocation, toast]);
+  }, [isGettingLocation]);
+  
+  const startAccuracyRefinement = useCallback(() => {
+    // Clear existing watch if any
+    if (userLocationWatchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(userLocationWatchIdRef.current);
+    }
+    
+    let goodReadingsCount = 0;
+    const maxWatchTime = 15000; // 15 seconds max
+    const startTime = Date.now();
+    
+    userLocationWatchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        
+        setUserLocation(newLocation);
+        setLocationAccuracy(position.coords.accuracy);
+        setLocationPermission('granted');
+        
+        if (map.current) {
+          updateMapWithUserLocation(newLocation);
+        }
+        
+        // Stop if accuracy is good enough or we've been watching too long
+        if (position.coords.accuracy <= 50) {
+          goodReadingsCount++;
+          if (goodReadingsCount >= 2) {
+            // Got consistent good readings, stop watching
+            if (userLocationWatchIdRef.current !== null) {
+              navigator.geolocation.clearWatch(userLocationWatchIdRef.current);
+              userLocationWatchIdRef.current = null;
+            }
+            setIsGettingLocation(false);
+          }
+        }
+        
+        // Timeout check
+        if (Date.now() - startTime > maxWatchTime) {
+          if (userLocationWatchIdRef.current !== null) {
+            navigator.geolocation.clearWatch(userLocationWatchIdRef.current);
+            userLocationWatchIdRef.current = null;
+          }
+          setIsGettingLocation(false);
+        }
+      },
+      (error) => {
+        console.error('Watch position error:', { code: error.code, message: error.message });
+        
+        if (userLocationWatchIdRef.current !== null) {
+          navigator.geolocation.clearWatch(userLocationWatchIdRef.current);
+          userLocationWatchIdRef.current = null;
+        }
+        setIsGettingLocation(false);
+        
+        if (error.code === 1) {
+          setLocationPermission('denied');
+          setShowLocationDialog(true);
+        } else {
+          // Only show toast if we don't have any location and haven't shown one recently
+          const now = Date.now();
+          if (!userLocation && now - lastLocationToastRef.current > 30000) {
+            lastLocationToastRef.current = now;
+            toast({
+              title: 'Localização indisponível',
+              description: 'Verifique se o GPS está ativado e tente novamente.',
+              variant: 'destructive',
+            });
+          }
+        }
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
+    );
+    
+    // Auto-stop after maxWatchTime
+    setTimeout(() => {
+      if (userLocationWatchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(userLocationWatchIdRef.current);
+        userLocationWatchIdRef.current = null;
+        setIsGettingLocation(false);
+      }
+    }, maxWatchTime);
+  }, [toast, userLocation]);
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
     const from = new google.maps.LatLng(lat1, lng1);
