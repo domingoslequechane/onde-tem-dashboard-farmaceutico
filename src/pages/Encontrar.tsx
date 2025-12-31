@@ -5,7 +5,7 @@ import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2 } from 'lucide-react';
+import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.png';
@@ -116,6 +116,7 @@ const Buscar = () => {
   const [navigationStartTime, setNavigationStartTime] = useState<number | null>(null);
   const [selectedFromDropdown, setSelectedFromDropdown] = useState(false);
   const [travelDuration, setTravelDuration] = useState<string>('');
+  const [mapViewMode, setMapViewMode] = useState<'2d' | '3d'>('2d');
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
@@ -248,17 +249,20 @@ const Buscar = () => {
 
       console.log('Google Maps libraries loaded successfully');
 
-      // Now google.maps is available globally
+      // Now google.maps is available globally - use Vector Map for rotation/tilt support
       const mapInstance = new google.maps.Map(mapContainer.current, {
         center: { lat: -25.9655, lng: 32.5892 },
         zoom: 13,
         mapTypeId: 'roadmap',
+        mapId: 'DEMO_MAP_ID', // Vector Map ID for rotation/tilt support
         mapTypeControl: true,
         fullscreenControl: true,
         streetViewControl: true,
         zoomControl: true,
         rotateControl: true,
         gestureHandling: 'greedy',
+        tilt: 0,
+        heading: 0,
         styles: [
           {
             featureType: 'poi.business',
@@ -1662,28 +1666,17 @@ const Buscar = () => {
         if (status === 'OK' && result && directionsRenderer.current && map.current) {
           const route = result.routes[0];
 
-          if (mode === 'WALKING') {
-            // For walking mode, use dots instead of lines
-            directionsRenderer.current.setOptions({
-              suppressMarkers: true,
-              polylineOptions: {
-                strokeOpacity: 0 // Hide the line completely
-              }
-            });
-            directionsRenderer.current.setDirections(result);
-            drawRouteWithDots(route);
-          } else {
-            // For driving mode, use normal line
-            directionsRenderer.current.setOptions({
-              suppressMarkers: true,
-              polylineOptions: {
-                strokeColor: '#10b981',
-                strokeWeight: 8,
-                strokeOpacity: 0.9
-              }
-            });
-            directionsRenderer.current.setDirections(result);
-          }
+          // Use continuous line for BOTH walking and driving modes
+          directionsRenderer.current.setOptions({
+            suppressMarkers: true,
+            polylineOptions: {
+              strokeColor: '#10b981',
+              strokeWeight: mode === 'WALKING' ? 6 : 8,
+              strokeOpacity: 0.9,
+              geodesic: true
+            }
+          });
+          directionsRenderer.current.setDirections(result);
 
           currentRouteSteps.current = route.legs[0]?.steps || [];
           currentStepIndex.current = 0;
@@ -1710,24 +1703,23 @@ const Buscar = () => {
             setArrivalTime(arrivalDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
           }
 
-          // Set navigation view - tilted, zoomed in, and position destination at top of screen
-          map.current.setZoom(18);
-          map.current.setTilt(45);
+          // Set navigation view - tilted, zoomed in, rotated towards destination
+          setMapViewMode('3d');
           
-          // Calculate bounds to position destination at top and user at bottom
-          const bounds = new google.maps.LatLngBounds();
-          bounds.extend(userLocation);
-          bounds.extend(new google.maps.LatLng(
+          // Calculate initial heading from user to destination
+          const destLatLng = new google.maps.LatLng(
             selectedMedicamento.farmacia_latitude,
             selectedMedicamento.farmacia_longitude
-          ));
+          );
+          const userLatLng = new google.maps.LatLng(userLocation.lat, userLocation.lng);
+          const initialHeading = google.maps.geometry.spherical.computeHeading(userLatLng, destLatLng);
           
-          // Fit bounds with padding to position destination at top
-          map.current.fitBounds(bounds, {
-            top: 100,    // Destination near top
-            bottom: 400, // User near bottom
-            left: 50,
-            right: 50
+          // Use moveCamera for smooth transition with heading
+          map.current.moveCamera({
+            center: userLocation,
+            zoom: 18,
+            tilt: 45,
+            heading: initialHeading
           });
 
           // Calculate initial distance to destination
@@ -1765,9 +1757,24 @@ const Buscar = () => {
                   userMarkerRef.current.setPosition(newPos);
                 }
 
-                // Map is now freely manipulable - no auto-centering or heading updates
-                // User can pan, zoom, and rotate as desired
-                // Only recenter when user clicks the "Recenter" button
+                // Auto-rotate map to face direction of travel during navigation
+                if (currentRouteSteps.current.length > currentStepIndex.current) {
+                  const currentStep = currentRouteSteps.current[currentStepIndex.current];
+                  if (currentStep.end_location) {
+                    const heading = google.maps.geometry.spherical.computeHeading(
+                      new google.maps.LatLng(newPos.lat, newPos.lng),
+                      currentStep.end_location
+                    );
+                    
+                    // Smooth camera update with heading aligned to direction
+                    map.current?.moveCamera({
+                      center: newPos,
+                      heading: heading,
+                      tilt: 45,
+                      zoom: 18
+                    });
+                  }
+                }
 
                 // Calculate distance to destination
                 if (destinationLocation.current) {
@@ -1927,7 +1934,26 @@ const Buscar = () => {
       map.current.setTilt(0);
       map.current.setHeading(0);
       map.current.setZoom(14);
+      setMapViewMode('2d');
     }
+  };
+
+  const toggleMapView = () => {
+    if (!map.current) return;
+    
+    if (mapViewMode === '2d') {
+      map.current.setTilt(45);
+      setMapViewMode('3d');
+    } else {
+      map.current.setTilt(0);
+      map.current.setHeading(0);
+      setMapViewMode('2d');
+    }
+  };
+
+  const resetMapOrientation = () => {
+    if (!map.current) return;
+    map.current.setHeading(0);
   };
 
   const recenterMap = () => {
@@ -2138,6 +2164,37 @@ const Buscar = () => {
               Obter Localização
             </Button>
           )
+        )}
+
+        {/* Map Control Buttons - Always visible when not navigating */}
+        {!isNavigating && userLocation && (
+          <div className="absolute bottom-24 right-4 flex flex-col gap-2 z-10">
+            {/* Toggle 2D/3D View */}
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-10 w-10 rounded-full shadow-lg bg-white hover:bg-gray-100"
+              onClick={toggleMapView}
+              title={mapViewMode === '2d' ? 'Vista 3D' : 'Vista 2D'}
+            >
+              {mapViewMode === '2d' ? (
+                <Eye className="h-4 w-4 text-primary" />
+              ) : (
+                <MapIcon className="h-4 w-4 text-primary" />
+              )}
+            </Button>
+            
+            {/* Reset Orientation (Compass) */}
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-10 w-10 rounded-full shadow-lg bg-white hover:bg-gray-100"
+              onClick={resetMapOrientation}
+              title="Norte para cima"
+            >
+              <Compass className="h-4 w-4 text-primary" />
+            </Button>
+          </div>
         )}
 
         {/* Search Box - Hidden when pharmacy selected or during navigation */}
@@ -2642,6 +2699,32 @@ const Buscar = () => {
 
             {/* Control Buttons - Right side */}
             <div className="absolute right-4 bottom-60 md:bottom-64 lg:bottom-32 flex flex-col gap-3 z-30">
+              {/* Toggle 2D/3D View */}
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-white hover:bg-gray-100"
+                onClick={toggleMapView}
+                title={mapViewMode === '2d' ? 'Vista 3D' : 'Vista 2D'}
+              >
+                {mapViewMode === '2d' ? (
+                  <Eye className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                ) : (
+                  <MapIcon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                )}
+              </Button>
+              
+              {/* Reset Orientation (Compass) */}
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-white hover:bg-gray-100"
+                onClick={resetMapOrientation}
+                title="Norte para cima"
+              >
+                <Compass className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+              </Button>
+              
               {/* Recenter Button */}
               <Button
                 size="icon"
