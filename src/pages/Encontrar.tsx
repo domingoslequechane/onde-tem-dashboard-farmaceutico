@@ -352,13 +352,15 @@ const Buscar = () => {
         center: { lat: -25.9655, lng: 32.5892 },
         zoom: 13,
         mapTypeId: 'roadmap',
-        mapId: 'DEMO_MAP_ID', // Vector Map ID for rotation/tilt support
+        // Desativar TODOS os controlos nativos
         mapTypeControl: false,
         fullscreenControl: false,
         streetViewControl: false,
         zoomControl: false,
         rotateControl: false,
         scaleControl: false,
+        keyboardShortcuts: false,
+        clickableIcons: false,
         gestureHandling: 'greedy',
         tilt: 0,
         heading: 0,
