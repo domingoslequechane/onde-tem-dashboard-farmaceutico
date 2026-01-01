@@ -353,11 +353,12 @@ const Buscar = () => {
         zoom: 13,
         mapTypeId: 'roadmap',
         mapId: 'DEMO_MAP_ID', // Vector Map ID for rotation/tilt support
-        mapTypeControl: true,
-        fullscreenControl: true,
-        streetViewControl: true,
-        zoomControl: true,
-        rotateControl: true,
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false,
+        zoomControl: false,
+        rotateControl: false,
+        scaleControl: false,
         gestureHandling: 'greedy',
         tilt: 0,
         heading: 0,
@@ -2448,7 +2449,7 @@ const Buscar = () => {
             {isSearchCollapsed ? (
               <Button
                 onClick={() => setIsSearchCollapsed(false)}
-                className="absolute top-20 left-4 z-10 shadow-lg"
+                className="absolute top-4 right-4 z-10 shadow-lg"
                 size="icon"
                 variant="default"
               >
