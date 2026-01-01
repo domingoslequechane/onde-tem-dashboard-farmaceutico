@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon, Moon, Sun, MessageSquare, Crosshair } from 'lucide-react';
+import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon, Moon, Sun, MessageSquare, Crosshair, Satellite, Layers } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.png';
@@ -125,6 +125,7 @@ const Buscar = () => {
   const [manualNightMode, setManualNightMode] = useState<'auto' | 'day' | 'night'>('auto');
   const [userHeading, setUserHeading] = useState<number>(0);
   const [isViewTransitioning, setIsViewTransitioning] = useState(false);
+  const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
@@ -352,6 +353,7 @@ const Buscar = () => {
         center: { lat: -25.9655, lng: 32.5892 },
         zoom: 13,
         mapTypeId: 'roadmap',
+        mapId: 'DEMO_MAP_ID', // Required for tilt/rotation support
         // Desativar TODOS os controlos nativos
         mapTypeControl: false,
         fullscreenControl: false,
@@ -2140,6 +2142,16 @@ const Buscar = () => {
     map.current.setHeading(0);
   };
 
+  const toggleMapType = () => {
+    if (!map.current) return;
+    const newType = mapType === 'roadmap' ? 'satellite' : 'roadmap';
+    setMapType(newType);
+    map.current.setMapTypeId(newType);
+    toast({
+      title: newType === 'satellite' ? 'Vista satélite' : 'Vista mapa',
+    });
+  };
+
   const recenterMap = () => {
     if (map.current && userLocation) {
       map.current.setCenter(userLocation);
@@ -2378,9 +2390,24 @@ const Buscar = () => {
           )
         )}
 
-        {/* Map Control Buttons - Repositioned to avoid overlap with Google Maps controls */}
+        {/* Map Control Buttons - Custom controls only */}
         {!isNavigating && userLocation && (
-          <div className="absolute bottom-44 right-4 flex flex-col gap-2 z-20">
+          <div className="absolute bottom-44 right-4 flex flex-col gap-2 z-30">
+            {/* Toggle Satellite/Map View */}
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-10 w-10 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
+              onClick={toggleMapType}
+              title={mapType === 'roadmap' ? 'Vista satélite' : 'Vista mapa'}
+            >
+              {mapType === 'roadmap' ? (
+                <Satellite className="h-4 w-4 text-primary" />
+              ) : (
+                <Layers className="h-4 w-4 text-primary" />
+              )}
+            </Button>
+            
             {/* Toggle 2D/3D View */}
             <Button
               size="icon"
@@ -2388,9 +2415,6 @@ const Buscar = () => {
               className="h-10 w-10 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
               onClick={() => {
                 toggleMapView();
-                toast({
-                  title: mapViewMode === '2d' ? 'Vista 3D ativada' : 'Vista 2D ativada',
-                });
               }}
               title={mapViewMode === '2d' ? 'Vista 3D' : 'Vista 2D'}
             >
@@ -2451,14 +2475,14 @@ const Buscar = () => {
             {isSearchCollapsed ? (
               <Button
                 onClick={() => setIsSearchCollapsed(false)}
-                className="absolute top-4 right-4 z-10 shadow-lg"
+                className="absolute top-4 right-4 z-40 shadow-lg"
                 size="icon"
                 variant="default"
               >
                 <Search className="h-4 w-4" />
               </Button>
             ) : (
-          <div className="absolute top-2 left-2 right-2 md:left-auto md:top-2 md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card rounded-xl shadow-lg p-4 z-10 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
+          <div className="absolute top-2 left-2 right-2 md:left-auto md:top-2 md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card rounded-xl shadow-lg p-4 z-40 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base md:text-lg font-bold text-foreground">Encontre ONDTem!</h2>
               <Button
