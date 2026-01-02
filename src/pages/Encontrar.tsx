@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon, Moon, Sun, MessageSquare, Crosshair, Satellite, Layers } from 'lucide-react';
+import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon, Moon, Sun, MessageSquare, Crosshair, Satellite, Layers, Minimize2, Maximize2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.png';
@@ -14,6 +14,7 @@ import pharmacyMarkerIcon from '@/assets/pharmacy-marker-icon.png';
 import { LeaveReviewModal } from '@/components/LeaveReviewModal';
 import { ViewReviewsModal } from '@/components/ViewReviewsModal';
 import { FeedbackModal } from '@/components/FeedbackModal';
+import { SearchFeedbackModal } from '@/components/SearchFeedbackModal';
 import Fuse from 'fuse.js';
 import { useSearchCapture } from '@/hooks/useSearchCapture';
 import {
@@ -126,6 +127,9 @@ const Buscar = () => {
   const [userHeading, setUserHeading] = useState<number>(0);
   const [isViewTransitioning, setIsViewTransitioning] = useState(false);
   const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
+  const [isNavCardMinimized, setIsNavCardMinimized] = useState(false);
+  const [showSearchFeedback, setShowSearchFeedback] = useState(false);
+  const searchFeedbackTimer = useRef<NodeJS.Timeout | null>(null);
   const navigationWatchId = useRef<number | null>(null);
   const currentRouteSteps = useRef<google.maps.DirectionsStep[]>([]);
   const currentStepIndex = useRef<number>(0);
@@ -139,9 +143,11 @@ const Buscar = () => {
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const lastUserPositionRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  // Base styles to hide all POIs (show only our registered pharmacies)
+  // Base styles to hide all POIs including medical/pharmacies
   const baseMapStyles: google.maps.MapTypeStyle[] = [
     { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', stylers: [{ visibility: 'off' }] },
     { featureType: 'poi.park', stylers: [{ visibility: 'simplified' }] },
     { featureType: 'poi.government', stylers: [{ visibility: 'on' }] },
     { featureType: 'poi.school', stylers: [{ visibility: 'on' }] },
@@ -2651,7 +2657,8 @@ const Buscar = () => {
                     key={radius}
                     onClick={() => {
                       setRaioKm(radius);
-                      if (selectedFromDropdown && medicamento.trim() && medicamentos.length > 0) {
+                      // Re-execute search when radius changes if user already selected something
+                      if (selectedFromDropdown && medicamento.trim()) {
                         setTimeout(() => handleBuscar(medicamento), 100);
                       }
                     }}
@@ -2671,7 +2678,7 @@ const Buscar = () => {
             {searchStatus !== 'idle' && (
               <div className={`mt-3 p-3 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200 ${
                 searchStatus === 'searching' ? 'bg-primary/5 border border-primary/20' :
-                searchStatus === 'found' ? 'bg-green-50 border border-green-200' :
+                searchStatus === 'found' ? 'bg-accent border border-border' :
                 'bg-destructive/10 border border-destructive/30'
               }`}>
                 {searchStatus === 'searching' && (
@@ -2685,17 +2692,17 @@ const Buscar = () => {
                   </div>
                 )}
                 {searchStatus === 'found' && (
-                  <div className="flex items-center gap-2 text-green-700">
-                    <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                      <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <div className="flex items-center gap-2 text-primary">
+                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <span className="text-sm font-semibold">
+                      <span className="text-sm font-semibold text-foreground">
                         {medicamentos.length} {medicamentos.length === 1 ? 'resultado' : 'resultados'} para{' '}
                       </span>
-                      <span className="text-sm font-bold">"{medicamento}"</span>
+                      <span className="text-sm font-bold text-primary">"{medicamento}"</span>
                     </div>
                   </div>
                 )}
@@ -2723,7 +2730,7 @@ const Buscar = () => {
                 {medicamentos.map((item, index) => (
                   <Card
                     key={`${item.farmacia_id}-${index}`}
-                    className="p-2 cursor-pointer hover:shadow-md transition-all duration-200 bg-green-50 border-l-2 border-l-green-500"
+                    className="p-2 cursor-pointer hover:shadow-md transition-all duration-200 bg-accent border-l-2 border-l-primary"
                     onClick={() => showRouteToPharmacy(item, 'walking')}
                   >
                     <div className="flex justify-between items-start gap-2">
@@ -2975,7 +2982,7 @@ const Buscar = () => {
               <Button
                 size="icon"
                 variant="secondary"
-                className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-white hover:bg-gray-100"
+                className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
                 onClick={toggleMapView}
                 title={mapViewMode === '2d' ? 'Vista 3D' : 'Vista 2D'}
               >
@@ -2990,7 +2997,7 @@ const Buscar = () => {
               <Button
                 size="icon"
                 variant="secondary"
-                className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-white hover:bg-gray-100"
+                className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
                 onClick={resetMapOrientation}
                 title="Norte para cima"
               >
@@ -3001,7 +3008,7 @@ const Buscar = () => {
               <Button
                 size="icon"
                 variant="secondary"
-                className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-white hover:bg-gray-100"
+                className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
                 onClick={recenterMap}
               >
                 <MapPin className="h-5 w-5 md:h-6 md:w-6 text-primary" />
@@ -3009,46 +3016,66 @@ const Buscar = () => {
             </div>
 
             {/* Navigation Footer - Bottom card (mobile) / Side card (tablet/desktop) */}
-            <Card className="absolute bottom-0 left-0 right-0 lg:bottom-4 lg:left-auto lg:right-4 lg:w-96 lg:rounded-xl bg-white border-t-2 lg:border-2 border-gray-200 p-4 md:p-5 shadow-2xl z-30 rounded-t-2xl lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
+            <Card className="absolute bottom-0 left-0 right-0 lg:bottom-4 lg:left-auto lg:right-4 lg:w-96 lg:rounded-xl bg-card border-t-2 lg:border-2 border-border p-4 md:p-5 shadow-2xl z-30 rounded-t-2xl lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
               <div className="space-y-4">
-                {/* Header with Close Button */}
+                {/* Header with Minimize and Close Buttons */}
                 <div className="flex justify-between items-center">
                   <h3 className="text-base md:text-lg font-bold text-foreground">Navegação</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={stopNavigation}
-                    className="text-sm font-medium hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    Fechar
-                  </Button>
-                </div>
-
-                {/* Trip Info Section */}
-                <div className="space-y-3 pb-3 border-b border-border">
-                  {/* Destination */}
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <div className="text-xs md:text-sm font-semibold text-muted-foreground mb-1">Destino:</div>
-                    <div className="text-sm md:text-base font-semibold text-foreground">{selectedMedicamento?.farmacia_nome}</div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsNavCardMinimized(!isNavCardMinimized)}
+                      className="h-8 w-8"
+                      title={isNavCardMinimized ? 'Maximizar' : 'Minimizar'}
+                    >
+                      {isNavCardMinimized ? (
+                        <Maximize2 className="h-4 w-4" />
+                      ) : (
+                        <Minimize2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={stopNavigation}
+                      className="text-sm font-medium hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      Fechar
+                    </Button>
                   </div>
                 </div>
 
-                {/* Travel Time and Distance - Prominent Display */}
-                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-4xl md:text-5xl">{selectedTravelMode === 'WALKING' ? '🚶' : '🚗'}</span>
-                      <div>
-                        <div className="text-3xl md:text-4xl font-bold text-green-700">
-                          {Math.round(distanceToDestination * 1000 / (selectedTravelMode === 'WALKING' ? 80 : 800))} min
-                        </div>
-                        <div className="text-xs md:text-sm text-green-600 font-medium mt-1">
-                          {Math.round(distanceToDestination * 1000)} m • Chegada: {arrivalTime}
+                {/* Collapsible content */}
+                {!isNavCardMinimized && (
+                  <>
+                    {/* Trip Info Section */}
+                    <div className="space-y-3 pb-3 border-b border-border">
+                      {/* Destination */}
+                      <div className="bg-muted/50 rounded-lg p-3">
+                        <div className="text-xs md:text-sm font-semibold text-muted-foreground mb-1">Destino:</div>
+                        <div className="text-sm md:text-base font-semibold text-foreground">{selectedMedicamento?.farmacia_nome}</div>
+                      </div>
+                    </div>
+
+                    {/* Travel Time and Distance - Prominent Display */}
+                    <div className="bg-primary/10 rounded-xl p-4 border border-primary/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-4xl md:text-5xl">{selectedTravelMode === 'WALKING' ? '🚶' : '🚗'}</span>
+                          <div>
+                            <div className="text-3xl md:text-4xl font-bold text-primary">
+                              {Math.round(distanceToDestination * 1000 / (selectedTravelMode === 'WALKING' ? 80 : 800))} min
+                            </div>
+                            <div className="text-xs md:text-sm text-muted-foreground font-medium mt-1">
+                              {Math.round(distanceToDestination * 1000)} m • Chegada: {arrivalTime}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
             </Card>
           </>
@@ -3122,17 +3149,29 @@ const Buscar = () => {
             </button>
 
             <div className="p-6 space-y-4">
+              {/* Thank you message */}
+              <div className="text-center space-y-2">
+                <div className="text-4xl">🎉</div>
+                <h2 className="text-xl font-bold text-primary">Chegou ao destino!</h2>
+                <p className="text-sm text-muted-foreground">
+                  Obrigado por usar o ONDTem para encontrar o seu medicamento.
+                </p>
+              </div>
+
               {/* Medicamento e Preço - apenas se veio de uma busca */}
               {selectedMedicamento && (
-                <div className="space-y-3">
+                <div className="space-y-3 bg-accent/50 rounded-lg p-4">
                   {isFromSearch && (
-                    <h3 className="text-lg font-semibold text-primary">
-                      {selectedMedicamento.medicamento_nome} - {selectedMedicamento.farmacia_mostrar_preco ? `${selectedMedicamento.medicamento_preco.toFixed(2)} MT` : 'Consultar preço'}
-                    </h3>
+                    <>
+                      <div className="text-sm text-muted-foreground">Você veio buscar:</div>
+                      <h3 className="text-lg font-semibold text-primary">
+                        {selectedMedicamento.medicamento_nome} {selectedMedicamento.farmacia_mostrar_preco ? `- ${selectedMedicamento.medicamento_preco.toFixed(2)} MT` : ''}
+                      </h3>
+                    </>
                   )}
 
-                  {/* Nome da Farmácia com borda verde */}
-                  <div className="border-l-4 border-green-600 pl-3 py-1">
+                  {/* Nome da Farmácia com borda */}
+                  <div className="border-l-4 border-primary pl-3 py-1">
                     <p className="font-medium text-foreground text-base uppercase">
                       {selectedMedicamento.farmacia_nome}
                     </p>
@@ -3148,7 +3187,7 @@ const Buscar = () => {
                             className={`h-5 w-5 ${
                               star <= Math.round(selectedMedicamento.media_avaliacoes || 0)
                                 ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-300'
+                                : 'text-muted-foreground/30'
                             }`}
                           />
                         ))}
@@ -3164,16 +3203,9 @@ const Buscar = () => {
                     </div>
                   )}
 
-                  {/* Status de chegada */}
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                      ✓ Chegou ao destino
-                    </div>
-                  </div>
-
                   {/* Métricas de viagem */}
                   {travelDuration && (
-                    <div className="flex items-center gap-4 text-sm py-2 border-t border-b">
+                    <div className="flex items-center gap-4 text-sm py-2 border-t border-border">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="font-semibold">{travelDuration}</span>
@@ -3211,6 +3243,14 @@ const Buscar = () => {
       <FeedbackModal
         open={showFeedbackModal}
         onOpenChange={setShowFeedbackModal}
+      />
+
+      {/* Search Feedback Modal - shown after navigation */}
+      <SearchFeedbackModal
+        open={showSearchFeedback}
+        onOpenChange={setShowSearchFeedback}
+        medicamento={selectedMedicamento?.medicamento_nome || medicamento}
+        farmacia={selectedMedicamento?.farmacia_nome || ''}
       />
     </div>
   );

@@ -341,6 +341,45 @@ export type Database = {
         }
         Relationships: []
       }
+      feedbacks: {
+        Row: {
+          avaliacao: number | null
+          criado_em: string | null
+          encontrou_medicamento: boolean | null
+          farmacia_nome: string | null
+          fonte: string | null
+          id: string
+          medicamento_buscado: string | null
+          mensagem: string
+          tipo: string
+          user_agent: string | null
+        }
+        Insert: {
+          avaliacao?: number | null
+          criado_em?: string | null
+          encontrou_medicamento?: boolean | null
+          farmacia_nome?: string | null
+          fonte?: string | null
+          id?: string
+          medicamento_buscado?: string | null
+          mensagem: string
+          tipo?: string
+          user_agent?: string | null
+        }
+        Update: {
+          avaliacao?: number | null
+          criado_em?: string | null
+          encontrou_medicamento?: boolean | null
+          farmacia_nome?: string | null
+          fonte?: string | null
+          id?: string
+          medicamento_buscado?: string | null
+          mensagem?: string
+          tipo?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       impressoes_farmacia: {
         Row: {
           cliente_latitude: number | null

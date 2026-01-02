@@ -81,6 +81,7 @@ const App = () => {
                 <Route path="/admin/farmacias" element={<Admin />} />
                 <Route path="/admin/prospeccao" element={<Admin />} />
                 <Route path="/admin/administradores" element={<Admin />} />
+                <Route path="/admin/feedbacks" element={<Admin />} />
                 <Route path="/admin/configuracoes" element={<AdminSettings />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin/recuperar-senha" element={<AdminResetPassword />} />
