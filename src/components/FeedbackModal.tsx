@@ -42,13 +42,14 @@ export const FeedbackModal = ({ open, onOpenChange }: FeedbackModalProps) => {
     setIsSubmitting(true);
 
     try {
-      // Try to submit to Supabase if connected, otherwise just show success
+      // Submit to feedbacks table
       const { error } = await supabase
-        .from('consultas')
+        .from('feedbacks')
         .insert({
-          medicamento_buscado: `[FEEDBACK - ${feedbackType.toUpperCase()}] ${feedback}`,
-          canal: 'web-feedback',
-          status: 'feedback',
+          tipo: feedbackType,
+          mensagem: feedback,
+          fonte: 'modal-feedback',
+          user_agent: navigator.userAgent,
         });
 
       if (error) {

@@ -15,6 +15,7 @@ import AdminFarmaciaModal from '@/components/AdminFarmaciaModal';
 import AdminManagers from '@/components/AdminManagers';
 import AdminStatistics from '@/components/AdminStatistics';
 import AdminProspects from '@/components/AdminProspects';
+import AdminFeedbacks from '@/components/AdminFeedbacks';
 import { DeletePharmacyDialog } from '@/components/DeletePharmacyDialog';
 
 const Admin = () => {
@@ -136,6 +137,8 @@ const Admin = () => {
     ? 'farmacias' 
     : location.pathname === '/admin/prospeccao'
     ? 'prospeccao'
+    : location.pathname === '/admin/feedbacks'
+    ? 'feedbacks'
     : 'estatisticas';
 
   return (
@@ -330,6 +333,11 @@ const Admin = () => {
           {/* Aba de Administradores */}
           <TabsContent value="administradores" className="flex-1 overflow-y-auto m-0">
             <AdminManagers />
+          </TabsContent>
+
+          {/* Aba de Feedbacks */}
+          <TabsContent value="feedbacks" className="flex-1 overflow-y-auto m-0">
+            <AdminFeedbacks />
           </TabsContent>
           </Tabs>
         </div>
