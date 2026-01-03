@@ -69,6 +69,7 @@ const Buscar = () => {
   const markersRef = useRef<google.maps.Marker[]>([]);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const radiusCircleRef = useRef<google.maps.Circle | null>(null);
+  const accuracyCircleRef = useRef<google.maps.Circle | null>(null);
   const directionsRenderer = useRef<google.maps.DirectionsRenderer | null>(null);
   const directionsService = useRef<google.maps.DirectionsService | null>(null);
   const infoWindowsRef = useRef<google.maps.InfoWindow[]>([]);
@@ -1152,7 +1153,7 @@ const Buscar = () => {
     }
   };
 
-  const requestGeolocation = useCallback(() => {
+  const requestGeolocation = useCallback((forceRefine = false) => {
     if (!('geolocation' in navigator) || isGettingLocation) return;
     
     setIsGettingLocation(true);
@@ -1163,6 +1164,14 @@ const Buscar = () => {
       userLocationWatchIdRef.current = null;
     }
     
+    // If forcing refine or no location yet, show toast
+    if (forceRefine && locationAccuracy && locationAccuracy > 50) {
+      toast({
+        title: 'A melhorar precisão...',
+        description: 'Aguarde enquanto obtemos uma localização mais precisa.',
+      });
+    }
+    
     // Phase A: Quick location (accepts cache, low accuracy OK)
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -1170,19 +1179,28 @@ const Buscar = () => {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
+        const accuracy = position.coords.accuracy;
+        
         setUserLocation(newLocation);
-        setLocationAccuracy(position.coords.accuracy);
+        setLocationAccuracy(accuracy);
         setLocationPermission('granted');
         
         if (map.current) {
           updateMapWithUserLocation(newLocation);
+          updateAccuracyCircle(newLocation, accuracy);
         }
         
-        // Phase B: Start watching for better accuracy (if current is poor)
-        if (position.coords.accuracy > 50) {
+        // Phase B: Start watching for better accuracy (if current is poor or forcing refine)
+        if (accuracy > 50 || forceRefine) {
           startAccuracyRefinement();
         } else {
           setIsGettingLocation(false);
+          if (accuracy <= 30) {
+            toast({
+              title: 'Localização precisa',
+              description: `Precisão: ${Math.round(accuracy)}m`,
+            });
+          }
         }
       },
       (error) => {
@@ -1198,9 +1216,34 @@ const Buscar = () => {
           startAccuracyRefinement();
         }
       },
-      { enableHighAccuracy: false, timeout: 3000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 3000, maximumAge: forceRefine ? 0 : 60000 }
     );
-  }, [isGettingLocation]);
+  }, [isGettingLocation, locationAccuracy, toast]);
+  
+  // Update accuracy circle on map
+  const updateAccuracyCircle = useCallback((location: { lat: number; lng: number }, accuracy: number) => {
+    if (!map.current) return;
+    
+    // Remove existing accuracy circle
+    if (accuracyCircleRef.current) {
+      accuracyCircleRef.current.setMap(null);
+    }
+    
+    // Only show accuracy circle if accuracy is poor (> 30m)
+    if (accuracy > 30) {
+      accuracyCircleRef.current = new google.maps.Circle({
+        strokeColor: accuracy > 100 ? '#ef4444' : accuracy > 50 ? '#f59e0b' : '#3b82f6',
+        strokeOpacity: 0.4,
+        strokeWeight: 2,
+        fillColor: accuracy > 100 ? '#ef4444' : accuracy > 50 ? '#f59e0b' : '#3b82f6',
+        fillOpacity: 0.1,
+        map: map.current,
+        center: location,
+        radius: accuracy,
+        zIndex: 500
+      });
+    }
+  }, []);
   
   const startAccuracyRefinement = useCallback(() => {
     // Clear existing watch if any
@@ -1208,8 +1251,10 @@ const Buscar = () => {
       navigator.geolocation.clearWatch(userLocationWatchIdRef.current);
     }
     
+    let bestAccuracy = locationAccuracy || Infinity;
+    let bestLocation: { lat: number; lng: number } | null = null;
     let goodReadingsCount = 0;
-    const maxWatchTime = 15000; // 15 seconds max
+    const maxWatchTime = 20000; // 20 seconds max
     const startTime = Date.now();
     
     userLocationWatchIdRef.current = navigator.geolocation.watchPosition(
@@ -1218,20 +1263,43 @@ const Buscar = () => {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
+        const accuracy = position.coords.accuracy;
         
-        setUserLocation(newLocation);
-        setLocationAccuracy(position.coords.accuracy);
-        setLocationPermission('granted');
-        
-        if (map.current) {
-          updateMapWithUserLocation(newLocation);
+        // Only accept readings that are better than what we have
+        // Or accept any reading if accuracy is good enough (< 50m)
+        if (accuracy < bestAccuracy || accuracy <= 50) {
+          bestAccuracy = accuracy;
+          bestLocation = newLocation;
+          
+          setUserLocation(newLocation);
+          setLocationAccuracy(accuracy);
+          setLocationPermission('granted');
+          
+          if (map.current) {
+            updateMapWithUserLocation(newLocation);
+            updateAccuracyCircle(newLocation, accuracy);
+          }
         }
         
-        // Stop if accuracy is good enough or we've been watching too long
-        if (position.coords.accuracy <= 50) {
+        // Stop if accuracy is excellent
+        if (accuracy <= 30) {
           goodReadingsCount++;
           if (goodReadingsCount >= 2) {
-            // Got consistent good readings, stop watching
+            // Got consistent excellent readings, stop watching
+            if (userLocationWatchIdRef.current !== null) {
+              navigator.geolocation.clearWatch(userLocationWatchIdRef.current);
+              userLocationWatchIdRef.current = null;
+            }
+            setIsGettingLocation(false);
+            toast({
+              title: 'Localização precisa',
+              description: `Precisão: ${Math.round(accuracy)}m`,
+            });
+          }
+        } else if (accuracy <= 50) {
+          // Good enough, but keep trying for a bit
+          goodReadingsCount++;
+          if (goodReadingsCount >= 3 || Date.now() - startTime > 10000) {
             if (userLocationWatchIdRef.current !== null) {
               navigator.geolocation.clearWatch(userLocationWatchIdRef.current);
               userLocationWatchIdRef.current = null;
@@ -1247,6 +1315,15 @@ const Buscar = () => {
             userLocationWatchIdRef.current = null;
           }
           setIsGettingLocation(false);
+          
+          // If we still have poor accuracy, warn the user
+          if (bestAccuracy > 100) {
+            toast({
+              title: 'Precisão limitada',
+              description: `Precisão atual: ~${Math.round(bestAccuracy)}m. Tente num local com melhor sinal GPS.`,
+              variant: 'destructive',
+            });
+          }
         }
       },
       (error) => {
@@ -1274,7 +1351,7 @@ const Buscar = () => {
           }
         }
       },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
+      { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
     );
     
     // Auto-stop after maxWatchTime
@@ -1285,7 +1362,7 @@ const Buscar = () => {
         setIsGettingLocation(false);
       }
     }, maxWatchTime);
-  }, [toast, userLocation]);
+  }, [toast, userLocation, locationAccuracy, updateAccuracyCircle]);
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
     const from = new google.maps.LatLng(lat1, lng1);
@@ -2385,7 +2462,7 @@ const Buscar = () => {
             </div>
           ) : (
             <Button 
-              onClick={requestGeolocation}
+              onClick={() => requestGeolocation()}
               className="absolute top-4 left-4 z-10 shadow-lg"
               size="sm"
               variant="default"
@@ -2462,16 +2539,39 @@ const Buscar = () => {
               )}
             </Button>
             
-            {/* Recenter Button */}
-            <Button
-              size="icon"
-              variant="secondary"
-              className="h-10 w-10 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
-              onClick={recenterMap}
-              title="Centralizar no utilizador"
-            >
-              <Crosshair className="h-4 w-4 text-primary" />
-            </Button>
+            {/* Recenter Button with Accuracy Indicator */}
+            <div className="relative">
+              <Button
+                size="icon"
+                variant="secondary"
+                className={`h-10 w-10 rounded-full shadow-lg bg-card hover:bg-accent border border-border ${isGettingLocation ? 'animate-pulse' : ''}`}
+                onClick={() => {
+                  if (locationAccuracy && locationAccuracy > 50) {
+                    requestGeolocation(true);
+                  } else {
+                    recenterMap();
+                  }
+                }}
+                title={locationAccuracy ? `Precisão: ${Math.round(locationAccuracy)}m` : 'Centralizar no utilizador'}
+              >
+                {isGettingLocation ? (
+                  <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                ) : (
+                  <Crosshair className="h-4 w-4 text-primary" />
+                )}
+              </Button>
+              {/* Accuracy indicator dot */}
+              {locationAccuracy && (
+                <div 
+                  className={`absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-card ${
+                    locationAccuracy <= 30 ? 'bg-green-500' : 
+                    locationAccuracy <= 50 ? 'bg-yellow-500' : 
+                    locationAccuracy <= 100 ? 'bg-orange-500' : 'bg-red-500'
+                  }`}
+                  title={`Precisão: ${Math.round(locationAccuracy)}m`}
+                />
+              )}
+            </div>
           </div>
         )}
 
