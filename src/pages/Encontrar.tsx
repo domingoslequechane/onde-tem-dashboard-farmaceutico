@@ -360,7 +360,7 @@ const Buscar = () => {
         center: { lat: -25.9655, lng: 32.5892 },
         zoom: 13,
         mapTypeId: 'roadmap',
-        mapId: 'DEMO_MAP_ID', // Required for tilt/rotation support
+        // mapId removido para aplicar estilos que escondem POIs de farmácias genéricas
         // Desativar TODOS os controlos nativos
         mapTypeControl: false,
         fullscreenControl: false,
