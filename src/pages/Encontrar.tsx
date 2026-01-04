@@ -147,7 +147,11 @@ const Buscar = () => {
   // Base styles - mostrar POIs gerais, esconder apenas médicos/farmácias
   const baseMapStyles: google.maps.MapTypeStyle[] = [
     // Esconder APENAS POIs médicos (farmácias, hospitais, clínicas)
-    { featureType: 'poi.medical', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', elementType: 'all', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', elementType: 'labels.text', stylers: [{ visibility: 'off' }] },
+
     // Manter outros POIs visíveis para orientação
     { featureType: 'poi.business', stylers: [{ visibility: 'on' }] },
     { featureType: 'poi.park', stylers: [{ visibility: 'on' }] },
