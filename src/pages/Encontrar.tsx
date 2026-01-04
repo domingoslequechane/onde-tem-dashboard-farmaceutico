@@ -144,14 +144,16 @@ const Buscar = () => {
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const lastUserPositionRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  // Base styles to hide all POIs including medical/pharmacies
+  // Base styles - mostrar POIs gerais, esconder apenas médicos/farmácias
   const baseMapStyles: google.maps.MapTypeStyle[] = [
-    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-    { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
+    // Esconder APENAS POIs médicos (farmácias, hospitais, clínicas)
     { featureType: 'poi.medical', stylers: [{ visibility: 'off' }] },
-    { featureType: 'poi.park', stylers: [{ visibility: 'simplified' }] },
+    // Manter outros POIs visíveis para orientação
+    { featureType: 'poi.business', stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.park', stylers: [{ visibility: 'on' }] },
     { featureType: 'poi.government', stylers: [{ visibility: 'on' }] },
     { featureType: 'poi.school', stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.attraction', stylers: [{ visibility: 'on' }] },
     { featureType: 'transit', stylers: [{ visibility: 'simplified' }] },
   ];
 
