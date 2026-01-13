@@ -6,6 +6,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import * as XLSX from 'xlsx';
+import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 import {
   Popover,
   PopoverContent,
@@ -164,6 +170,43 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
     }
   };
 
+  // Parse Excel files (.xlsx, .xls)
+  const parseExcel = async (file: File): Promise<string> => {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    let content = '';
+    workbook.SheetNames.forEach((sheetName, index) => {
+      const sheet = workbook.Sheets[sheetName];
+      if (index > 0) content += `\n\n--- Folha: ${sheetName} ---\n`;
+      content += XLSX.utils.sheet_to_csv(sheet);
+    });
+    return content;
+  };
+
+  // Parse Word files (.docx, .doc)
+  const parseWord = async (file: File): Promise<string> => {
+    const buffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+    return result.value;
+  };
+
+  // Parse PDF files
+  const parsePDF = async (file: File): Promise<string> => {
+    const buffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    let text = '';
+    const maxPages = Math.min(pdf.numPages, 50);
+    for (let i = 1; i <= maxPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items
+        .map((item: any) => item.str)
+        .join(' ');
+      text += pageText + '\n';
+    }
+    return text;
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -189,25 +232,55 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
       return;
     }
 
+    const isBinaryFile = ['.pdf', '.xlsx', '.xls', '.doc', '.docx'].includes(fileExtension);
+    if (isBinaryFile) {
+      toast({
+        title: 'A processar ficheiro...',
+        description: 'Extraindo conteúdo, aguarde.',
+      });
+    }
+
     try {
       let content = '';
       
       if (['.csv', '.txt', '.json'].includes(fileExtension)) {
         content = await file.text();
-      } else {
-        content = `[Ficheiro binário: ${file.name}]\nTipo: ${file.type || fileExtension}\nTamanho: ${(file.size / 1024).toFixed(1)}KB`;
+      } else if (['.xlsx', '.xls'].includes(fileExtension)) {
+        content = await parseExcel(file);
+      } else if (['.docx', '.doc'].includes(fileExtension)) {
+        content = await parseWord(file);
+      } else if (fileExtension === '.pdf') {
+        content = await parsePDF(file);
+      }
+      
+      if (!content.trim()) {
+        toast({
+          title: 'Ficheiro vazio',
+          description: 'Não foi possível extrair conteúdo do ficheiro.',
+          variant: 'destructive',
+        });
+        return;
       }
       
       setAttachedFile({
         name: file.name,
-        content: content.slice(0, 15000),
+        content: content.slice(0, 50000),
         type: file.type || 'text/plain'
       });
+      
+      if (isBinaryFile) {
+        toast({
+          title: 'Ficheiro processado!',
+          description: `Conteúdo extraído com sucesso.`,
+        });
+      }
+      
       textareaRef.current?.focus();
     } catch (error) {
+      console.error('Error parsing file:', error);
       toast({
-        title: 'Erro ao ler ficheiro',
-        description: 'Não foi possível processar o ficheiro.',
+        title: 'Erro ao processar ficheiro',
+        description: 'Não foi possível extrair o conteúdo.',
         variant: 'destructive',
       });
     }

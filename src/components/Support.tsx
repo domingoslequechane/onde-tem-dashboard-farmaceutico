@@ -7,6 +7,12 @@ import { Send, Bot, User, Loader2, Paperclip, X, FileText, Trash2, Phone, Downlo
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { formatMarkdownToHtml, formatInlineMarkdown } from '@/lib/formatMarkdown';
+import * as XLSX from 'xlsx';
+import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 import {
   AlertDialog,
   AlertDialogAction,
@@ -163,6 +169,46 @@ const Support = ({ farmaciaId }: SupportProps) => {
     }
   };
 
+  // Parse Excel files (.xlsx, .xls)
+  const parseExcel = async (file: File): Promise<string> => {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    let content = '';
+    workbook.SheetNames.forEach((sheetName, index) => {
+      const sheet = workbook.Sheets[sheetName];
+      if (index > 0) content += `\n\n--- Folha: ${sheetName} ---\n`;
+      content += XLSX.utils.sheet_to_csv(sheet);
+    });
+    return content;
+  };
+
+  // Parse Word files (.docx, .doc)
+  const parseWord = async (file: File): Promise<string> => {
+    const buffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+    return result.value;
+  };
+
+  // Parse PDF files
+  const parsePDF = async (file: File): Promise<string> => {
+    const buffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    let text = '';
+    const maxPages = Math.min(pdf.numPages, 50); // Limit to 50 pages
+    for (let i = 1; i <= maxPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items
+        .map((item: any) => item.str)
+        .join(' ');
+      text += pageText + '\n';
+    }
+    if (pdf.numPages > 50) {
+      text += `\n[Nota: Apenas as primeiras 50 páginas de ${pdf.numPages} foram processadas]`;
+    }
+    return text;
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -189,29 +235,57 @@ const Support = ({ farmaciaId }: SupportProps) => {
       return;
     }
 
+    // Show loading toast for binary files
+    const isBinaryFile = ['.pdf', '.xlsx', '.xls', '.doc', '.docx'].includes(fileExtension);
+    if (isBinaryFile) {
+      toast({
+        title: 'A processar ficheiro...',
+        description: 'Extraindo conteúdo, aguarde um momento.',
+      });
+    }
+
     try {
       let content = '';
       
-      // For text-based files, read as text
+      // Parse based on file type
       if (['.csv', '.txt', '.json'].includes(fileExtension)) {
         content = await file.text();
-      } else {
-        // For binary files (PDF, Excel, Word), read as base64 and explain to AI
-        const buffer = await file.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer.slice(0, 5000))));
-        content = `[Ficheiro binário: ${file.name}]\nTipo: ${file.type || fileExtension}\nTamanho: ${(file.size / 1024).toFixed(1)}KB\n\nPor favor, peça ao utilizador para descrever os dados contidos no ficheiro ou copiar/colar o conteúdo relevante.`;
+      } else if (['.xlsx', '.xls'].includes(fileExtension)) {
+        content = await parseExcel(file);
+      } else if (['.docx', '.doc'].includes(fileExtension)) {
+        content = await parseWord(file);
+      } else if (fileExtension === '.pdf') {
+        content = await parsePDF(file);
+      }
+      
+      if (!content.trim()) {
+        toast({
+          title: 'Ficheiro vazio',
+          description: 'Não foi possível extrair conteúdo do ficheiro. Pode ser um PDF escaneado ou ficheiro protegido.',
+          variant: 'destructive',
+        });
+        return;
       }
       
       setAttachedFile({
         name: file.name,
-        content: content.slice(0, 15000),
+        content: content.slice(0, 50000), // Increased limit for parsed content
         type: file.type || 'text/plain'
       });
+      
+      if (isBinaryFile) {
+        toast({
+          title: 'Ficheiro processado!',
+          description: `Conteúdo de "${file.name}" extraído com sucesso.`,
+        });
+      }
+      
       textareaRef.current?.focus();
     } catch (error) {
+      console.error('Error parsing file:', error);
       toast({
-        title: 'Erro ao ler ficheiro',
-        description: 'Não foi possível processar o ficheiro.',
+        title: 'Erro ao processar ficheiro',
+        description: 'Não foi possível extrair o conteúdo. Tente um formato diferente.',
         variant: 'destructive',
       });
     }
