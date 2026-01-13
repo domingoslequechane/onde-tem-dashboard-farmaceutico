@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import OpenAI from "https://esm.sh/openai@4.20.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,10 +14,12 @@ serve(async (req) => {
   try {
     const { demandData, totalStats, neighborhoods } = await req.json();
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
+
+    const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
     const systemPrompt = `Você é o assistente de análise de demanda integrado à plataforma ONDTem.
 
@@ -57,44 +60,16 @@ ${neighborhoods.map((n: any) => `- ${n.name}: ${n.searches} buscas (Nível: ${n.
 
 Com base nesses dados, forneça uma análise e recomendações para melhorar a taxa de sucesso da farmácia.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      max_completion_tokens: 1000,
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente mais tarde." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos insuficientes. Por favor, adicione créditos à sua conta." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      return new Response(
-        JSON.stringify({ error: "Erro ao processar análise com IA" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const data = await response.json();
-    const analysis = data.choices?.[0]?.message?.content;
+    const analysis = response.choices?.[0]?.message?.content;
 
     return new Response(
       JSON.stringify({ success: true, analysis }),
