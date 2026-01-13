@@ -3,10 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User, Loader2, Paperclip, X, FileText, Trash2, Phone, Download } from 'lucide-react';
+import { Send, Bot, User, Paperclip, X, FileText, Trash2, Phone, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { formatMarkdownToHtml, formatInlineMarkdown } from '@/lib/formatMarkdown';
+import { formatMarkdownToHtml } from '@/lib/formatMarkdown';
 import * as XLSX from 'xlsx';
 import mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
 interface Message {
   id?: string;
   role: 'user' | 'assistant';
@@ -37,6 +38,7 @@ interface Message {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const MAX_TEXTAREA_HEIGHT = 150;
+const POLLING_INTERVAL = 1500; // 1.5 seconds
 
 const WELCOME_MESSAGE: Message = {
   role: 'assistant',
@@ -54,18 +56,96 @@ const Support = ({ farmaciaId }: SupportProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [attachedFile, setAttachedFile] = useState<{ name: string; content: string; type: string } | null>(null);
+  const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load chat history on mount
   useEffect(() => {
     if (farmaciaId) {
       loadChatHistory();
+      checkPendingRequests();
     } else {
       setIsLoadingHistory(false);
     }
+    
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
   }, [farmaciaId]);
+
+  // Check for pending requests on load
+  const checkPendingRequests = async () => {
+    if (!farmaciaId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('suporte_requests')
+        .select('id, status')
+        .eq('farmacia_id', farmaciaId)
+        .in('status', ['pending', 'processing'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setIsLoading(true);
+        setPendingRequestId(data[0].id);
+        startPolling(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error checking pending requests:', error);
+    }
+  };
+
+  // Start polling for request status
+  const startPolling = (requestId: string) => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('suporte_requests')
+          .select('status, error_message')
+          .eq('id', requestId)
+          .single();
+
+        if (error) throw error;
+
+        if (data?.status === 'completed') {
+          // Load updated messages
+          await loadChatHistory();
+          setIsLoading(false);
+          setPendingRequestId(null);
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+        } else if (data?.status === 'error') {
+          setIsLoading(false);
+          setPendingRequestId(null);
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+          toast({
+            title: 'Erro',
+            description: data.error_message || 'Não foi possível processar a mensagem',
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, POLLING_INTERVAL);
+  };
 
   // Auto-focus after loading
   useEffect(() => {
@@ -126,20 +206,26 @@ const Support = ({ farmaciaId }: SupportProps) => {
     }
   };
 
-  const saveMessage = async (message: Message) => {
-    if (!farmaciaId) return;
+  const saveMessage = async (message: Message): Promise<string | null> => {
+    if (!farmaciaId) return null;
 
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('suporte_mensagens')
         .insert({
           farmacia_id: farmaciaId,
           role: message.role,
           content: message.content,
           file_name: message.file?.name || null
-        });
+        })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      return data?.id || null;
     } catch (error) {
       console.error('Error saving message:', error);
+      return null;
     }
   };
 
@@ -153,6 +239,12 @@ const Support = ({ farmaciaId }: SupportProps) => {
         .eq('farmacia_id', farmaciaId);
 
       if (error) throw error;
+
+      // Also clean up any pending requests
+      await supabase
+        .from('suporte_requests')
+        .delete()
+        .eq('farmacia_id', farmaciaId);
 
       setMessages([WELCOME_MESSAGE]);
       toast({
@@ -349,110 +441,48 @@ const Support = ({ farmaciaId }: SupportProps) => {
     setIsLoading(true);
 
     // Save user message
-    await saveMessage(userMessage);
+    const messageId = await saveMessage(userMessage);
 
     setTimeout(() => textareaRef.current?.focus(), 0);
 
     try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/support-chat`, {
+      // Create request record for async processing
+      const { data: requestData, error: requestError } = await supabase
+        .from('suporte_requests')
+        .insert({
+          farmacia_id: farmaciaId,
+          mensagem_id: messageId,
+          status: 'pending'
+        })
+        .select('id')
+        .single();
+
+      if (requestError) throw requestError;
+
+      const requestId = requestData.id;
+      setPendingRequestId(requestId);
+
+      // Add placeholder message for loading
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+      // Dispatch to edge function (don't await)
+      fetch(`${SUPABASE_URL}/functions/v1/support-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          requestId,
+          farmaciaId,
           messages: [...messages.filter(m => m !== WELCOME_MESSAGE), userMessage].map(m => ({
             role: m.role,
             content: m.content
           }))
         }),
-      });
+      }).catch(err => console.error('Edge function call error:', err));
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Erro ao enviar mensagem');
-      }
-
-      if (!response.body) {
-        throw new Error('Resposta vazia do servidor');
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let assistantContent = '';
-      let textBuffer = '';
-
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setMessages(prev => {
-                const newMessages = [...prev];
-                const lastMessage = newMessages[newMessages.length - 1];
-                if (lastMessage?.role === 'assistant') {
-                  lastMessage.content = assistantContent;
-                }
-                return newMessages;
-              });
-            }
-          } catch {
-            textBuffer = line + '\n' + textBuffer;
-            break;
-          }
-        }
-      }
-
-      // Process remaining buffer
-      if (textBuffer.trim()) {
-        for (let raw of textBuffer.split('\n')) {
-          if (!raw) continue;
-          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
-          if (raw.startsWith(':') || raw.trim() === '') continue;
-          if (!raw.startsWith('data: ')) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (jsonStr === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setMessages(prev => {
-                const newMessages = [...prev];
-                const lastMessage = newMessages[newMessages.length - 1];
-                if (lastMessage?.role === 'assistant') {
-                  lastMessage.content = assistantContent;
-                }
-                return newMessages;
-              });
-            }
-          } catch { /* ignore */ }
-        }
-      }
-
-      // Save assistant message
-      if (assistantContent) {
-        await saveMessage({ role: 'assistant', content: assistantContent });
-      }
+      // Start polling for result
+      startPolling(requestId);
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -468,9 +498,7 @@ const Support = ({ farmaciaId }: SupportProps) => {
         }
         return newMessages;
       });
-    } finally {
       setIsLoading(false);
-      textareaRef.current?.focus();
     }
   };
 
@@ -536,10 +564,19 @@ const Support = ({ farmaciaId }: SupportProps) => {
     return <div className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</div>;
   };
 
+  // Loading dots animation component
+  const LoadingDots = () => (
+    <div className="flex items-center gap-1.5 py-2">
+      <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms', animationDuration: '0.6s' }} />
+      <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms', animationDuration: '0.6s' }} />
+      <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms', animationDuration: '0.6s' }} />
+    </div>
+  );
+
   if (isLoadingHistory) {
     return (
       <Card className="flex flex-col h-[calc(100vh-180px)] sm:h-[calc(100vh-160px)] items-center justify-center border-border/50">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <LoadingDots />
         <p className="text-muted-foreground mt-2">Carregando histórico...</p>
       </Card>
     );
@@ -629,12 +666,7 @@ const Support = ({ farmaciaId }: SupportProps) => {
                       renderUserMessage(message)
                     ) : (
                       <div className="text-sm leading-relaxed">
-                        {message.content ? formatMessage(message.content) : (
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span className="text-muted-foreground text-xs">A pensar...</span>
-                          </div>
-                        )}
+                        {message.content ? formatMessage(message.content) : <LoadingDots />}
                       </div>
                     )}
                   </div>
@@ -696,11 +728,7 @@ const Support = ({ farmaciaId }: SupportProps) => {
                 size="icon"
                 className="flex-shrink-0 shadow-sm"
               >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
+                <Send className="h-4 w-4" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-2.5 text-center">
