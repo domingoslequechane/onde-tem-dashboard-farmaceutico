@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.20.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -168,18 +169,21 @@ ${ONDTEM_DOCUMENTATION}
 2. **Formatação**: Use **negrito** e listas com - (hífen).
 
 3. **GERAÇÃO DE CSV**:
-   Quando receber dados de medicamentos, gere APENAS o CSV e o botão de download.
+   Quando receber dados de medicamentos (ficheiro anexado ou lista):
    
-   NÃO mostre:
-   - Código
-   - Instruções de copiar/colar
-   - Passos manuais
+   ⚠️ REGRAS CRÍTICAS:
+   - NUNCA liste os medicamentos no texto
+   - NUNCA mostre a lista antes do CSV
+   - NUNCA explique o que vai fazer
+   - Gere DIRETAMENTE o CSV sem pré-visualização
+   - NÃO mostre código ou instruções de copiar
    
-   Use EXATAMENTE este formato:
+   Use EXATAMENTE este formato (sem texto antes):
 
    ---CSV_START---
    Nome,Preço,Categoria,Disponível
    Paracetamol 500mg,15.00,Analgésico,Sim
+   Ibuprofeno 400mg,25.00,Anti-inflamatório,Sim
    ---CSV_END---
 
    **Regras do CSV**:
@@ -188,7 +192,7 @@ ${ONDTEM_DOCUMENTATION}
    - Disponível: Sim ou Não
    - Valores padrão: Preço=0.00, Categoria=Geral, Disponível=Sim
 
-   **Após o CSV, diga APENAS**:
+   **Após o CSV, diga APENAS UMA LINHA**:
    "Clique em **Baixar CSV** e importe em **Estoque > Importação CSV**."
 
 4. **Problemas técnicos**: Resolva brevemente ou direcione para suporte@ondtem.com.
@@ -201,8 +205,10 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, requestId, farmaciaId } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY is not configured");
@@ -210,6 +216,67 @@ serve(async (req) => {
 
     const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
+    // If async mode with requestId, process and save to DB
+    if (requestId && farmaciaId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+      // Update request status to processing
+      await supabase
+        .from('suporte_requests')
+        .update({ status: 'processing' })
+        .eq('id', requestId);
+
+      try {
+        // Process without streaming (wait for full response)
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            ...messages,
+          ],
+          stream: false,
+        });
+
+        const assistantContent = completion.choices[0]?.message?.content || '';
+
+        // Save assistant message to database
+        await supabase
+          .from('suporte_mensagens')
+          .insert({
+            farmacia_id: farmaciaId,
+            role: 'assistant',
+            content: assistantContent
+          });
+
+        // Mark request as completed
+        await supabase
+          .from('suporte_requests')
+          .update({ 
+            status: 'completed', 
+            completed_at: new Date().toISOString() 
+          })
+          .eq('id', requestId);
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+
+      } catch (error) {
+        // Mark request as error
+        await supabase
+          .from('suporte_requests')
+          .update({ 
+            status: 'error', 
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+            completed_at: new Date().toISOString() 
+          })
+          .eq('id', requestId);
+
+        throw error;
+      }
+    }
+
+    // Legacy streaming mode (fallback)
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -219,7 +286,6 @@ serve(async (req) => {
       stream: true,
     });
 
-    // Create a ReadableStream to handle the OpenAI stream
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream({
       async start(controller) {

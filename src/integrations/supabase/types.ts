@@ -819,6 +819,51 @@ export type Database = {
           },
         ]
       }
+      suporte_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          farmacia_id: string | null
+          id: string
+          mensagem_id: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          farmacia_id?: string | null
+          id?: string
+          mensagem_id?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          farmacia_id?: string | null
+          id?: string
+          mensagem_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suporte_requests_farmacia_id_fkey"
+            columns: ["farmacia_id"]
+            isOneToOne: false
+            referencedRelation: "farmacias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suporte_requests_mensagem_id_fkey"
+            columns: ["mensagem_id"]
+            isOneToOne: false
+            referencedRelation: "suporte_mensagens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           account_status: Database["public"]["Enums"]["account_status"]
@@ -1108,6 +1153,7 @@ export type Database = {
       delete_admin: { Args: { target_user_id: string }; Returns: undefined }
       delete_expired_codes: { Args: never; Returns: undefined }
       delete_old_support_messages: { Args: never; Returns: undefined }
+      delete_old_support_requests: { Args: never; Returns: undefined }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {

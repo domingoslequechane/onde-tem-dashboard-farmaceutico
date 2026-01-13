@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, User, Phone, Send, Loader2, Paperclip, X, FileText, Trash2, ChevronLeft, Download, Mail, MessageCircle } from 'lucide-react';
+import { Bot, User, Phone, Send, Paperclip, X, FileText, Trash2, ChevronLeft, Download, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import * as XLSX from 'xlsx';
@@ -42,6 +42,7 @@ interface Message {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const MAX_TEXTAREA_HEIGHT = 120;
+const POLLING_INTERVAL = 1500;
 
 const WELCOME_MESSAGE: Message = {
   role: 'assistant',
@@ -64,14 +65,93 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [attachedFile, setAttachedFile] = useState<{ name: string; content: string; type: string } | null>(null);
+  const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Don't show on support page
   if (location.pathname === '/farmacia/suporte') {
     return null;
   }
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, []);
+
+  // Check for pending requests
+  const checkPendingRequests = async () => {
+    if (!farmaciaId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('suporte_requests')
+        .select('id, status')
+        .eq('farmacia_id', farmaciaId)
+        .in('status', ['pending', 'processing'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setIsLoading(true);
+        setPendingRequestId(data[0].id);
+        startPolling(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error checking pending requests:', error);
+    }
+  };
+
+  // Start polling for request status
+  const startPolling = (requestId: string) => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('suporte_requests')
+          .select('status, error_message')
+          .eq('id', requestId)
+          .single();
+
+        if (error) throw error;
+
+        if (data?.status === 'completed') {
+          await loadChatHistory();
+          setIsLoading(false);
+          setPendingRequestId(null);
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+        } else if (data?.status === 'error') {
+          setIsLoading(false);
+          setPendingRequestId(null);
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+          toast({
+            title: 'Erro',
+            description: data.error_message || 'Não foi possível processar',
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, POLLING_INTERVAL);
+  };
 
   // Load chat history when opening chat
   const loadChatHistory = async () => {
@@ -132,20 +212,26 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
     adjustTextareaHeight();
   }, [inputValue, adjustTextareaHeight]);
 
-  const saveMessage = async (message: Message) => {
-    if (!farmaciaId) return;
+  const saveMessage = async (message: Message): Promise<string | null> => {
+    if (!farmaciaId) return null;
 
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('suporte_mensagens')
         .insert({
           farmacia_id: farmaciaId,
           role: message.role,
           content: message.content,
           file_name: message.file?.name || null
-        });
+        })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      return data?.id || null;
     } catch (error) {
       console.error('Error saving message:', error);
+      return null;
     }
   };
 
@@ -159,6 +245,11 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
         .eq('farmacia_id', farmaciaId);
 
       if (error) throw error;
+
+      await supabase
+        .from('suporte_requests')
+        .delete()
+        .eq('farmacia_id', farmaciaId);
 
       setMessages([WELCOME_MESSAGE]);
       toast({
@@ -338,72 +429,44 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
     setAttachedFile(null);
     setIsLoading(true);
 
-    await saveMessage(userMessage);
+    const messageId = await saveMessage(userMessage);
 
     try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/support-chat`, {
+      // Create request record for async processing
+      const { data: requestData, error: requestError } = await supabase
+        .from('suporte_requests')
+        .insert({
+          farmacia_id: farmaciaId,
+          mensagem_id: messageId,
+          status: 'pending'
+        })
+        .select('id')
+        .single();
+
+      if (requestError) throw requestError;
+
+      const requestId = requestData.id;
+      setPendingRequestId(requestId);
+
+      // Add placeholder message for loading
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+      // Dispatch to edge function (don't await)
+      fetch(`${SUPABASE_URL}/functions/v1/support-chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          requestId,
+          farmaciaId,
           messages: [...messages.filter(m => m !== WELCOME_MESSAGE), userMessage].map(m => ({
             role: m.role,
             content: m.content
           }))
         }),
-      });
+      }).catch(err => console.error('Edge function call error:', err));
 
-      if (!response.ok) throw new Error('Erro ao enviar mensagem');
-      if (!response.body) throw new Error('Resposta vazia');
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let assistantContent = '';
-      let textBuffer = '';
-
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setMessages(prev => {
-                const newMessages = [...prev];
-                const lastMessage = newMessages[newMessages.length - 1];
-                if (lastMessage?.role === 'assistant') {
-                  lastMessage.content = assistantContent;
-                }
-                return newMessages;
-              });
-            }
-          } catch {
-            textBuffer = line + '\n' + textBuffer;
-            break;
-          }
-        }
-      }
-
-      if (assistantContent) {
-        await saveMessage({ role: 'assistant', content: assistantContent });
-      }
+      // Start polling for result
+      startPolling(requestId);
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -419,7 +482,6 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
         }
         return newMessages;
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -430,6 +492,15 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
       sendMessage();
     }
   };
+
+  // Loading dots animation
+  const LoadingDots = () => (
+    <div className="flex items-center gap-1 py-1">
+      <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms', animationDuration: '0.6s' }} />
+      <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms', animationDuration: '0.6s' }} />
+      <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms', animationDuration: '0.6s' }} />
+    </div>
+  );
 
   const formatMessage = (content: string) => {
     const csvContent = extractCSVFromMessage(content);
@@ -509,6 +580,7 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
   const openChat = () => {
     setViewMode('chat');
     loadChatHistory();
+    checkPendingRequests();
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
 
@@ -660,7 +732,7 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
       {/* Messages */}
       {isLoadingHistory ? (
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <LoadingDots />
         </div>
       ) : (
         <ScrollArea ref={scrollAreaRef} className="flex-1 py-2">
@@ -686,12 +758,7 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
                     <div className="text-xs">{message.content.split('\n\n[Ficheiro anexado:')[0]}</div>
                   ) : (
                     <div className="text-xs">
-                      {message.content ? formatMessage(message.content) : (
-                        <div className="flex items-center gap-1">
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          <span className="text-muted-foreground">A pensar...</span>
-                        </div>
-                      )}
+                      {message.content ? formatMessage(message.content) : <LoadingDots />}
                     </div>
                   )}
                 </div>
@@ -754,7 +821,7 @@ const FloatingSupportButton = ({ farmaciaId }: FloatingSupportButtonProps) => {
             size="icon"
             className="flex-shrink-0 h-8 w-8"
           >
-            {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+            <Send className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
