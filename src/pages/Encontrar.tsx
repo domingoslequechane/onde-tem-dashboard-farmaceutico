@@ -148,12 +148,24 @@ const Buscar = () => {
     { featureType: 'poi.medical', elementType: 'labels.text.fill', stylers: [{ visibility: 'off' }] },
     { featureType: 'poi.medical', elementType: 'labels.text.stroke', stylers: [{ visibility: 'off' }] },
 
-    // Manter outros POIs visíveis para orientação
-    { featureType: 'poi.business', stylers: [{ visibility: 'on' }] },
-    { featureType: 'poi.park', stylers: [{ visibility: 'on' }] },
-    { featureType: 'poi.government', stylers: [{ visibility: 'on' }] },
-    { featureType: 'poi.school', stylers: [{ visibility: 'on' }] },
-    { featureType: 'poi.attraction', stylers: [{ visibility: 'on' }] },
+    // Esconder labels/ícones de TODOS os POIs por padrão (evita farmácias do Google/Places)
+    { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi', elementType: 'labels.text', stylers: [{ visibility: 'off' }] },
+
+    // Esconder POIs de negócios (onde o Google costuma classificar farmácias)
+    { featureType: 'poi.business', elementType: 'all', stylers: [{ visibility: 'off' }] },
+
+    // Reativar apenas POIs úteis para orientação
+    { featureType: 'poi.park', elementType: 'all', stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.park', elementType: 'labels', stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.government', elementType: 'all', stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.government', elementType: 'labels', stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.school', elementType: 'all', stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.school', elementType: 'labels', stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.attraction', elementType: 'all', stylers: [{ visibility: 'on' }] },
+    { featureType: 'poi.attraction', elementType: 'labels', stylers: [{ visibility: 'on' }] },
+
     { featureType: 'transit', stylers: [{ visibility: 'simplified' }] },
   ];
 
