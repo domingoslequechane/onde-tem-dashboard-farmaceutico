@@ -10,6 +10,7 @@ import { ArrowLeft, Mail, Phone, MapPin, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/ondtem-logo.png';
+import Footer from '@/components/Footer';
 import { z } from 'zod';
 
 const contactSchema = z.object({
@@ -286,39 +287,7 @@ const Contacto = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 bg-background border-t border-border">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-              <div className="flex items-center gap-4">
-                <img src={logo} alt="ONDTem" className="h-8" />
-                <p className="text-sm text-muted-foreground">
-                  © 2025 ONDTem. Todos os direitos reservados.
-                  <br />
-                  by <a href="https://onixagence.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Onix Agence</a>
-                </p>
-              </div>
-              <div className="flex gap-6">
-                <a 
-                  href="https://ondtem.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  ondtem.com
-                </a>
-                <button 
-                  onClick={() => navigate('/entrar')}
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Entrar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
