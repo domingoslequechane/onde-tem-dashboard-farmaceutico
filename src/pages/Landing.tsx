@@ -22,7 +22,7 @@ const Landing = () => {
             </span>
             <span className="flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">geral@ondtem.pt</span>
+              <span className="hidden md:inline">comercial@ondtem.com</span>
             </span>
           </div>
           <div className="flex items-center gap-4">
@@ -36,7 +36,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <img src={logo} alt="ONDTem" className="h-8 md:h-10 lg:h-12" />
           
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden lg:flex items-center gap-6">
             <button 
               onClick={() => document.getElementById('sobre')?.scrollIntoView({ behavior: 'smooth' })}
               className="text-foreground/80 hover:text-foreground transition-colors font-medium"
@@ -55,19 +55,9 @@ const Landing = () => {
             >
               Como Funciona
             </button>
-            <button 
-              onClick={() => navigate('/contacto')}
-              className="text-foreground/80 hover:text-foreground transition-colors font-medium"
-            >
-              Contacto
-            </button>
           </nav>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden lg:flex items-center gap-2 text-secondary">
-              <Phone className="h-5 w-5" />
-              <span className="font-semibold">Contacto</span>
-            </div>
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button 
               variant="outline" 
               onClick={() => navigate('/entrar')} 
@@ -79,14 +69,14 @@ const Landing = () => {
               onClick={() => navigate('/contacto')} 
               className="bg-secondary hover:bg-secondary/90 text-sm"
             >
-              Sou Farmácia
+              Contacto
             </Button>
           </div>
         </div>
       </header>
 
       {/* Hero Section - Full Height with Background Image */}
-      <section className="relative min-h-[calc(100vh-140px)] flex items-center">
+      <section className="relative min-h-[70vh] md:min-h-[calc(100vh-140px)] flex items-center">
         {/* Background Image with Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -96,20 +86,20 @@ const Landing = () => {
         </div>
 
         {/* Hero Content */}
-        <div className="container mx-auto px-4 relative z-10 py-16 md:py-24">
-          <div className="max-w-2xl text-white space-y-6">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+        <div className="container mx-auto px-4 relative z-10 py-12 md:py-24">
+          <div className="max-w-2xl text-white space-y-4 md:space-y-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
               Onde-Tem
             </h1>
-            <p className="text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed">
               Plataforma de informação sobre disponibilidade de medicamentos. 
               Conectamos farmácias à procura real da sua região, de forma ética e transparente.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-2 md:pt-4">
               <Button 
                 size="lg" 
                 onClick={() => document.getElementById('sobre')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-secondary hover:bg-secondary/90 text-white px-8 py-6 text-base font-medium"
+                className="bg-secondary hover:bg-secondary/90 text-white px-6 md:px-8 py-5 md:py-6 text-sm md:text-base font-medium w-full sm:w-auto"
               >
                 Saber Mais
               </Button>
@@ -117,7 +107,7 @@ const Landing = () => {
                 size="lg" 
                 variant="outline"
                 onClick={() => navigate('/encontrar')}
-                className="bg-white/10 backdrop-blur border-white/30 text-white hover:bg-white/20 px-8 py-6 text-base font-medium"
+                className="bg-white/10 backdrop-blur border-white/30 text-white hover:bg-white/20 px-6 md:px-8 py-5 md:py-6 text-sm md:text-base font-medium w-full sm:w-auto"
               >
                 Procurar Medicamento
               </Button>
@@ -126,11 +116,11 @@ const Landing = () => {
         </div>
 
         {/* Feature Cards - Bottom Section */}
-        <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 z-20 px-4">
+        <div className="absolute bottom-0 left-0 right-0 translate-y-1/3 md:translate-y-1/2 z-20 px-4">
           <div className="container mx-auto">
-            <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
               {/* Card 1 - Green */}
-              <Card className="bg-secondary text-secondary-foreground p-6 shadow-xl">
+              <Card className="bg-secondary text-secondary-foreground p-6 shadow-xl border-0">
                 <div className="flex flex-col items-center text-center space-y-3">
                   <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
                     <Search className="h-7 w-7" />
@@ -143,7 +133,7 @@ const Landing = () => {
               </Card>
 
               {/* Card 2 - Green */}
-              <Card className="bg-secondary text-secondary-foreground p-6 shadow-xl">
+              <Card className="bg-secondary text-secondary-foreground p-6 shadow-xl border-0">
                 <div className="flex flex-col items-center text-center space-y-3">
                   <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
                     <MapPin className="h-7 w-7" />
@@ -176,7 +166,7 @@ const Landing = () => {
       </section>
 
       {/* Spacer for cards */}
-      <div className="h-32 md:h-40" />
+      <div className="h-[420px] md:h-40" />
 
       {/* Sobre Section */}
       <section id="sobre" className="py-16 md:py-24 bg-muted/30">
@@ -281,7 +271,7 @@ const Landing = () => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              <Card className="p-8 bg-secondary text-secondary-foreground shadow-lg border-0">
+              <Card className="p-6 md:p-8 bg-secondary text-secondary-foreground shadow-lg border-0">
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
                     <Search className="h-8 w-8" />
@@ -302,7 +292,7 @@ const Landing = () => {
                 </div>
               </Card>
 
-              <Card className="p-8 bg-white shadow-lg border border-secondary/20">
+              <Card className="p-6 md:p-8 bg-white shadow-lg border border-secondary/20">
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center">
                     <Building2 className="h-8 w-8 text-secondary" />
@@ -414,9 +404,8 @@ const Landing = () => {
               </Button>
               <Button 
                 size="lg"
-                variant="outline"
                 onClick={() => navigate('/entrar')}
-                className="border-white/30 text-white hover:bg-white/10 px-8"
+                className="bg-white text-secondary hover:bg-white/90 px-8"
               >
                 Já tenho conta
               </Button>
