@@ -137,13 +137,16 @@ const Buscar = () => {
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const lastUserPositionRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  // Base styles - mostrar POIs gerais, esconder apenas médicos/farmácias
+  // Base styles - esconder TODAS as farmácias do Google Maps, manter outros POIs
   const baseMapStyles: google.maps.MapTypeStyle[] = [
-    // Esconder APENAS POIs médicos (farmácias, hospitais, clínicas)
+    // Esconder TODOS os POIs médicos (farmácias, hospitais, clínicas, dentistas, etc.)
     { featureType: 'poi.medical', elementType: 'all', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
     { featureType: 'poi.medical', elementType: 'labels', stylers: [{ visibility: 'off' }] },
     { featureType: 'poi.medical', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
     { featureType: 'poi.medical', elementType: 'labels.text', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', elementType: 'labels.text.fill', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', elementType: 'labels.text.stroke', stylers: [{ visibility: 'off' }] },
 
     // Manter outros POIs visíveis para orientação
     { featureType: 'poi.business', stylers: [{ visibility: 'on' }] },
@@ -649,8 +652,8 @@ const Buscar = () => {
             map: map.current!,
             icon: {
               url: pharmacyMarkerIcon,
-              scaledSize: new google.maps.Size(40, 40),
-              anchor: new google.maps.Point(20, 40),
+              scaledSize: new google.maps.Size(28, 28),
+              anchor: new google.maps.Point(14, 28),
             },
             title: pharmacy.nome
           });
@@ -1093,8 +1096,8 @@ const Buscar = () => {
             map: map.current!,
             icon: {
               url: pharmacyMarkerIcon,
-              scaledSize: new google.maps.Size(40, 40),
-              anchor: new google.maps.Point(20, 40),
+              scaledSize: new google.maps.Size(28, 28),
+              anchor: new google.maps.Point(14, 28),
             },
             title: item.farmacia_nome
           });
@@ -2878,7 +2881,7 @@ const Buscar = () => {
 
         {/* Pharmacy Info Card - Hidden during navigation */}
         {selectedMedicamento && !isNavigating && (
-          <Card className="absolute bottom-4 left-4 right-4 md:bottom-auto md:top-2 md:left-auto md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card p-3 shadow-xl z-10 animate-in slide-in-from-bottom-5 md:slide-in-from-right-5 duration-300">
+          <Card className="absolute bottom-4 left-4 right-4 md:bottom-auto md:top-2 md:left-auto md:right-2 md:w-[380px] md:max-h-[calc(100vh-120px)] md:overflow-y-auto bg-card p-3 shadow-xl z-50 animate-in slide-in-from-bottom-5 md:slide-in-from-right-5 duration-300">
             <div className="space-y-2">
               {/* Header with medication name and close button */}
               <div className="flex items-center justify-between gap-2">
