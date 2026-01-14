@@ -20,14 +20,13 @@ const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  // Carregar credenciais salvas ao montar o componente
+  // Carregar email salvo ao montar o componente (nunca armazenar senha)
   useEffect(() => {
     const savedCredentials = localStorage.getItem(STORAGE_KEY);
     if (savedCredentials) {
       try {
-        const { email: savedEmail, password: savedPassword } = JSON.parse(savedCredentials);
+        const { email: savedEmail } = JSON.parse(savedCredentials);
         setEmail(savedEmail || '');
-        setPassword(savedPassword || '');
         setRememberMe(true);
       } catch {
         localStorage.removeItem(STORAGE_KEY);
@@ -76,9 +75,9 @@ const Auth = () => {
       // Registrar login no histórico
       await supabase.rpc('log_user_login');
 
-      // Salvar ou remover credenciais baseado no checkbox
+      // Salvar ou remover email baseado no checkbox (nunca armazenar senha)
       if (rememberMe) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ email, password }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ email }));
       } else {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -218,7 +217,7 @@ const Auth = () => {
                   htmlFor="rememberMe"
                   className="text-sm text-muted-foreground cursor-pointer select-none"
                 >
-                  Lembrar minhas credenciais
+                  Lembrar meu email
                 </label>
               </div>
             )}
