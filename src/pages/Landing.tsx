@@ -66,9 +66,11 @@ const Landing = () => {
               Entrar
             </Button>
             <Button 
+              variant="ghost"
               onClick={() => navigate('/contacto')} 
-              className="bg-secondary hover:bg-secondary/90 text-sm"
+              className="text-secondary hover:text-secondary/80 hover:bg-secondary/10 text-sm gap-1.5"
             >
+              <Phone className="h-4 w-4" />
               Contacto
             </Button>
           </div>
