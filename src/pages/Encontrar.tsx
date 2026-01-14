@@ -5,13 +5,11 @@ import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon, MessageSquare, Crosshair, Satellite, Layers, Minimize2, Maximize2 } from 'lucide-react';
+import { Search, MapPin, Phone, AlertCircle, X, Clock, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon, MessageSquare, Crosshair, Satellite, Layers, Minimize2, Maximize2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.png';
 import pharmacyMarkerIcon from '@/assets/pharmacy-marker-icon.png';
-import { LeaveReviewModal } from '@/components/LeaveReviewModal';
-import { ViewReviewsModal } from '@/components/ViewReviewsModal';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import { SearchFeedbackModal } from '@/components/SearchFeedbackModal';
 import Fuse from 'fuse.js';
@@ -93,10 +91,7 @@ const Buscar = () => {
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [showLeaveReview, setShowLeaveReview] = useState(false);
-  const [showViewReviews, setShowViewReviews] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [showArrivalModal, setShowArrivalModal] = useState(false);
@@ -2812,21 +2807,10 @@ const Buscar = () => {
                         <p className="text-xs md:text-sm text-muted-foreground truncate">{item.farmacia_nome}</p>
                       </div>
                       <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                        {item.farmacia_mostrar_preco ? (
-                          <span className="text-sm md:text-base font-bold text-green-600">{item.medicamento_preco.toFixed(2)} MT</span>
-                        ) : (
-                          <span className="text-xs md:text-sm text-muted-foreground italic">Consultar preço</span>
-                        )}
+                        <span className="text-xs md:text-sm text-muted-foreground italic">Disponível</span>
                         <span className="text-xs md:text-sm text-green-600 font-medium">{item.distancia_km.toFixed(1)}km</span>
                       </div>
                     </div>
-                    {item.media_avaliacoes !== undefined && (
-                      <div className="flex items-center gap-0.5 mt-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs md:text-sm font-medium">{item.media_avaliacoes.toFixed(1)}</span>
-                        <span className="text-xs md:text-sm text-muted-foreground">({item.total_avaliacoes})</span>
-                      </div>
-                    )}
                   </Card>
                 ))}
               </div>
@@ -2899,7 +2883,7 @@ const Buscar = () => {
               {/* Header with medication name and close button */}
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-base md:text-lg lg:text-xl font-bold text-primary flex-1">
-                  {selectedMedicamento.medicamento_nome} - {selectedMedicamento.farmacia_mostrar_preco ? `${selectedMedicamento.medicamento_preco.toFixed(2)} MT` : 'Consultar preço'}
+                  {selectedMedicamento.medicamento_nome}
                 </h3>
                 <Button
                   variant="ghost"
@@ -2916,27 +2900,8 @@ const Buscar = () => {
                 <p className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{selectedMedicamento.farmacia_nome}</p>
               </div>
 
-              {/* Star Rating and Operating Hours - Combined */}
-              <div className="flex items-center justify-between gap-2">
-                {selectedMedicamento.media_avaliacoes !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <div className="flex items-center gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3.5 w-3.5 md:h-4 md:w-4 ${
-                            i < Math.round(selectedMedicamento.media_avaliacoes!)
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs md:text-sm font-bold">{selectedMedicamento.media_avaliacoes.toFixed(1)}</span>
-                    <span className="text-[10px] md:text-xs text-muted-foreground">({selectedMedicamento.total_avaliacoes})</span>
-                  </div>
-                )}
-                
+              {/* Operating Hours Only */}
+              <div className="flex items-center gap-2">
                 {/* Operating Hours */}
                 {(() => {
                   const { isOpen, label } = isPharmacyOpen();
@@ -2981,28 +2946,12 @@ const Buscar = () => {
                 </Button>
               </div>
 
-              {/* Action Buttons */}
-              <div className="grid grid-cols-3 gap-1.5 pt-1">
+              {/* Action Button - Call Only */}
+              <div className="pt-1">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 md:h-8 text-xs md:text-sm"
-                  onClick={() => setShowLeaveReview(true)}
-                >
-                  Avaliar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 md:h-8 text-xs md:text-sm"
-                  onClick={() => setShowViewReviews(true)}
-                >
-                  Avaliações
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 md:h-8 text-xs md:text-sm"
+                  className="w-full h-8 md:h-9 text-xs md:text-sm"
                   onClick={() => {
                     if (selectedMedicamento?.farmacia_telefone) {
                       window.location.href = `tel:${selectedMedicamento.farmacia_telefone}`;
@@ -3016,8 +2965,8 @@ const Buscar = () => {
                     }
                   }}
                 >
-                  <Phone className="h-3 w-3 md:h-3.5 md:w-3.5 mr-1" />
-                  Ligar
+                  <Phone className="h-3.5 w-3.5 md:h-4 md:w-4 mr-2" />
+                  Contactar Farmácia
                 </Button>
               </div>
             </div>
@@ -3160,25 +3109,6 @@ const Buscar = () => {
         © {new Date().getFullYear()} ONDTem. by <a href="https://onixagence.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 font-medium transition-colors">Onix Agence</a>
       </footer>
 
-      {/* Modals */}
-      <LeaveReviewModal
-        open={showLeaveReview}
-        onOpenChange={setShowLeaveReview}
-        farmaciaId={selectedMedicamento?.farmacia_id || ''}
-        farmaciaNome={selectedMedicamento?.farmacia_nome || ''}
-        onReviewSubmitted={() => {
-          setReviewRefreshTrigger(prev => prev + 1);
-        }}
-      />
-
-      <ViewReviewsModal
-        open={showViewReviews}
-        onOpenChange={setShowViewReviews}
-        farmaciaId={selectedMedicamento?.farmacia_id || ''}
-        farmaciaNome={selectedMedicamento?.farmacia_nome || ''}
-        refreshTrigger={reviewRefreshTrigger}
-      />
-
       <AlertDialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -3231,14 +3161,14 @@ const Buscar = () => {
                 </p>
               </div>
 
-              {/* Medicamento e Preço - apenas se veio de uma busca */}
+              {/* Medicamento - apenas se veio de uma busca */}
               {selectedMedicamento && (
                 <div className="space-y-3 bg-accent/50 rounded-lg p-4">
                   {isFromSearch && (
                     <>
                       <div className="text-sm text-muted-foreground">Você veio buscar:</div>
                       <h3 className="text-lg font-semibold text-primary">
-                        {selectedMedicamento.medicamento_nome} {selectedMedicamento.farmacia_mostrar_preco ? `- ${selectedMedicamento.medicamento_preco.toFixed(2)} MT` : ''}
+                        {selectedMedicamento.medicamento_nome}
                       </h3>
                     </>
                   )}
@@ -3249,32 +3179,6 @@ const Buscar = () => {
                       {selectedMedicamento.farmacia_nome}
                     </p>
                   </div>
-
-                  {/* Rating (se disponível) */}
-                  {selectedMedicamento.media_avaliacoes !== undefined && selectedMedicamento.media_avaliacoes > 0 && (
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`h-5 w-5 ${
-                              star <= Math.round(selectedMedicamento.media_avaliacoes || 0)
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-muted-foreground/30'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="font-semibold text-lg">
-                        {selectedMedicamento.media_avaliacoes.toFixed(1)}
-                      </span>
-                      {selectedMedicamento.total_avaliacoes !== undefined && (
-                        <span className="text-muted-foreground text-sm">
-                          ({selectedMedicamento.total_avaliacoes})
-                        </span>
-                      )}
-                    </div>
-                  )}
 
                   {/* Métricas de viagem */}
                   {travelDuration && (

@@ -78,7 +78,7 @@ const Landing = () => {
       </header>
 
       {/* Hero Section - Full Height with Background Image */}
-      <section className="relative min-h-[70vh] md:min-h-[calc(100vh-140px)] flex items-center">
+      <section className="relative min-h-[60vh] md:min-h-[calc(100vh-140px)] flex items-center pb-8 md:pb-0">
         {/* Background Image with Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -88,7 +88,7 @@ const Landing = () => {
         </div>
 
         {/* Hero Content */}
-        <div className="container mx-auto px-4 relative z-10 py-12 md:py-24">
+        <div className="container mx-auto px-4 relative z-10 py-8 md:py-24">
           <div className="max-w-2xl text-white space-y-4 md:space-y-6">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
               Onde-Tem
@@ -116,59 +116,56 @@ const Landing = () => {
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Feature Cards - Bottom Section */}
-        <div className="absolute bottom-0 left-0 right-0 translate-y-1/3 md:translate-y-1/2 z-20 px-4">
-          <div className="container mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
-              {/* Card 1 - Green */}
-              <Card className="bg-secondary text-secondary-foreground p-6 shadow-xl border-0">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-                    <Search className="h-7 w-7" />
-                  </div>
-                  <h3 className="text-lg font-semibold">Informação de Disponibilidade</h3>
-                  <p className="text-sm text-white/80">
-                    Acesso rápido à informação sobre medicamentos disponíveis nas farmácias da região.
-                  </p>
+      {/* Feature Cards - Below Hero Section (Not overlapping on mobile) */}
+      <section className="relative z-20 px-4 -mt-8 md:-mt-24 pb-8">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            {/* Card 1 - Green */}
+            <Card className="bg-secondary text-secondary-foreground p-6 shadow-xl border-0">
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+                  <Search className="h-7 w-7" />
                 </div>
-              </Card>
+                <h3 className="text-lg font-semibold">Informação de Disponibilidade</h3>
+                <p className="text-sm text-white/80">
+                  Acesso rápido à informação sobre medicamentos disponíveis nas farmácias da região.
+                </p>
+              </div>
+            </Card>
 
-              {/* Card 2 - Green */}
-              <Card className="bg-secondary text-secondary-foreground p-6 shadow-xl border-0">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-                    <MapPin className="h-7 w-7" />
-                  </div>
-                  <h3 className="text-lg font-semibold">Proximidade Geográfica</h3>
-                  <p className="text-sm text-white/80">
-                    Resultados ordenados por proximidade, facilitando o acesso do cidadão.
-                  </p>
+            {/* Card 2 - Green */}
+            <Card className="bg-secondary text-secondary-foreground p-6 shadow-xl border-0">
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+                  <MapPin className="h-7 w-7" />
                 </div>
-              </Card>
+                <h3 className="text-lg font-semibold">Proximidade Geográfica</h3>
+                <p className="text-sm text-white/80">
+                  Resultados ordenados por proximidade, facilitando o acesso do cidadão.
+                </p>
+              </div>
+            </Card>
 
-              {/* Card 3 - White */}
-              <Card className="bg-white text-foreground p-6 shadow-xl border-0">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <h3 className="text-lg font-semibold text-secondary">É Farmácia?</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Solicite informação sobre integração na plataforma de forma institucional.
-                  </p>
-                  <Button 
-                    onClick={() => navigate('/contacto')}
-                    className="bg-secondary hover:bg-secondary/90 mt-2"
-                  >
-                    Solicitar Informação
-                  </Button>
-                </div>
-              </Card>
-            </div>
+            {/* Card 3 - White */}
+            <Card className="bg-white text-foreground p-6 shadow-xl border-0">
+              <div className="flex flex-col items-center text-center space-y-3">
+                <h3 className="text-lg font-semibold text-secondary">É Farmácia?</h3>
+                <p className="text-sm text-muted-foreground">
+                  Solicite informação sobre integração na plataforma de forma institucional.
+                </p>
+                <Button 
+                  onClick={() => navigate('/contacto')}
+                  className="bg-secondary hover:bg-secondary/90 mt-2"
+                >
+                  Solicitar Informação
+                </Button>
+              </div>
+            </Card>
           </div>
         </div>
       </section>
-
-      {/* Spacer for cards */}
-      <div className="h-[420px] md:h-40" />
 
       {/* Sobre Section */}
       <section id="sobre" className="py-16 md:py-24 bg-muted/30">
