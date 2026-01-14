@@ -3,6 +3,8 @@ import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { Scale, Shield, Heart, FileCheck, MapPin, Users, Building2, BarChart3, CheckCircle2, Search, ArrowRight, Clock, TrendingUp, Eye, AlertCircle } from 'lucide-react';
 import logo from '@/assets/ondtem-logo.png';
+import Footer from '@/components/Footer';
+
 const Landing = () => {
   const navigate = useNavigate();
   return <div className="min-h-screen bg-background overflow-x-hidden">
@@ -627,17 +629,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 md:py-12 bg-muted/50 border-t border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <img src={logo} alt="ONDTem" className="h-6 md:h-8" />
-            <p className="text-sm text-muted-foreground text-center md:text-right">
-              © {new Date().getFullYear()} ONDTem. Plataforma de interesse público.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer variant="minimal" />
     </div>;
 };
 export default Landing;

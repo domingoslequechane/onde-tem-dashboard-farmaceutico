@@ -9,6 +9,7 @@ import { ThemeProvider } from "next-themes";
 import FloatingImportProgress from "@/components/FloatingImportProgress";
 import SplashScreen from "@/components/SplashScreen";
 import InstallPWAModal from "@/components/InstallPWAModal";
+import ScrollToTop from "@/components/ScrollToTop";
 import Landing from "./pages/Landing";
 import Instalar from "./pages/Instalar";
 import Encontrar from "./pages/Encontrar";
@@ -40,7 +41,7 @@ const App = () => {
   }, []);
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light">
       <QueryClientProvider client={queryClient}>
         <ImportProvider>
           <TooltipProvider>
@@ -50,6 +51,7 @@ const App = () => {
             <FloatingImportProgress />
             <InstallPWAModal />
             <BrowserRouter>
+              <ScrollToTop />
               <Routes>
                 <Route path="/" element={<Encontrar />} />
                 <Route path="/home" element={<Landing />} />

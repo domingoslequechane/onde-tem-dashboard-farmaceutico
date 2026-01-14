@@ -2,11 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon, Moon, Sun, MessageSquare, Crosshair, Satellite, Layers, Minimize2, Maximize2 } from 'lucide-react';
+import { Search, MapPin, Phone, AlertCircle, X, Clock, Star, Navigation, Plus, Compass, Loader2, Eye, Map as MapIcon, MessageSquare, Crosshair, Satellite, Layers, Minimize2, Maximize2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/ondtem-logo.png';
@@ -63,7 +62,6 @@ interface Medicamento {
 const Buscar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -2418,21 +2416,6 @@ const Buscar = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          {/* Theme Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="h-9 w-9"
-            title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-          </Button>
-          
           {/* Feedback Button */}
           <Button
             variant="ghost"
@@ -2528,22 +2511,6 @@ const Buscar = () => {
               <Compass className="h-4 w-4 text-primary" />
             </Button>
             
-            {/* Night Mode Toggle */}
-            <Button
-              size="icon"
-              variant="secondary"
-              className="h-10 w-10 rounded-full shadow-lg bg-card hover:bg-accent border border-border"
-              onClick={toggleNightMode}
-              title={manualNightMode === 'auto' ? 'Automático' : manualNightMode === 'night' ? 'Noturno' : 'Diurno'}
-            >
-              {manualNightMode === 'night' ? (
-                <Moon className="h-4 w-4 text-primary" />
-              ) : manualNightMode === 'day' ? (
-                <Sun className="h-4 w-4 text-primary" />
-              ) : (
-                <Sun className="h-4 w-4 text-muted-foreground" />
-              )}
-            </Button>
             
             {/* Recenter Button with Accuracy Indicator */}
             <div className="relative">
