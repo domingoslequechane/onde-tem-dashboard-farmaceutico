@@ -13,10 +13,11 @@ import {
   CheckCircle2,
   Search,
   ArrowRight,
-  Clock,
   TrendingUp,
-  Eye,
-  AlertCircle
+  AlertCircle,
+  ClipboardCheck,
+  UserCheck,
+  FileText
 } from 'lucide-react';
 import logo from '@/assets/ondtem-logo.png';
 
@@ -56,89 +57,77 @@ const Landing = () => {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
               Onde-Tem
             </h1>
-            <p className="text-xl md:text-2xl lg:text-3xl text-muted-foreground max-w-3xl mx-auto font-medium">
-              A plataforma que conecta farmácias à procura real da sua região.
+            <p className="text-xl md:text-2xl lg:text-3xl text-muted-foreground max-w-3xl mx-auto">
+              Informação de disponibilidade de medicamentos.
             </p>
-            
-            <div className="flex flex-col gap-2 text-base md:text-lg text-foreground/80 max-w-2xl mx-auto pt-4">
-              <p className="flex items-center justify-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                Mais visibilidade institucional.
-              </p>
-              <p className="flex items-center justify-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                Mais inteligência de decisão.
-              </p>
-              <p className="flex items-center justify-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                Sem publicidade. Sem concorrência desleal.
-              </p>
-            </div>
+            <p className="text-lg md:text-xl text-foreground/80 max-w-2xl mx-auto">
+              Ao serviço da saúde pública.
+            </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
               <Button 
                 size="lg" 
-                onClick={() => navigate('/contacto')}
+                onClick={() => {
+                  const element = document.getElementById('como-funciona');
+                  element?.scrollIntoView({ behavior: 'smooth' });
+                }}
                 className="text-sm md:text-base px-6 md:px-8 py-3 md:py-4 h-auto"
               >
-                Solicitar Integração Institucional
+                Saber Mais
                 <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
-                onClick={() => {
-                  const element = document.getElementById('conformidade');
-                  element?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={() => navigate('/contacto')}
                 className="text-sm md:text-base px-6 md:px-8 py-3 md:py-4 h-auto"
               >
-                Conhecer o Enquadramento
+                Contactar
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Bloco 1 - O Problema Real */}
+      {/* Bloco 1 - O Desafio do Acesso */}
       <section className="py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 md:mb-16">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-6">
-                O Problema Real
+                O Desafio do Acesso à Saúde
               </h2>
               <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
-                Todos os dias, milhares de cidadãos percorrem farmácias à procura de medicamentos essenciais — muitas vezes sem sucesso.
+                Todos os dias, cidadãos percorrem várias farmácias à procura de medicamentos essenciais — muitas vezes sem sucesso.
               </p>
             </div>
 
             <div className="mb-12">
-              <p className="text-center text-lg md:text-xl text-foreground mb-8 font-medium">
-                Ao mesmo tempo, farmácias com stock disponível:
+              <p className="text-center text-lg md:text-xl text-foreground mb-8">
+                Ao mesmo tempo, farmácias com stock disponível não conseguem ser localizadas por quem precisa.
               </p>
               <div className="grid md:grid-cols-3 gap-6">
                 <Card className="p-6 space-y-4 bg-background border-muted">
                   <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                    <Eye className="h-6 w-6 text-muted-foreground" />
+                    <Search className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg md:text-xl font-semibold text-foreground">
-                    Não são encontradas
+                    Falta de informação
                   </h3>
                   <p className="text-sm md:text-base text-muted-foreground">
-                    Os cidadãos não sabem onde procurar quando precisam de um medicamento específico.
+                    Os cidadãos não têm forma de saber onde encontrar um medicamento específico na sua zona.
                   </p>
                 </Card>
 
                 <Card className="p-6 space-y-4 bg-background border-muted">
                   <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-muted-foreground" />
+                    <MapPin className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg md:text-xl font-semibold text-foreground">
-                    Não são lembradas
+                    Deslocações desnecessárias
                   </h3>
                   <p className="text-sm md:text-base text-muted-foreground">
-                    Fora do momento de necessidade, a farmácia deixa de fazer parte da memória do cliente.
+                    Múltiplas deslocações sem garantia de encontrar o medicamento necessário.
                   </p>
                 </Card>
 
@@ -147,10 +136,10 @@ const Landing = () => {
                     <Users className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg md:text-xl font-semibold text-foreground">
-                    Não fazem parte da decisão
+                    Ineficiência no acesso
                   </h3>
                   <p className="text-sm md:text-base text-muted-foreground">
-                    O cliente escolhe outra farmácia por falta de informação acessível.
+                    Tempo perdido e frustração para cidadãos que precisam de cuidados de saúde.
                   </p>
                 </Card>
               </div>
@@ -159,20 +148,20 @@ const Landing = () => {
             <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-6 md:p-8">
               <h3 className="text-lg md:text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-destructive" />
-                Essa desconexão gera:
+                Esta desconexão afeta:
               </h3>
               <ul className="space-y-3 text-base md:text-lg text-muted-foreground">
                 <li className="flex items-start gap-3">
                   <span className="text-destructive font-bold">•</span>
-                  <span>Deslocações desnecessárias para o cidadão</span>
+                  <span>A qualidade de vida dos cidadãos</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-destructive font-bold">•</span>
-                  <span>Frustração e perda de tempo</span>
+                  <span>A eficiência do sistema de saúde</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-destructive font-bold">•</span>
-                  <span>Oportunidades perdidas para a farmácia</span>
+                  <span>O acesso equitativo a medicamentos</span>
                 </li>
               </ul>
             </div>
@@ -180,16 +169,16 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Bloco 2 - A Proposta da Onde-Tem */}
-      <section className="py-16 md:py-24">
+      {/* Bloco 2 - Como a Onde-Tem Funciona */}
+      <section id="como-funciona" className="py-16 md:py-24 scroll-mt-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 md:mb-16">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
-                A Proposta da Onde-Tem
+                Como a Onde-Tem Funciona
               </h2>
               <p className="text-base md:text-lg text-muted-foreground">
-                Uma plataforma de interesse público ao serviço da saúde
+                Informação de disponibilidade de medicamentos ao serviço do cidadão
               </p>
             </div>
 
@@ -201,7 +190,7 @@ const Landing = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Disponibilidade por Proximidade
+                      Informação por Proximidade
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
                       Indica a disponibilidade de medicamentos com base na localização do cidadão.
@@ -217,10 +206,10 @@ const Landing = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Conexão com a População
+                      Acesso Facilitado
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      Conecta a população às farmácias da sua região de forma direta e eficiente.
+                      O cidadão encontra informação sobre farmácias da sua região de forma directa.
                     </p>
                   </div>
                 </div>
@@ -236,7 +225,7 @@ const Landing = () => {
                       Critérios Técnicos e Neutros
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      Funciona com critérios objetivos, sem favorecimentos ou rankings comerciais.
+                      Funciona com critérios objectivos, sem favorecimentos ou destaques diferenciados.
                     </p>
                   </div>
                 </div>
@@ -252,51 +241,26 @@ const Landing = () => {
                       Enquadramento Legal
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      Respeita integralmente o enquadramento legal do setor farmacêutico.
+                      Opera em conformidade com o regulamento farmacêutico em vigor.
                     </p>
                   </div>
                 </div>
               </Card>
             </div>
 
-            <div className="text-center bg-secondary/10 rounded-xl p-6 md:p-8 border border-secondary/20">
-              <p className="text-xl md:text-2xl font-semibold text-foreground">
-                Não é publicidade.<br />
-                Não é promoção.<br />
-                <span className="text-primary">É serviço.</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Bloco 3 - Como Funciona */}
-      <section className="py-16 md:py-24 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12 md:mb-16">
-              <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
-                Como Funciona
-              </h2>
-              <p className="text-base md:text-lg text-muted-foreground">
-                Um processo simples, objetivo e eficiente
-              </p>
-            </div>
-
             <div className="space-y-6">
               {[
                 { step: 1, icon: Search, title: "Cidadão procura", description: "O cidadão procura um medicamento específico na plataforma." },
-                { step: 2, icon: MapPin, title: "Plataforma identifica", description: "A plataforma identifica farmácias próximas com disponibilidade do produto." },
-                { step: 3, icon: Building2, title: "Farmácia é encontrada", description: "A farmácia é encontrada no momento certo, quando o cidadão precisa." },
-                { step: 4, icon: ArrowRight, title: "Acesso facilitado", description: "O acesso às informações de contacto e localização é facilitado." },
-                { step: 5, icon: CheckCircle2, title: "Decisão eficiente", description: "A decisão é mais rápida e eficiente para todos." }
+                { step: 2, icon: MapPin, title: "Plataforma identifica", description: "A plataforma identifica farmácias próximas com disponibilidade reportada." },
+                { step: 3, icon: Building2, title: "Informação disponibilizada", description: "O cidadão recebe informação sobre localização e contacto das farmácias." },
+                { step: 4, icon: CheckCircle2, title: "Acesso à farmácia", description: "O cidadão pode contactar ou dirigir-se à farmácia com informação prévia." }
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-4 md:gap-6">
                   <div className="flex flex-col items-center">
                     <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg md:text-xl">
                       {item.step}
                     </div>
-                    {item.step < 5 && <div className="w-0.5 h-8 bg-primary/30 mt-2" />}
+                    {item.step < 4 && <div className="w-0.5 h-8 bg-primary/30 mt-2" />}
                   </div>
                   <Card className="flex-1 p-4 md:p-6 bg-background">
                     <div className="flex items-start gap-4">
@@ -312,106 +276,94 @@ const Landing = () => {
                 </div>
               ))}
             </div>
-
-            <div className="mt-12 text-center">
-              <p className="text-base md:text-lg text-muted-foreground italic">
-                Tudo de forma objetiva, sem exposição comercial.
-              </p>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* Bloco 4 - Benefícios para a Farmácia */}
-      <section className="py-16 md:py-24">
+      {/* Bloco 3 - Participação das Farmácias */}
+      <section className="py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 md:mb-16">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
-                Benefícios para a Farmácia
+                Participação das Farmácias
               </h2>
               <p className="text-base md:text-lg text-muted-foreground">
-                Ao integrar a Onde-Tem, a farmácia passa a:
+                Responsabilidades e compromissos das farmácias participantes
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              <Card className="p-6 bg-background border-border hover:border-primary/30 transition-colors">
+              <Card className="p-6 bg-background border-border">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Search className="h-6 w-6 text-primary" />
+                    <ClipboardCheck className="h-6 w-6 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Ser encontrada
+                      Confirmação de Disponibilidade
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      Por quem realmente procura um medicamento que a farmácia tem disponível.
+                      A farmácia confirma a disponibilidade de stock sob responsabilidade do farmacêutico.
                     </p>
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-6 bg-background border-border hover:border-primary/30 transition-colors">
+              <Card className="p-6 bg-background border-border">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Clock className="h-6 w-6 text-primary" />
+                    <UserCheck className="h-6 w-6 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Reduzir chamadas improdutivas
+                      Responsabilidade Técnica
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      Menos visitas e chamadas de clientes à procura de produtos não disponíveis.
+                      Toda a informação é verificada e atualizada por profissional responsável identificado.
                     </p>
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-6 bg-background border-border hover:border-primary/30 transition-colors">
+              <Card className="p-6 bg-background border-border">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <MapPin className="h-6 w-6 text-primary" />
+                    <FileText className="h-6 w-6 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Fortalecer presença regional
+                      Dados Actualizados
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      Aumentar a visibilidade institucional junto da comunidade local.
+                      Manutenção de informação precisa e actualizada sobre disponibilidade.
                     </p>
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-6 bg-background border-border hover:border-primary/30 transition-colors">
+              <Card className="p-6 bg-background border-border">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <Heart className="h-6 w-6 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Contribuir para a saúde
+                      Serviço de Saúde
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      Fazer parte de um serviço de saúde mais eficiente e acessível para todos.
+                      Contribuição para um serviço de informação de saúde mais eficiente.
                     </p>
                   </div>
                 </div>
               </Card>
             </div>
-
-            <div className="mt-10 text-center">
-              <p className="text-base md:text-lg font-medium text-foreground bg-muted/50 inline-block px-6 py-3 rounded-lg">
-                A visibilidade é técnica, não comercial.
-              </p>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* Bloco 5 - Inteligência de Dados (Opcional) */}
-      <section className="py-16 md:py-24 bg-muted/30">
+      {/* Bloco 4 - Dados Agregados (Opcional) */}
+      <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 md:mb-16">
@@ -419,10 +371,10 @@ const Landing = () => {
                 Opcional
               </div>
               <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
-                Inteligência de Dados
+                Dados Agregados
               </h2>
               <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-                Além da presença institucional, a Onde-Tem disponibiliza relatórios analíticos opcionais, com dados agregados sobre:
+                A plataforma disponibiliza relatórios analíticos opcionais com dados agregados e anónimos:
               </p>
             </div>
 
@@ -434,7 +386,7 @@ const Landing = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">Procura por medicamentos</h3>
-                    <p className="text-sm text-muted-foreground">Quais produtos são mais procurados na região</p>
+                    <p className="text-sm text-muted-foreground">Tendências agregadas de procura na região</p>
                   </div>
                 </div>
               </Card>
@@ -445,8 +397,8 @@ const Landing = () => {
                     <MapPin className="h-5 w-5 text-secondary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground">Tendências regionais</h3>
-                    <p className="text-sm text-muted-foreground">Padrões de procura por área geográfica</p>
+                    <h3 className="font-semibold text-foreground">Padrões regionais</h3>
+                    <p className="text-sm text-muted-foreground">Dados agregados por área geográfica</p>
                   </div>
                 </div>
               </Card>
@@ -469,7 +421,7 @@ const Landing = () => {
                     <TrendingUp className="h-5 w-5 text-secondary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground">Evolução mensal</h3>
+                    <h3 className="font-semibold text-foreground">Evolução temporal</h3>
                     <p className="text-sm text-muted-foreground">Acompanhamento da evolução da procura ao longo do tempo</p>
                   </div>
                 </div>
@@ -477,69 +429,63 @@ const Landing = () => {
             </div>
 
             <div className="mt-10 text-center">
-              <p className="text-base md:text-lg text-muted-foreground italic">
-                Esses dados apoiam decisões internas, sem exposição pública.
+              <p className="text-base md:text-lg text-muted-foreground">
+                Todos os dados são anónimos e agregados, destinados a apoiar decisões internas.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Bloco 6 - Igualdade, Ética e Neutralidade */}
-      <section className="py-16 md:py-24">
+      {/* Bloco 5 - Princípios de Funcionamento */}
+      <section className="py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 md:mb-16">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
-                Igualdade, Ética e Neutralidade
+                Princípios de Funcionamento
               </h2>
               <p className="text-base md:text-lg text-muted-foreground">
-                Na Onde-Tem, todos são tratados de forma igual
+                Como a plataforma opera
               </p>
             </div>
 
-            <Card className="p-8 md:p-10 bg-primary/5 border-primary/20">
+            <Card className="p-8 md:p-10 bg-background border-border">
               <div className="space-y-6">
                 {[
-                  "Todas as farmácias têm os mesmos direitos",
-                  "Nenhuma paga para aparecer",
-                  "Não existem rankings comerciais",
-                  "Não há publicidade de medicamentos",
-                  "A plataforma é neutra por definição"
+                  "Tratamento igualitário de todas as farmácias participantes",
+                  "Sem destaques diferenciados ou posicionamentos pagos",
+                  "Sem rankings ou classificações comparativas",
+                  "Informação factual e verificada pelo farmacêutico responsável",
+                  "Neutralidade técnica em todos os processos"
                 ].map((item, index) => (
                   <div key={index} className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                       <CheckCircle2 className="h-5 w-5 text-primary" />
                     </div>
-                    <p className="text-base md:text-lg text-foreground font-medium">{item}</p>
+                    <p className="text-base md:text-lg text-foreground">{item}</p>
                   </div>
                 ))}
-              </div>
-
-              <div className="mt-10 pt-8 border-t border-primary/20 text-center">
-                <p className="text-xl md:text-2xl font-bold text-primary">
-                  O interesse público vem primeiro.
-                </p>
               </div>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* Bloco 7 - Conformidade Legal */}
-      <section id="conformidade" className="py-16 md:py-24 bg-muted/30 scroll-mt-20">
+      {/* Bloco 6 - Enquadramento Regulamentar */}
+      <section id="conformidade" className="py-16 md:py-24 scroll-mt-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 md:mb-16">
               <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
-                Conformidade Legal
+                Enquadramento Regulamentar
               </h2>
               <p className="text-base md:text-lg text-muted-foreground">
-                A plataforma foi concebida com base em princípios rigorosos
+                Conformidade com o regulamento farmacêutico
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-6 mb-10">
               <Card className="p-6 bg-background">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -547,10 +493,10 @@ const Landing = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Regulamento Farmacêutico Nacional
+                      Regulamento Farmacêutico
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      Respeito integral às normas que regem o setor farmacêutico em Portugal.
+                      Conformidade com as normas que regem o setor farmacêutico nacional.
                     </p>
                   </div>
                 </div>
@@ -563,10 +509,10 @@ const Landing = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Princípio da Não Publicidade
+                      Art. 94 e Art. 95
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      A plataforma não promove nem publicita medicamentos de qualquer forma.
+                      Respeito às disposições sobre publicidade e informação de medicamentos.
                     </p>
                   </div>
                 </div>
@@ -575,14 +521,14 @@ const Landing = () => {
               <Card className="p-6 bg-background">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Scale className="h-6 w-6 text-primary" />
+                    <UserCheck className="h-6 w-6 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Igualdade entre Farmácias
+                      Art. 80 - Responsabilidade Técnica
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      Todas as farmácias têm os mesmos deveres e direitos na plataforma.
+                      Exigência de farmacêutico ou técnico responsável identificado.
                     </p>
                   </div>
                 </div>
@@ -595,56 +541,64 @@ const Landing = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Proteção Institucional
+                      Art. 90 - Alvará
                     </h3>
                     <p className="text-sm md:text-base text-muted-foreground">
-                      Os dados são tratados com proteção institucional e confidencialidade.
+                      Verificação de licenciamento e alvará emitido pela ANARME.
                     </p>
                   </div>
                 </div>
               </Card>
             </div>
 
-            <div className="mt-10 text-center">
-              <p className="text-base md:text-lg font-medium text-foreground bg-background inline-block px-6 py-3 rounded-lg border border-border">
-                A Onde-Tem atua como sistema informativo, não promocional.
+            {/* Declaração Legal */}
+            <Card className="p-6 md:p-8 bg-muted/50 border-border">
+              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Scale className="h-5 w-5 text-primary" />
+                Declaração de Conformidade
+              </h3>
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                O serviço Onde-Tem presta informação de disponibilidade de medicamentos com caráter estritamente informativo e de utilidade pública. Não realiza, directa ou indirectamente, promoção, publicidade, divulgação de preços, comparações ou incentivos de qualquer natureza (cf. Art. 94 e Art. 95 do Regulamento). Toda informação sobre disponibilidade deverá ser confirmada por farmacêutico titular ou técnico responsável, cuja identificação e alvará serão exigidos no processo de adesão (cf. Art. 80 e Art. 90).
               </p>
-            </div>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* Bloco 8 - Convite Institucional */}
+      {/* Bloco 7 - Processo de Adesão */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-6">
-              Convite Institucional
+              Processo de Adesão
             </h2>
             <p className="text-base md:text-lg text-muted-foreground mb-10">
-              Estamos a integrar farmácias de forma progressiva e responsável.
+              A integração de farmácias ocorre de forma progressiva e responsável.
             </p>
 
             <Card className="p-8 md:p-10 bg-background border-border mb-10">
               <p className="text-lg md:text-xl font-medium text-foreground mb-6">
-                Se a sua farmácia acredita em:
+                Requisitos para participação:
               </p>
-              <div className="grid sm:grid-cols-2 gap-4 text-left max-w-xl mx-auto">
+              <div className="grid sm:grid-cols-2 gap-4 text-left max-w-xl mx-auto mb-8">
                 {[
-                  "Serviço à comunidade",
-                  "Uso ético de dados",
-                  "Decisão baseada em informação",
-                  "Evolução do setor farmacêutico"
+                  "Alvará válido emitido pela ANARME",
+                  "Farmacêutico responsável identificado",
+                  "Compromisso com actualização de dados",
+                  "Conformidade regulamentar"
                 ].map((item, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
-                    <span className="text-foreground">{item}</span>
+                    <span className="text-foreground text-sm md:text-base">{item}</span>
                   </div>
                 ))}
               </div>
-              <p className="text-lg md:text-xl font-semibold text-primary mt-8">
-                Então a Onde-Tem faz sentido para si.
-              </p>
+              
+              <div className="border-t border-border pt-6">
+                <p className="text-sm md:text-base text-muted-foreground">
+                  O processo inclui: submissão de documentação, verificação de licenciamento e ativação na plataforma.
+                </p>
+              </div>
             </Card>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -653,16 +607,19 @@ const Landing = () => {
                 onClick={() => navigate('/contacto')}
                 className="text-sm md:text-base px-6 md:px-8 py-3 md:py-4 h-auto"
               >
-                Solicitar Integração Institucional
+                Solicitar Informações
                 <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
-                onClick={() => navigate('/contacto')}
+                onClick={() => {
+                  const element = document.getElementById('conformidade');
+                  element?.scrollIntoView({ behavior: 'smooth' });
+                }}
                 className="text-sm md:text-base px-6 md:px-8 py-3 md:py-4 h-auto"
               >
-                Conhecer o Enquadramento da Plataforma
+                Ver Enquadramento Regulamentar
               </Button>
             </div>
           </div>
@@ -675,7 +632,7 @@ const Landing = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <img src={logo} alt="ONDTem" className="h-6 md:h-8" />
             <p className="text-sm text-muted-foreground text-center md:text-right">
-              © {new Date().getFullYear()} ONDTem. Plataforma de interesse público.
+              © {new Date().getFullYear()} ONDTem. Serviço de informação de saúde pública.
             </p>
           </div>
         </div>
